@@ -2,6 +2,7 @@ import { ShipMap } from "./ShipMap.js";
 import { UserInterface } from "./UserInterface.js";
 import { EventBus } from "./EventBus.js";
 import { Player } from "./Player.js";
+import { InputHandler } from "./InputHandler.js";
 
 class Game {
   constructor() {
@@ -37,7 +38,8 @@ class Game {
     const spawnPoint = this.ship.getSpawnPoint();
     this.player = new Player(spawnPoint.x, spawnPoint.y);
     this.player.registerEventHandlers(this.eventBus);
-    this.setupControls();
+    this.inputHandler = new InputHandler(this.eventBus);
+    this.setupMoveValidation();
     this.gameLoop();
     new UserInterface(this.player, this.eventBus);
   }
@@ -48,29 +50,14 @@ class Game {
     });
   }
 
-  handleKeyPress(key) {
-    switch (key.toLowerCase()) {
-      case "w":
-        if (this.canMoveTo(this.player.x, this.player.y - 1)) {
-          this.eventBus.emit("player-move", { dx: 0, dy: -1 });
-        }
-        break;
-      case "a":
-        if (this.canMoveTo(this.player.x - 1, this.player.y)) {
-          this.eventBus.emit("player-move", { dx: -1, dy: 0 });
-        }
-        break;
-      case "s":
-        if (this.canMoveTo(this.player.x, this.player.y + 1)) {
-          this.eventBus.emit("player-move", { dx: 0, dy: 1 });
-        }
-        break;
-      case "d":
-        if (this.canMoveTo(this.player.x + 1, this.player.y)) {
-          this.eventBus.emit("player-move", { dx: 1, dy: 0 });
-        }
-        break;
-    }
+  setupMoveValidation() {
+    this.eventBus.on("attempt-move", (direction) => {
+      const newX = this.player.x + direction.dx;
+      const newY = this.player.y + direction.dy;
+      if (this.canMoveTo(newX, newY)) {
+        this.eventBus.emit("player-move", { x: newX, y: newY });
+      }
+    });
   }
 
   canMoveTo(x, y) {

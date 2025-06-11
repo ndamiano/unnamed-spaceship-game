@@ -10,9 +10,9 @@ class Player {
   }
 
   registerEventHandlers(eventBus) {
-    eventBus.on("player-move", ({ dx, dy }) => {
-      this.x += dx;
-      this.y += dy;
+    eventBus.on("player-move", ({ x, y }) => {
+      this.x = x;
+      this.y = y;
       this.battery -= this.batteryChange;
       eventBus.emit("player-updated", this);
     });
@@ -26,10 +26,10 @@ class Player {
     eventBus.emit("player-updated", this);
   }
 
-  move(dx, dy) {
+  move(x, y) {
     this.battery = Math.max(0, this.battery - 1);
-    this.x += dx;
-    this.y += dy;
+    this.x = x;
+    this.y = y;
     if (this.onUpdate) this.onUpdate();
   }
 
