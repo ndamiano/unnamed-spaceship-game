@@ -1,0 +1,30 @@
+#battery-display {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 120px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid #00ff00;
+  border-radius: 5px;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  font-family: monospace;
+  color: #00ff00;
+}
+
+#battery-level {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(to right, #00ff00, #00aa00);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+#battery-text {
+  position: absolute;
+  right: 10px;
+  font-size: 14px;
+  text-shadow: 0 0 5px #00ff00;
+}

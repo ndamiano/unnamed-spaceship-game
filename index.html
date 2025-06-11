@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Procedural Spaceship Generator</title>
+    <link rel="stylesheet" href="battery.css" />
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #000;
+      }
+      canvas {
+        display: block;
+        margin: 0 auto;
+        background: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="battery-display">
+      <div id="battery-level"></div>
+      <span id="battery-text">100%</span>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <script type="module" src="js/modules/Game.js"></script>
+  </body>
+</html>
