@@ -9,7 +9,7 @@ class Game {
     this.config = {
       canvasWidth: 800,
       canvasHeight: 800,
-      tileSize: 16,
+      tileSize: 32,
       shipTypes: ["colony", "warship", "science"],
       debugMode: false,
     };
@@ -90,7 +90,22 @@ class Game {
     this.ctx.fillStyle = "#000";
     this.ctx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
 
-    // Render tiles using TileRenderer
+    // Calculate center of viewport
+    const centerX = this.config.canvasWidth / 2;
+    const centerY = this.config.canvasHeight / 2;
+
+    // Calculate player's center position in world coordinates
+    const playerCenterX = (this.player.x + 0.5) * this.config.tileSize;
+    const playerCenterY = (this.player.y + 0.5) * this.config.tileSize;
+
+    // Save context state
+    this.ctx.save();
+
+    // Move canvas origin to center, then offset by player position
+    this.ctx.translate(centerX, centerY);
+    this.ctx.translate(-playerCenterX, -playerCenterY);
+
+    // Render tiles
     for (let y = 0; y < this.ship.height; y++) {
       for (let x = 0; x < this.ship.width; x++) {
         const tile = this.ship.getTile(x, y);
@@ -105,12 +120,15 @@ class Game {
       }
     }
 
-    // Render player
+    // Restore context state
+    this.ctx.restore();
+
+    // Render player (always centered)
     this.ctx.fillStyle = "#ff0";
     this.ctx.beginPath();
     this.ctx.arc(
-      (this.player.x + 0.5) * this.config.tileSize,
-      (this.player.y + 0.5) * this.config.tileSize,
+      centerX,
+      centerY,
       this.config.tileSize / 2 - 1,
       0,
       Math.PI * 2
