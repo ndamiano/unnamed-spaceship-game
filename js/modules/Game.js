@@ -10,7 +10,7 @@ class Game {
     this.config = {
       canvasWidth: 800,
       canvasHeight: 800,
-      tileSize: 32,
+      tileSize: 50,
       shipTypes: ["colony", "warship", "science"],
       debugMode: false,
     };
@@ -52,10 +52,15 @@ class Game {
 
   setupMoveValidation() {
     this.eventBus.on("attempt-move", (direction) => {
-      const newX = this.player.x + direction.dx;
-      const newY = this.player.y + direction.dy;
+      this.eventBus.emit("player-direction-change", direction);
+      const newX = this.player.x + direction.x;
+      const newY = this.player.y + direction.y;
       if (this.canMoveTo(newX, newY)) {
-        this.eventBus.emit("player-move", { x: newX, y: newY });
+        this.eventBus.emit("player-move", {
+          x: newX,
+          y: newY,
+          direction,
+        });
       }
     });
   }
@@ -111,16 +116,7 @@ class Game {
     this.ctx.restore();
 
     // Render player (always centered)
-    this.ctx.fillStyle = "#ff0";
-    this.ctx.beginPath();
-    this.ctx.arc(
-      centerX,
-      centerY,
-      this.config.tileSize / 2 - 1,
-      0,
-      Math.PI * 2
-    );
-    this.ctx.fill();
+    this.player.render(this.ctx, centerX, centerY, this.config.tileSize);
   }
 }
 

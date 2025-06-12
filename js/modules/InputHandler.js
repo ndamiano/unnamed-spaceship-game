@@ -1,13 +1,13 @@
-import { EventBus } from "./EventBus.js";
+import { Directions } from "./Utils.js";
 
 class InputHandler {
   constructor(eventBus) {
     this.eventBus = eventBus;
     this.directions = {
-      w: { dx: 0, dy: -1 },
-      a: { dx: -1, dy: 0 },
-      s: { dx: 0, dy: 1 },
-      d: { dx: 1, dy: 0 },
+      w: Directions.UP,
+      a: Directions.LEFT,
+      s: Directions.DOWN,
+      d: Directions.RIGHT,
     };
     this.setupControls();
   }
