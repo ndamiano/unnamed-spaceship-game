@@ -1,6 +1,6 @@
 import { randomInt } from "./Utils.js";
 import { MedicalRoom } from "./rooms/MedicalRoom.js";
-import { SpawnRoom, FinishRoom, BaseRoom } from "./rooms/index.js";
+import { SpawnRoom, FinishRoom, BaseRoom, TestRoom } from "./rooms/index.js";
 
 class RoomQueue {
   constructor(shipType = "colony", maxSize = 25) {
@@ -20,6 +20,8 @@ class RoomQueue {
   initialize() {
     // Always start with spawn room
     this.queue.push(new SpawnRoom(0, 0, 8, 6));
+    // For debugging purposes
+    // this.queue.push(new TestRoom(0, 0, 15, 15));
 
     // Add the normal rooms
     for (let i = 0; i < this.maxSize; i++) {

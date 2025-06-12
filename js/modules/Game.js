@@ -3,6 +3,7 @@ import { UserInterface } from "./UserInterface.js";
 import { EventBus } from "./EventBus.js";
 import { Player } from "./Player.js";
 import { InputHandler } from "./InputHandler.js";
+import { Floor } from "./tiles/Floor.js";
 
 class Game {
   constructor() {
@@ -111,7 +112,14 @@ class Game {
     for (let y = 0; y < this.ship.height; y++) {
       for (let x = 0; x < this.ship.width; x++) {
         const tile = this.ship.getTile(x, y);
-        if (tile.visible) {
+        if (tile && tile.visible) {
+          const floor = new Floor(x, y);
+          floor.render(
+            this.ctx,
+            x * this.config.tileSize,
+            y * this.config.tileSize,
+            this.config.tileSize
+          );
           tile.render(
             this.ctx,
             x * this.config.tileSize,
