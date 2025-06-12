@@ -2,3 +2,8 @@ export { BaseRoom } from "./BaseRoom.js";
 export { FinishRoom } from "./FinishRoom.js";
 export { SpawnRoom } from "./SpawnRoom.js";
 export { TestRoom } from "./TestRoom.js";
+export { CryoChamber } from "./CryoChamber.js";
+export { DroneControlBay } from "./DroneControlBay.js";
+export { MedicalWing } from "./MedicalWing.js";
+export { EngineeringCore } from "./EngineeringCore.js";
+export { XenoResearchLab } from "./XenoResearchLab.js";

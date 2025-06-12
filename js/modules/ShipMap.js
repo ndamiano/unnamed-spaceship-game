@@ -66,6 +66,9 @@ class ShipMap {
   _addRoomToMap(room) {
     // Set floor tiles for the room
     for (let y = room.y; y < room.y + room.height; y++) {
+      if (!this.tiles[y]) {
+        this.tiles[y] = [];
+      }
       for (let x = room.x; x < room.x + room.width; x++) {
         this.tiles[y][x] = new Floor(x, y);
       }
@@ -73,11 +76,17 @@ class ShipMap {
 
     // Add room objects to their tiles
     room.objects.forEach((obj) => {
+      if (!this.tiles[obj.y]) {
+        this.tiles[obj.y] = [];
+      }
       this.tiles[obj.y][obj.x] = obj;
     });
 
     // Add doors
     room.getDoors().forEach((door) => {
+      if (!this.tiles[door.y]) {
+        this.tiles[door.y] = [];
+      }
       this.tiles[door.y][door.x] = door;
     });
   }

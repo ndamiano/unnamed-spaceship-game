@@ -1,6 +1,24 @@
 import { randomInt } from "./Utils.js";
-import { MedicalRoom } from "./rooms/MedicalRoom.js";
-import { SpawnRoom, FinishRoom, BaseRoom, TestRoom } from "./rooms/index.js";
+import {
+  BaseRoom,
+  CryoChamber,
+  DroneControlBay,
+  EngineeringCore,
+  FinishRoom,
+  MedicalWing,
+  SpawnRoom,
+  TestRoom,
+  XenoResearchLab,
+} from "./rooms/index.js";
+
+const roomTypes = [
+  { type: BaseRoom, weight: 10 },
+  { type: CryoChamber, weight: 10 },
+  { type: DroneControlBay, weight: 10 },
+  { type: EngineeringCore, weight: 10 },
+  { type: MedicalWing, weight: 10 },
+  { type: XenoResearchLab, weight: 10 },
+];
 
 class RoomQueue {
   constructor(shipType = "colony", maxSize = 25) {
@@ -19,9 +37,9 @@ class RoomQueue {
    */
   initialize() {
     // Always start with spawn room
-    this.queue.push(new SpawnRoom(0, 0, 8, 6));
+    this.queue.push(new SpawnRoom(0, 0));
     // For debugging purposes
-    // this.queue.push(new TestRoom(0, 0, 15, 15));
+    // this.queue.push(new TestRoom(0, 0));
 
     // Add the normal rooms
     for (let i = 0; i < this.maxSize; i++) {
@@ -29,7 +47,7 @@ class RoomQueue {
     }
 
     // Add the finish
-    this.queue.push(new FinishRoom(0, 0, 5, 4));
+    this.queue.push(new FinishRoom(0, 0));
   }
 
   /**
@@ -49,12 +67,21 @@ class RoomQueue {
    * Adds a standard room to the queue
    */
   addStandardRoom() {
-    const rand = Math.random();
-    if (rand < 0.5) {
-      this.queue.push(new BaseRoom(0, 0, randomInt(4, 8), randomInt(4, 8)));
-    } else {
-      this.queue.push(new MedicalRoom(0, 0, randomInt(4, 8), randomInt(4, 8)));
+    this.queue.push(this.getWeightedRoom());
+  }
+
+  getWeightedRoom() {
+    const totalWeight = roomTypes.reduce((sum, room) => sum + room.weight, 0);
+    let random = Math.random() * totalWeight;
+    let weightSum = 0;
+
+    for (const room of roomTypes) {
+      weightSum += room.weight;
+      if (random <= weightSum) {
+        return new room.type(0, 0);
+      }
     }
+    return new BaseRoom(0, 0); // fallback
   }
 }
 

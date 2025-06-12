@@ -1,11 +1,19 @@
 class BaseRoom {
-  constructor(x, y, width, height) {
+  constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.width = width;
-    this.height = height;
+    this.width = 4;
+    this.height = 4;
     this.doors = [];
     this.objects = [];
+    this.weight = 10;
+  }
+
+  getWidth() {
+    return this.width;
+  }
+  getHeight() {
+    return this.height;
   }
 
   setX(x) {
