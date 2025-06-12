@@ -1,8 +1,8 @@
 import { Tile } from "../Tile.js";
 
 export default class GameObject extends Tile {
-  constructor(x, y) {
-    super(x, y, false);
+  constructor(x, y, passable = false, blocksLineOfSight = false) {
+    super(x, y, passable, blocksLineOfSight);
   }
 
   render(ctx, x, y, size) {

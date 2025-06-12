@@ -18,7 +18,7 @@ class ShipMap {
 
     // Setup event listeners
     eventBus.on("player-updated", (player) => {
-      this.revealAreaAroundPlayer(player.x, player.y, 1);
+      this.revealAreaAroundPlayer(player.x, player.y, 2);
     });
 
     this.generateLayout();
@@ -33,8 +33,8 @@ class ShipMap {
   }
 
   createEmptyGrid() {
-    return Array.from({ length: this.height }, (_, y) =>
-      Array.from({ length: this.width }, (_, x) => new Wall(x, y))
+    return Array.from({ length: this.height + 1 }, (_, y) =>
+      Array.from({ length: this.width + 1 }, (_, x) => new Wall(x, y))
     );
   }
 
@@ -121,20 +121,51 @@ class ShipMap {
     return null;
   }
 
+  hasLineOfSight(fromX, fromY, toX, toY) {
+    const dx = Math.abs(toX - fromX);
+    const dy = Math.abs(toY - fromY);
+    const sx = fromX < toX ? 1 : -1;
+    const sy = fromY < toY ? 1 : -1;
+    let err = dx - dy;
+
+    while (true) {
+      // Stop if we reach the target position
+      if (fromX === toX && fromY === toY) break;
+
+      const tile = this.getTile(fromX, fromY);
+      if (tile && tile.blocksLineOfSight) {
+        return false; // Wall blocks line of sight
+      }
+
+      const e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        fromX += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        fromY += sy;
+      }
+    }
+    return true;
+  }
+
   revealAreaAroundPlayer(x, y, radius) {
     for (let dy = -radius; dy <= radius; dy++) {
       for (let dx = -radius; dx <= radius; dx++) {
         const nx = x + dx;
         const ny = y + dy;
         if (nx >= 0 && nx < this.width && ny >= 0 && ny < this.height) {
-          const tile = this.getTile(nx, ny);
-          if (tile.type === "object") {
-            this.setTile(nx, ny, {
-              ...tile,
-              visible: true,
-            });
-          } else {
-            this.setTile(nx, ny, { visible: true });
+          if (this.hasLineOfSight(x, y, nx, ny)) {
+            const tile = this.getTile(nx, ny);
+            if (tile.type === "object") {
+              this.setTile(nx, ny, {
+                ...tile,
+                visible: true,
+              });
+            } else {
+              this.setTile(nx, ny, { visible: true });
+            }
           }
         }
       }

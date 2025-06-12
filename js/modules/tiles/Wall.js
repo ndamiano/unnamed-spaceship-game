@@ -2,7 +2,7 @@ import { Tile } from "../Tile.js";
 
 export class Wall extends Tile {
   constructor(x, y) {
-    super(x, y, false);
+    super(x, y, false, true);
   }
 
   render(ctx, x, y, size) {

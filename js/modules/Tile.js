@@ -1,8 +1,9 @@
 export class Tile {
-  constructor(x, y, passable = false) {
+  constructor(x, y, passable = false, blocksLineOfSight = false) {
     this.x = x;
     this.y = y;
     this.passable = passable;
+    this.blocksLineOfSight = blocksLineOfSight;
     this.visible = false;
   }
 

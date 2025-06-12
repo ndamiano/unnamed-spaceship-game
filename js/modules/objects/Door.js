@@ -2,8 +2,7 @@ import GameObject from "./GameObject.js";
 
 export class Door extends GameObject {
   constructor(x, y) {
-    super(x, y);
-    this.passable = true;
+    super(x, y, true, true);
   }
 
   render(ctx, x, y, size) {
