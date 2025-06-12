@@ -17,6 +17,8 @@ class InputHandler {
       const key = e.key.toLowerCase();
       if (this.directions[key]) {
         this.eventBus.emit("attempt-move", this.directions[key]);
+      } else if (key === "e") {
+        this.eventBus.emit("attempt-interact");
       }
     });
   }

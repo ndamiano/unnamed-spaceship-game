@@ -63,6 +63,16 @@ class Game {
         });
       }
     });
+
+    this.eventBus.on("attempt-interact", () => {
+      const direction = this.player.direction;
+      const targetX = this.player.x + direction.x;
+      const targetY = this.player.y + direction.y;
+      const tile = this.ship.getTile(targetX, targetY);
+      if (tile && typeof tile.onInteract === "function") {
+        tile.onInteract(this.player);
+      }
+    });
   }
 
   canMoveTo(x, y) {
