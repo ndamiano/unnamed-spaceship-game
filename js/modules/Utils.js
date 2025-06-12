@@ -29,71 +29,43 @@ function randomInt(min, max) {
 
 function getPossibleDoorPositions(targetRoom, rooms, maxHeight, maxWidth) {
   const positions = [];
-  const minSpacing = 1;
-
-  const sides = [
-    {
-      name: "top",
-      condition: (r) => r.y > targetRoom.height + minSpacing,
-      calc: (r) => {
-        const x = randomInt(r.x + 1, r.x + r.width - 2);
-        return {
-          x: x - Math.floor(targetRoom.width / 2),
-          y: r.y - targetRoom.height - minSpacing,
-          doorX: x,
-          doorY: r.y - 1,
-        };
-      },
-    },
-    {
-      name: "bottom",
-      condition: (r) =>
-        r.y + r.height + targetRoom.height + minSpacing < maxHeight,
-      calc: (r) => {
-        const x = randomInt(r.x + 1, r.x + r.width - 2);
-        return {
-          x: x - Math.floor(targetRoom.width / 2),
-          y: r.y + r.height + minSpacing,
-          doorX: x,
-          doorY: r.y + r.height,
-        };
-      },
-    },
-    {
-      name: "left",
-      condition: (r) => r.x > targetRoom.width + minSpacing,
-      calc: (r) => {
-        const y = randomInt(r.y + 1, r.y + r.height - 2);
-        return {
-          x: r.x - targetRoom.width - minSpacing,
-          y: y - Math.floor(targetRoom.height / 2),
-          doorX: r.x - 1,
-          doorY: y,
-        };
-      },
-    },
-    {
-      name: "right",
-      condition: (r) =>
-        r.x + r.width + targetRoom.width + minSpacing < maxWidth,
-      calc: (r) => {
-        const y = randomInt(r.y + 1, r.y + r.height - 2);
-        return {
-          x: r.x + r.width + minSpacing,
-          y: y - Math.floor(targetRoom.height / 2),
-          doorX: r.x + r.width,
-          doorY: y,
-        };
-      },
-    },
-  ];
 
   for (const existingRoom of rooms) {
-    for (const side of sides) {
-      if (side.condition(existingRoom)) {
-        const pos = side.calc(existingRoom);
-        pos.connectingRoom = existingRoom;
-        positions.push(pos);
+    // Check each potential door position in the existing room
+    for (const potentialDoor of existingRoom.potentialDoors) {
+      console.log(existingRoom.x);
+      const absX = existingRoom.x + potentialDoor.x;
+      console.log(absX);
+      const absY = existingRoom.y + potentialDoor.y;
+
+      for (const targetPotentialDoor of targetRoom.potentialDoors) {
+        let newRoomX = absX - targetPotentialDoor.x;
+        let newRoomY = absY - targetPotentialDoor.y;
+
+        // Check if new position is within bounds
+        if (
+          newRoomX >= 0 &&
+          newRoomX + targetRoom.width <= maxWidth &&
+          newRoomY >= 0 &&
+          newRoomY + targetRoom.height <= maxHeight &&
+          !roomsOverlap(
+            {
+              x: newRoomX,
+              y: newRoomY,
+              width: targetRoom.width,
+              height: targetRoom.height,
+            },
+            existingRoom
+          )
+        ) {
+          positions.push({
+            x: newRoomX,
+            y: newRoomY,
+            doorX: absX,
+            doorY: absY,
+            connectingRoom: existingRoom,
+          });
+        }
       }
     }
   }

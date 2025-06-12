@@ -82,7 +82,7 @@ class ShipMap {
       this.tiles[obj.y][obj.x] = obj;
     });
 
-    // Add doors
+    // Add doors from room's actual door list
     room.getDoors().forEach((door) => {
       if (!this.tiles[door.y]) {
         this.tiles[door.y] = [];
@@ -95,7 +95,7 @@ class ShipMap {
     // Find best position for the room
     if (this.rooms.length === 0) {
       // First room (spawn room)
-      room.setX(Math.floor(this.width * 0.1));
+      room.setX(Math.floor(this.width * 0.2));
       room.setY(Math.floor(this.height * 0.5 - room.height / 2));
       this.rooms.push(room);
 

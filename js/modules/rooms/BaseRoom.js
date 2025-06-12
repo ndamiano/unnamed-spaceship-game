@@ -4,9 +4,15 @@ class BaseRoom {
     this.y = y;
     this.width = 4;
     this.height = 4;
-    this.doors = [];
+    this.potentialDoors = []; // Array of {x, y} relative to room position
+    this.doors = []; // Actual door instances
     this.objects = [];
     this.weight = 10;
+  }
+
+  // Add potential door position (relative coordinates)
+  addPotentialDoor(relX, relY) {
+    this.potentialDoors.push({ x: relX, y: relY });
   }
 
   getWidth() {

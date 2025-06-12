@@ -35,7 +35,7 @@ class Game {
     // Initialize EventBus
     this.eventBus = new EventBus();
 
-    this.ship = new ShipMap(50, 50, "colony", this.eventBus);
+    this.ship = new ShipMap(250, 250, "colony", this.eventBus);
     const spawnPoint = this.ship.getSpawnPoint();
     this.player = new Player(spawnPoint.x, spawnPoint.y);
     this.player.registerEventHandlers(this.eventBus);
