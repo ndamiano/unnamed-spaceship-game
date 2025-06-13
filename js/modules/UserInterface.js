@@ -3,37 +3,37 @@ import { eventBus } from "./EventBus.js";
 class UserInterface {
   constructor(player) {
     this.player = player;
-    this.levelElement = document.getElementById("battery-level");
-    this.textElement = document.getElementById("battery-text");
+    this.statsPanel = document.getElementById("stats-panel");
+    this.messagesPanel = document.getElementById("messages-panel");
 
     // Listen for player updates
     eventBus.on("player-updated", (player) => {
       this.player = player;
-      this.update();
+      this.updateStats();
+    });
+
+    // Listen for game messages
+    eventBus.on("game-message", (message) => {
+      this.addMessage(message);
     });
 
     // Initial render
-    this.update();
+    this.updateStats();
   }
 
-  update() {
-    const percent = Math.floor(
-      (this.player.battery / this.player.maxBattery) * 100
-    );
-    this.levelElement.style.width = `${percent}%`;
-    this.textElement.textContent = `${this.player.battery}/${this.player.maxBattery}`;
+  updateStats() {
+    this.statsPanel.innerHTML = `
+      <h3>Resources</h3>
+      <div>Battery: ${this.player.battery}/${this.player.maxBattery}</div>
+    `;
+  }
 
-    if (percent < 20) {
-      this.levelElement.style.background =
-        "linear-gradient(to right, #ff0000, #aa0000)";
-      this.textElement.style.color = "#ff0000";
-      this.textElement.style.textShadow = "0 0 5px #ff0000";
-    } else {
-      this.levelElement.style.background =
-        "linear-gradient(to right, #00ff00, #00aa00)";
-      this.textElement.style.color = "#00ff00";
-      this.textElement.style.textShadow = "0 0 5px #00ff00";
-    }
+  addMessage(message) {
+    const messageElement = document.createElement("div");
+    messageElement.textContent = `> ${message}`;
+    messageElement.style.marginBottom = "5px";
+    this.messagesPanel.appendChild(messageElement);
+    this.messagesPanel.scrollTop = this.messagesPanel.scrollHeight;
   }
 }
 
