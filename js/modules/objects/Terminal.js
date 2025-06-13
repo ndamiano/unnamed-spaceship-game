@@ -1,3 +1,4 @@
+import { eventBus } from "../EventBus.js";
 import GameObject from "./GameObject.js";
 
 export default class Terminal extends GameObject {
@@ -6,8 +7,7 @@ export default class Terminal extends GameObject {
     this.name = "terminal";
   }
 
-  onInteract(player) {
-    // Terminal interaction logic
-    console.log("Terminal interacted with by player");
+  onInteract() {
+    eventBus.emit("game-message", "Log stuff");
   }
 }

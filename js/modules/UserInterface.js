@@ -1,14 +1,13 @@
 import { eventBus } from "./EventBus.js";
+import { getStats } from "./PlayerStats.js";
 
 class UserInterface {
-  constructor(player) {
-    this.player = player;
+  constructor() {
     this.statsPanel = document.getElementById("stats-panel");
     this.messagesPanel = document.getElementById("messages-panel");
 
     // Listen for player updates
-    eventBus.on("player-updated", (player) => {
-      this.player = player;
+    eventBus.on("player-updated", () => {
       this.updateStats();
     });
 
@@ -22,9 +21,11 @@ class UserInterface {
   }
 
   updateStats() {
+    const playerStats = getStats();
     this.statsPanel.innerHTML = `
       <h3>Resources</h3>
-      <div>Battery: ${this.player.battery}/${this.player.maxBattery}</div>
+      <div>Battery: ${playerStats.battery}/${playerStats.maxBattery}</div>
+      <div>Nanites: ${playerStats.resources.Nanites}</div>
     `;
   }
 

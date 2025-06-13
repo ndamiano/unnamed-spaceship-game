@@ -4,42 +4,37 @@ import { eventBus } from "./EventBus.js";
 import { Player } from "./Player.js";
 import { InputHandler } from "./InputHandler.js";
 import { Floor } from "./tiles/Floor.js";
+import { GameConfig } from "./Config.js";
+import { registerPlayer } from "./PlayerStats.js";
 
 class Game {
   constructor() {
     console.log("Initializing game...");
-    this.config = {
-      canvasWidth: 1920,
-      canvasHeight: 1080,
-      tileSize: 100,
-      shipTypes: ["colony", "warship", "science"],
-      debugMode: false,
-    };
+    this.config = GameConfig;
+    this.setupCanvas();
+    this.setupShip();
+    this.setupPlayer();
+    this.setupInputHandling();
+    this.setupMoveValidation();
+    this.setupUI();
+    this.gameLoop();
+  }
+  setupUI() {
+    this.userInterface = new UserInterface(this.player);
+  }
 
-    this.canvas = document.getElementById("gameCanvas");
-    if (!this.canvas) {
-      console.error("Canvas element not found");
-      return;
-    }
-    this.ctx = this.canvas.getContext("2d");
-    if (!this.ctx) {
-      console.error("Could not get 2D context");
-      return;
-    }
-    this.canvas.width = this.config.canvasWidth;
-    this.canvas.height = this.config.canvasHeight;
+  setupInputHandling() {
+    this.inputHandler = new InputHandler();
+  }
 
-    // Set canvas background
-    this.canvas.style.backgroundColor = "#000";
-
+  setupShip() {
     this.ship = new ShipMap(250, 250, "colony");
+  }
+
+  setupPlayer() {
     const spawnPoint = this.ship.getSpawnPoint();
     this.player = new Player(spawnPoint.x, spawnPoint.y);
-    this.player.registerEventHandlers();
-    this.inputHandler = new InputHandler();
-    this.setupMoveValidation();
-    this.gameLoop();
-    new UserInterface(this.player);
+    registerPlayer(this.player);
   }
 
   setupControls() {
@@ -68,7 +63,7 @@ class Game {
       const targetY = this.player.y + direction.y;
       const tile = this.ship.getTile(targetX, targetY);
       if (tile && typeof tile.onInteract === "function") {
-        tile.onInteract(this.player);
+        tile.onInteract();
       }
     });
   }
@@ -132,6 +127,22 @@ class Game {
 
     // Render player (always centered)
     this.player.render(this.ctx, centerX, centerY, this.config.tileSize);
+  }
+
+  setupCanvas() {
+    this.canvas = document.getElementById("gameCanvas");
+    if (!this.canvas) {
+      console.error("Canvas element not found");
+      return;
+    }
+    this.ctx = this.canvas.getContext("2d");
+    if (!this.ctx) {
+      console.error("Could not get 2D context");
+      return;
+    }
+    this.canvas.width = this.config.canvasWidth;
+    this.canvas.height = this.config.canvasHeight;
+    this.canvas.style.backgroundColor = "#000";
   }
 }
 
