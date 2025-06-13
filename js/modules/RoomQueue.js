@@ -1,4 +1,5 @@
 import { randomInt } from "./Utils.js";
+import { FarmRoom } from "./rooms/FarmRoom.js";
 import {
   BaseRoom,
   CryoChamber,
@@ -18,6 +19,7 @@ const roomTypes = [
   { type: EngineeringCore, weight: 10 },
   { type: MedicalWing, weight: 10 },
   { type: XenoResearchLab, weight: 10 },
+  { type: FarmRoom, weight: 10 },
 ];
 
 class RoomQueue {
@@ -38,8 +40,6 @@ class RoomQueue {
   initialize() {
     // Always start with spawn room
     this.queue.push(new SpawnRoom(0, 0));
-    // For debugging purposes
-    // this.queue.push(new TestRoom(0, 0));
 
     // Add the normal rooms
     for (let i = 0; i < this.maxSize; i++) {

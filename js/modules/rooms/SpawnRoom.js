@@ -1,6 +1,7 @@
 import { BaseRoom } from "./BaseRoom.js";
 import Terminal from "../objects/Terminal.js";
 import DronePod from "../objects/DronePod.js";
+import AssemblyArm from "../objects/AssemblyArm.js";
 
 export class SpawnRoom extends BaseRoom {
   constructor(x, y) {
@@ -23,7 +24,9 @@ export class SpawnRoom extends BaseRoom {
     this.addPotentialDoor(2, this.height);
 
     // Create objects for this room
-    this.addObject(new Terminal(0, 0), 1, 1);
+    this.addObject(new Terminal(0, 0), 3, 0);
     this.addObject(new DronePod(0, 0), 0, 0);
+    this.addObject(new AssemblyArm(0, 0), 0, 3);
+    this.addObject(new AssemblyArm(0, 0).flip(), 3, 3);
   }
 }

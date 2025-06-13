@@ -33,9 +33,7 @@ function getPossibleDoorPositions(targetRoom, rooms, maxHeight, maxWidth) {
   for (const existingRoom of rooms) {
     // Check each potential door position in the existing room
     for (const potentialDoor of existingRoom.potentialDoors) {
-      console.log(existingRoom.x);
       const absX = existingRoom.x + potentialDoor.x;
-      console.log(absX);
       const absY = existingRoom.y + potentialDoor.y;
 
       for (const targetPotentialDoor of targetRoom.potentialDoors) {

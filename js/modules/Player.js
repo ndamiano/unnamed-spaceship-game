@@ -9,78 +9,27 @@ class Player {
     this.maxBattery = 5000;
     this.spawnPoint = { x, y };
     this.batteryChange = 1;
-    this.direction = Directions.RIGHT;
+    this.direction = Directions.DOWN;
   }
 
   render(ctx, centerX, centerY, tileSize) {
-    const size = tileSize / 2 - 1;
+    const assetImage = new Image();
+    assetImage.src = `assets/player-100x100.png`;
+
     ctx.save();
-    ctx.translate(centerX, centerY);
 
-    // Draw robot body with rounded corners
-    ctx.fillStyle = "#3a7bd5";
-    ctx.beginPath();
-    ctx.roundRect(-size / 2, -size / 2, size, size, size / 4);
-    ctx.fill();
+    ctx.translate(centerX, centerY); // Move origin to center of screen
 
-    // Add body details
-    ctx.fillStyle = "#00d2ff";
-    ctx.beginPath();
-    ctx.roundRect(-size / 3, -size / 3, size * 0.66, size * 0.66, size / 6);
-    ctx.fill();
-
-    // Draw robot head with antenna
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.arc(0, -size * 0.9, size / 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Antenna
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, -size * 1.2);
-    ctx.lineTo(0, -size * 0.9);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(0, -size * 1.2, size / 8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw direction indicators with more style
-    ctx.fillStyle = "#ff8a00";
     if (this.direction === Directions.UP) {
-      // Arms up
-      ctx.beginPath();
-      ctx.ellipse(-size * 0.4, -size * 0.6, size / 4, size / 6, 0, 0, Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(size * 0.4, -size * 0.6, size / 4, size / 6, 0, 0, Math.PI);
-      ctx.fill();
+      ctx.rotate(Math.PI); // 180°
     } else if (this.direction === Directions.RIGHT) {
-      // Arms right
-      ctx.beginPath();
-      ctx.ellipse(size * 0.6, -size * 0.2, size / 6, size / 4, 0, 0, Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(size * 0.6, size * 0.2, size / 6, size / 4, 0, 0, Math.PI);
-      ctx.fill();
-    } else if (this.direction === Directions.DOWN) {
-      // Arms down
-      ctx.beginPath();
-      ctx.ellipse(-size * 0.4, size * 0.6, size / 4, size / 6, 0, 0, Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(size * 0.4, size * 0.6, size / 4, size / 6, 0, 0, Math.PI);
-      ctx.fill();
-    } else {
-      // Arms left
-      ctx.beginPath();
-      ctx.ellipse(-size * 0.6, -size * 0.2, size / 6, size / 4, 0, 0, Math.PI);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(-size * 0.6, size * 0.2, size / 6, size / 4, 0, 0, Math.PI);
-      ctx.fill();
+      ctx.rotate(-Math.PI / 2); // -90°
+    } else if (this.direction === Directions.LEFT) {
+      ctx.rotate(Math.PI / 2); // +90°
     }
+
+    // Draw image centered at new origin
+    ctx.drawImage(assetImage, -64, -64); // draw centered
 
     ctx.restore();
   }

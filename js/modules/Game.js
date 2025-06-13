@@ -9,9 +9,9 @@ class Game {
   constructor() {
     console.log("Initializing game...");
     this.config = {
-      canvasWidth: 800,
-      canvasHeight: 800,
-      tileSize: 50,
+      canvasWidth: 1920,
+      canvasHeight: 1080,
+      tileSize: 100,
       shipTypes: ["colony", "warship", "science"],
       debugMode: false,
     };
