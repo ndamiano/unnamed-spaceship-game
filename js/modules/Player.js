@@ -1,4 +1,5 @@
 import { Directions } from "./Utils.js";
+import { eventBus } from "./EventBus.js";
 
 class Player {
   constructor(x, y) {
@@ -34,7 +35,7 @@ class Player {
     ctx.restore();
   }
 
-  registerEventHandlers(eventBus) {
+  registerEventHandlers() {
     eventBus.on("player-move", ({ x, y, direction }) => {
       this.x = x;
       this.y = y;

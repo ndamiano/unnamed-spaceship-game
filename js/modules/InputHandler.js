@@ -1,8 +1,8 @@
 import { Directions } from "./Utils.js";
+import { eventBus } from "./EventBus.js";
 
 class InputHandler {
-  constructor(eventBus) {
-    this.eventBus = eventBus;
+  constructor() {
     this.directions = {
       w: Directions.UP,
       a: Directions.LEFT,
@@ -16,9 +16,9 @@ class InputHandler {
     document.addEventListener("keydown", (e) => {
       const key = e.key.toLowerCase();
       if (this.directions[key]) {
-        this.eventBus.emit("attempt-move", this.directions[key]);
+        eventBus.emit("attempt-move", this.directions[key]);
       } else if (key === "e") {
-        this.eventBus.emit("attempt-interact");
+        eventBus.emit("attempt-interact");
       }
     });
   }

@@ -1,6 +1,6 @@
 import { ShipMap } from "./ShipMap.js";
 import { UserInterface } from "./UserInterface.js";
-import { EventBus } from "./EventBus.js";
+import { eventBus } from "./EventBus.js";
 import { Player } from "./Player.js";
 import { InputHandler } from "./InputHandler.js";
 import { Floor } from "./tiles/Floor.js";
@@ -32,17 +32,14 @@ class Game {
     // Set canvas background
     this.canvas.style.backgroundColor = "#000";
 
-    // Initialize EventBus
-    this.eventBus = new EventBus();
-
-    this.ship = new ShipMap(250, 250, "colony", this.eventBus);
+    this.ship = new ShipMap(250, 250, "colony");
     const spawnPoint = this.ship.getSpawnPoint();
     this.player = new Player(spawnPoint.x, spawnPoint.y);
-    this.player.registerEventHandlers(this.eventBus);
-    this.inputHandler = new InputHandler(this.eventBus);
+    this.player.registerEventHandlers();
+    this.inputHandler = new InputHandler();
     this.setupMoveValidation();
     this.gameLoop();
-    new UserInterface(this.player, this.eventBus);
+    new UserInterface(this.player);
   }
 
   setupControls() {
@@ -52,12 +49,12 @@ class Game {
   }
 
   setupMoveValidation() {
-    this.eventBus.on("attempt-move", (direction) => {
-      this.eventBus.emit("player-direction-change", direction);
+    eventBus.on("attempt-move", (direction) => {
+      eventBus.emit("player-direction-change", direction);
       const newX = this.player.x + direction.x;
       const newY = this.player.y + direction.y;
       if (this.canMoveTo(newX, newY)) {
-        this.eventBus.emit("player-move", {
+        eventBus.emit("player-move", {
           x: newX,
           y: newY,
           direction,
@@ -65,7 +62,7 @@ class Game {
       }
     });
 
-    this.eventBus.on("attempt-interact", () => {
+    eventBus.on("attempt-interact", () => {
       const direction = this.player.direction;
       const targetX = this.player.x + direction.x;
       const targetY = this.player.y + direction.y;

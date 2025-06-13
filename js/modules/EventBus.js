@@ -1,6 +1,10 @@
 class EventBus {
   constructor() {
+    if (EventBus.instance) {
+      return EventBus.instance;
+    }
     this.listeners = {};
+    EventBus.instance = this;
   }
 
   on(event, callback) {
@@ -32,4 +36,5 @@ class EventBus {
   }
 }
 
-export { EventBus };
+const eventBus = new EventBus();
+export { eventBus };

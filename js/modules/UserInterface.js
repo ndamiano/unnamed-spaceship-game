@@ -1,5 +1,7 @@
+import { eventBus } from "./EventBus.js";
+
 class UserInterface {
-  constructor(player, eventBus) {
+  constructor(player) {
     this.player = player;
     this.levelElement = document.getElementById("battery-level");
     this.textElement = document.getElementById("battery-text");

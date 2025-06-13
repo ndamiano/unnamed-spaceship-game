@@ -4,9 +4,10 @@ import { RoomQueue } from "./RoomQueue.js";
 import { Wall } from "./tiles/Wall.js";
 import { Floor } from "./tiles/Floor.js";
 import { Door } from "./objects/Door.js";
+import { eventBus } from "./EventBus.js";
 
 class ShipMap {
-  constructor(width, height, type = "colony", eventBus) {
+  constructor(width, height, type = "colony") {
     // Initialize dimensions and properties
     this.width = width;
     this.height = height;
