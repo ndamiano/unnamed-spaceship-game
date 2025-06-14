@@ -10,7 +10,10 @@ function getStats() {
     y: playerInstance.y,
     battery: playerInstance.battery,
     maxBattery: playerInstance.maxBattery,
+    harvestMultiplier: playerInstance.harvestMultiplier,
+    movementCost: playerInstance.movementCost,
     resources: playerInstance.resources,
+    getUpgradeCount: (upgradeId) => playerInstance.upgrades.get(upgradeId) || 0,
   });
 }
 

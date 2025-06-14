@@ -4,18 +4,18 @@ import {
   RESOURCE_TYPES,
   BASE_RESOURCES,
   modifyResources,
+  subtractResources,
 } from "./resources.js";
 import { getStats } from "./PlayerStats.js";
+import { UPGRADE_DEFS, UpgradeSystem } from "./UpgradeSystem.js";
 
 class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.speed = 1;
     this.battery = 100;
-    this.maxBattery = 100;
     this.spawnPoint = { x, y };
-    this.batteryChange = 1;
+    this.upgrades = new Map();
     this.direction = Directions.DOWN;
     this.resources = { ...BASE_RESOURCES };
     this.registerEventHandlers();
@@ -46,7 +46,7 @@ class Player {
       this.x = x;
       this.y = y;
       this.direction = direction;
-      this.battery -= this.batteryChange;
+      this.battery -= this.movementCost;
       eventBus.emit("player-updated", getStats());
     });
 
@@ -63,6 +63,14 @@ class Player {
         );
         eventBus.emit("reset-state");
         this.reset();
+      }
+    });
+
+    eventBus.on("purchase-upgrade", (upgrade_def) => {
+      if (UpgradeSystem.canAffordUpgrade(upgrade_def.id, this.resources)) {
+        this.resources = subtractResources(this.resources, upgrade_def.cost);
+        const currentCount = this.getUpgradeCount(upgradeDef.id);
+        this.upgrades.set(upgradeDef.id, currentCount + 1);
       }
     });
 
@@ -89,24 +97,31 @@ class Player {
     eventBus.emit("player-updated", this);
   }
 
-  move(x, y) {
-    this.battery = Math.max(0, this.battery - 1);
-    this.x = x;
-    this.y = y;
-    if (this.onUpdate) this.onUpdate();
-  }
-
   interact(object) {
     if (typeof object.onInteract === "function") {
       object.onInteract(this);
     }
   }
 
+  get maxBattery() {
+    return 100 + (10 * this.upgrades.get(UPGRADE_DEFS.BATTERY_CAPACITY) || 0);
+  }
+
+  get harvestMultiplier() {
+    return 1 + (0.5 * this.upgrades.get(UPGRADE_DEFS.RESOURCE_HARVEST) || 0);
+  }
+
+  get movementCost() {
+    return (
+      1 *
+      Math.pow(0.8, this.upgrades.get(UPGRADE_DEFS.MOVEMENT_EFFICIENCY) || 0)
+    );
+  }
+
   reset() {
     this.x = this.spawnPoint.x;
     this.y = this.spawnPoint.y;
     this.battery = this.maxBattery;
-    if (this.onUpdate) this.onUpdate();
   }
 }
 
