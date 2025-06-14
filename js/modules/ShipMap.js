@@ -80,7 +80,8 @@ class ShipMap {
       if (!this.tiles[obj.y]) {
         this.tiles[obj.y] = [];
       }
-      this.tiles[obj.y][obj.x] = obj;
+      this.tiles[obj.y][obj.x].object = obj;
+      this.tiles[obj.y][obj.x].passable = obj.passable;
     });
 
     // Add doors from room's actual door list

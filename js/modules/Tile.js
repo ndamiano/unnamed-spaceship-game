@@ -11,7 +11,7 @@ export class Tile {
     // Base implementation - can be overridden
   }
 
-  render(ctx, x, y, size) {
+  render(ctx, x, y) {
     // Base rendering logic - to be implemented
     // This will be called by the TileRenderer
   }

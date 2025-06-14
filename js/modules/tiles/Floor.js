@@ -1,16 +1,14 @@
 import { Tile } from "../Tile.js";
+import { randomInt } from "../Utils.js";
 
 export class Floor extends Tile {
   constructor(x, y) {
-    super(x, y, true); // Floors are passable
+    super(x, y, true);
+    this.number = randomInt(1, 3);
   }
-  render(ctx, x, y, size) {
-    ctx.fillStyle = "#555";
-    ctx.fillRect(x, y, size, size);
-
-    // Add grid pattern
-    ctx.strokeStyle = "#666";
-    ctx.lineWidth = 0.5;
-    ctx.strokeRect(x + 0.5, y + 0.5, size - 1, size - 1);
+  render(ctx, x, y) {
+    const assetImage = new Image();
+    assetImage.src = `assets/tile${this.number}-100x100.png`;
+    ctx.drawImage(assetImage, x, y);
   }
 }

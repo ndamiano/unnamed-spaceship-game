@@ -106,19 +106,20 @@ class Game {
       for (let x = 0; x < this.ship.width; x++) {
         const tile = this.ship.getTile(x, y);
         if (tile && tile.visible) {
-          const floor = new Floor(x, y);
-          floor.render(
-            this.ctx,
-            x * this.config.tileSize,
-            y * this.config.tileSize,
-            this.config.tileSize
-          );
           tile.render(
             this.ctx,
             x * this.config.tileSize,
             y * this.config.tileSize,
             this.config.tileSize
           );
+          if (tile.object != undefined) {
+            tile.object.render(
+              this.ctx,
+              x * this.config.tileSize,
+              y * this.config.tileSize,
+              this.config.tileSize
+            );
+          }
         }
       }
     }
