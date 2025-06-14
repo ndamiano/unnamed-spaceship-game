@@ -11,7 +11,7 @@ export const RESOURCE_TYPES = {
 
 // Base structure for player resources
 export const BASE_RESOURCES = {
-  [RESOURCE_TYPES.NANITES]: 0,
+  [RESOURCE_TYPES.NANITES]: 100,
   [RESOURCE_TYPES.SHIP_PARTS]: 0,
   [RESOURCE_TYPES.RESEARCH_POINTS]: 0,
 };
@@ -24,7 +24,7 @@ export const BASE_RESOURCES = {
  */
 export function hasMoreResources(resourcesA, resourcesB) {
   return Object.values(RESOURCE_TYPES).every(
-    (type) => resourcesA[type] >= resourcesB[type]
+    (type) => (resourcesA[type] || 0) >= (resourcesB[type] || 0)
   );
 }
 

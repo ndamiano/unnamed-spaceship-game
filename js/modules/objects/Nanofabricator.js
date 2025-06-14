@@ -1,6 +1,7 @@
 import { eventBus } from "../EventBus.js";
 import GameObject from "./GameObject.js";
 import { RESOURCE_TYPES } from "../resources.js";
+import { randomInt } from "../Utils.js";
 
 export default class Nanofabricator extends GameObject {
   constructor(x, y) {
@@ -13,7 +14,11 @@ export default class Nanofabricator extends GameObject {
   }
   onInteract() {
     if (!this.used) {
-      eventBus.emit(`add${RESOURCE_TYPES.NANITES}`, 1);
+      const amount = 8 + randomInt(0, 4);
+      eventBus.emit("add-resource", {
+        type: RESOURCE_TYPES.NANITES,
+        amount: amount,
+      });
       this.used = true;
     }
   }

@@ -28,7 +28,7 @@ export const UPGRADE_DEFS = {
     description: "Increase resource collection by 50%",
     repeatable: true,
     cost: {
-      [RESOURCE_TYPES.SHIP_PARTS]: 40,
+      [RESOURCE_TYPES.NANITES]: 40,
     },
   },
 };

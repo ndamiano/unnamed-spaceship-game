@@ -69,31 +69,20 @@ class Player {
     eventBus.on("purchase-upgrade", (upgrade_def) => {
       if (UpgradeSystem.canAffordUpgrade(upgrade_def.id, this.resources)) {
         this.resources = subtractResources(this.resources, upgrade_def.cost);
-        const currentCount = this.getUpgradeCount(upgradeDef.id);
-        this.upgrades.set(upgradeDef.id, currentCount + 1);
+        const currentCount = this.upgrades.get(upgrade_def.id) ?? 0;
+        this.upgrades.set(upgrade_def.id, currentCount + 1);
+        eventBus.emit("player-updated");
       }
     });
 
     // Resource event handlers
-    eventBus.on(`add${RESOURCE_TYPES.NANITES}`, (amount) => {
+    eventBus.on("add-resource", ({ type, amount }) => {
+      const toAdd = amount * this.harvestMultiplier;
       this.resources = modifyResources(this.resources, {
-        [RESOURCE_TYPES.NANITES]: amount,
+        [type]: toAdd,
       });
       eventBus.emit("player-updated", getStats());
     });
-    eventBus.on(`add${RESOURCE_TYPES.SHIP_PARTS}`, (amount) => {
-      this.resources = modifyResources(this.resources, {
-        [RESOURCE_TYPES.SHIP_PARTS]: amount,
-      });
-      eventBus.emit("player-updated", getStats());
-    });
-    eventBus.on(`add${RESOURCE_TYPES.RESEARCH_POINTS}`, (amount) => {
-      this.resources = modifyResources(this.resources, {
-        [RESOURCE_TYPES.RESEARCH_POINTS]: amount,
-      });
-      eventBus.emit("player-updated", getStats());
-    });
-
     eventBus.emit("player-updated", this);
   }
 
@@ -104,18 +93,21 @@ class Player {
   }
 
   get maxBattery() {
-    return 100 + (10 * this.upgrades.get(UPGRADE_DEFS.BATTERY_CAPACITY) || 0);
+    const capacityUpgrade =
+      this.upgrades.get(UPGRADE_DEFS.BATTERY_CAPACITY.id) || 0;
+    return 100 + 100 * capacityUpgrade;
   }
 
   get harvestMultiplier() {
-    return 1 + (0.5 * this.upgrades.get(UPGRADE_DEFS.RESOURCE_HARVEST) || 0);
+    const harvestMultiplier =
+      this.upgrades.get(UPGRADE_DEFS.RESOURCE_HARVEST.id) || 0;
+    return 1 + 0.5 * harvestMultiplier;
   }
 
   get movementCost() {
-    return (
-      1 *
-      Math.pow(0.8, this.upgrades.get(UPGRADE_DEFS.MOVEMENT_EFFICIENCY) || 0)
-    );
+    const efficiencyLevel =
+      this.upgrades.get(UPGRADE_DEFS.MOVEMENT_EFFICIENCY.id) || 0;
+    return Math.pow(0.8, efficiencyLevel);
   }
 
   reset() {
