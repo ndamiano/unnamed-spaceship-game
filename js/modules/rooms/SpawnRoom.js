@@ -7,8 +7,8 @@ export class SpawnRoom extends BaseRoom {
   constructor(x, y) {
     super(x, y);
 
-    this.width = 4;
-    this.height = 4;
+    this.width = 5;
+    this.height = 5;
 
     // Right walls (this.width, positive y to go down)
     this.addPotentialDoor(this.width, 1);
@@ -24,9 +24,9 @@ export class SpawnRoom extends BaseRoom {
     this.addPotentialDoor(2, this.height);
 
     // Create objects for this room
-    this.addObject(new Terminal(0, 0), 3, 0);
+    this.addObject(new Terminal(0, 0), 4, 0);
     this.addObject(new DronePod(0, 0), 0, 0);
-    this.addObject(new AssemblyArm(0, 0), 0, 3);
-    this.addObject(new AssemblyArm(0, 0).flip(), 3, 3);
+    this.addObject(new AssemblyArm(0, 0), 0, 4);
+    this.addObject(new AssemblyArm(0, 0).flip(), 4, 4);
   }
 }

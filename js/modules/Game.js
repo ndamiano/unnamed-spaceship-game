@@ -35,6 +35,7 @@ class Game {
     const spawnPoint = this.ship.getSpawnPoint();
     this.player = new Player(spawnPoint.x, spawnPoint.y);
     registerPlayer(this.player);
+    this.ship.revealAreaAroundPlayer(this.player.x, this.player.y, 20);
   }
 
   setupControls() {

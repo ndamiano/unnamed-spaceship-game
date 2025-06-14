@@ -7,7 +7,7 @@ export const UPGRADE_DEFS = {
   BATTERY_CAPACITY: {
     id: "BATTERY_CAPACITY",
     name: "Battery Capacity",
-    description: "Increase maximum battery capacity by 25%",
+    description: "Increase maximum battery capacity by 100",
     repeatable: true,
     cost: {
       [RESOURCE_TYPES.NANITES]: 50,
@@ -16,8 +16,8 @@ export const UPGRADE_DEFS = {
   MOVEMENT_EFFICIENCY: {
     id: "MOVEMENT_EFFICIENCY",
     name: "Movement Efficiency",
-    description: "Reduce battery consumption when moving by 20%",
-    repeatable: true,
+    description: "Gives a 10% chance to not use battery",
+    repeatable: false,
     cost: {
       [RESOURCE_TYPES.NANITES]: 30,
     },

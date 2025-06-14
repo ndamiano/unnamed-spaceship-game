@@ -1,4 +1,4 @@
-import { Directions } from "./Utils.js";
+import { Directions, randomInt } from "./Utils.js";
 import { eventBus } from "./EventBus.js";
 import {
   RESOURCE_TYPES,
@@ -14,6 +14,7 @@ class Player {
     this.x = x;
     this.y = y;
     this.battery = 100;
+    this.movementCost = 1;
     this.spawnPoint = { x, y };
     this.upgrades = new Map();
     this.direction = Directions.DOWN;
@@ -46,6 +47,11 @@ class Player {
       this.x = x;
       this.y = y;
       this.direction = direction;
+      let movementCost = this.movementCost;
+      const hit = randomInt(0, 10);
+      if (hit == 1) {
+        movementCost = 0;
+      }
       this.battery -= this.movementCost;
       eventBus.emit("player-updated", getStats());
     });
@@ -72,6 +78,7 @@ class Player {
         const currentCount = this.upgrades.get(upgrade_def.id) ?? 0;
         this.upgrades.set(upgrade_def.id, currentCount + 1);
         eventBus.emit("player-updated");
+        eventBus.emit("game-message", "Upgrade purchased: " + upgrade_def.name);
       }
     });
 
@@ -102,12 +109,6 @@ class Player {
     const harvestMultiplier =
       this.upgrades.get(UPGRADE_DEFS.RESOURCE_HARVEST.id) || 0;
     return 1 + 0.5 * harvestMultiplier;
-  }
-
-  get movementCost() {
-    const efficiencyLevel =
-      this.upgrades.get(UPGRADE_DEFS.MOVEMENT_EFFICIENCY.id) || 0;
-    return Math.pow(0.8, efficiencyLevel);
   }
 
   reset() {
