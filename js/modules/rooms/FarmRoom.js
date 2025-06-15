@@ -11,35 +11,26 @@ export class FarmRoom extends BaseRoom {
     this.width = 7;
     this.height = 5;
 
-    // Right walls (this.width -1, positive y to go down)
+    // Doors
     this.addPotentialDoor(this.width - 1, 1, "right");
+    this.addPotentialDoor(this.width - 1, 2, "right");
     this.addPotentialDoor(this.width - 1, 3, "right");
-    // Left walls (-1, positive y to go down)
     this.addPotentialDoor(0, 1, "left");
+    this.addPotentialDoor(0, 2, "left");
     this.addPotentialDoor(0, 3, "left");
-    // Top Walls (positive x to go right, -1)
-    this.addPotentialDoor(3, 0, "top");
-    // Top Walls (positive x to go right, this.height)
+    this.addPotentialDoor(2, this.height - 1, "bottom");
     this.addPotentialDoor(3, this.height - 1, "bottom");
+    this.addPotentialDoor(4, this.height - 1, "bottom");
 
-    // Create objects for this room
-    this.addObject(new HydroponicBed(0, 0), 0, 0);
-    this.addObject(new HydroponicBed(0, 0), 1, 0);
-    this.addObject(new HydroponicBed(0, 0), 2, 0);
-    this.addObject(new HydroponicBed(0, 0), 4, 0);
-    this.addObject(new HydroponicBed(0, 0), 5, 0);
-    this.addObject(new HydroponicBed(0, 0), 6, 0);
-    this.addObject(new HydroponicBed(0, 0), 0, 2);
-    this.addObject(new HydroponicBed(0, 0), 1, 2);
-    this.addObject(new HydroponicBed(0, 0), 2, 2);
-    this.addObject(new HydroponicBed(0, 0), 4, 2);
-    this.addObject(new HydroponicBed(0, 0), 5, 2);
-    this.addObject(new HydroponicBed(0, 0), 6, 2);
-    this.addObject(new HydroponicBed(0, 0), 0, 4);
-    this.addObject(new HydroponicBed(0, 0), 1, 4);
-    this.addObject(new HydroponicBed(0, 0), 2, 4);
-    this.addObject(new HydroponicBed(0, 0), 4, 4);
-    this.addObject(new HydroponicBed(0, 0), 5, 4);
-    this.addObject(new HydroponicBed(0, 0), 6, 4);
+    // Hydroponic rows
+    for (let x = 1; x <= 5; x++) {
+      this.addObject(new HydroponicBed(), x, 1);
+      this.addObject(new HydroponicBed(), x, 3);
+    }
+
+    // Maintenance + control
+    this.addObject(new DronePod(), 0, 0);
+    this.addObject(new AssemblyArm(), 6, 0);
+    this.addObject(new Terminal(), 3, 1);
   }
 }

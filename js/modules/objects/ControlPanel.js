@@ -1,8 +1,8 @@
 import GameObject from "./GameObject.js";
 
-export default class AccessPanel extends GameObject {
+export default class ControlPanel extends GameObject {
   constructor(x, y) {
     super(x, y);
-    this.name = "access-panel";
+    this.name = "control-panel";
   }
 }

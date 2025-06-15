@@ -1,23 +1,24 @@
 import {
   BaseRoom,
-  CryoChamber,
-  DroneControlBay,
-  EngineeringCore,
+  CryoChamberRoom,
   FinishRoom,
-  MedicalWing,
   SpawnRoom,
-  TestRoom,
-  XenoResearchLab,
   FarmRoom,
+  SecurityRoom,
+  DroneHangarRoom,
+  EngineeringBayRoom,
+  HolographicsLabRoom,
+  XenobotanyRoom,
 } from "../rooms/index.js";
 
 const roomTypes = [
   { type: BaseRoom, weight: 10 },
-  { type: CryoChamber, weight: 10 },
-  { type: DroneControlBay, weight: 10 },
-  { type: EngineeringCore, weight: 10 },
-  { type: MedicalWing, weight: 10 },
-  { type: XenoResearchLab, weight: 10 },
+  { type: CryoChamberRoom, weight: 10 },
+  { type: SecurityRoom, weight: 10 },
+  { type: DroneHangarRoom, weight: 10 },
+  { type: EngineeringBayRoom, weight: 10 },
+  { type: HolographicsLabRoom, weight: 10 },
+  { type: XenobotanyRoom, weight: 10 },
   { type: FarmRoom, weight: 10 },
 ];
 
