@@ -11,17 +11,17 @@ export class SpawnRoom extends BaseRoom {
     this.height = 5;
 
     // Right walls (this.width, positive y to go down)
-    this.addPotentialDoor(this.width, 1);
-    this.addPotentialDoor(this.width, 2);
+    this.addPotentialDoor(this.width - 1, 1, "right");
+    this.addPotentialDoor(this.width - 1, 2, "right");
     // Left walls (-1, positive y to go down)
-    this.addPotentialDoor(-1, 1);
-    this.addPotentialDoor(-1, 2);
+    this.addPotentialDoor(0, 1, "left");
+    this.addPotentialDoor(0, 2, "left");
     // Top Walls (positive x to go right, -1)
-    this.addPotentialDoor(1, -1);
-    this.addPotentialDoor(2, -1);
-    // Top Walls (positive x to go right, this.height)
-    this.addPotentialDoor(1, this.height);
-    this.addPotentialDoor(2, this.height);
+    this.addPotentialDoor(1, 0, "top");
+    this.addPotentialDoor(2, 0, "top");
+    // Bottom Walls (positive x to go right, this.height)
+    this.addPotentialDoor(1, this.height - 1, "bottom");
+    this.addPotentialDoor(2, this.height - 1, "bottom");
 
     // Create objects for this room
     this.addObject(new Terminal(0, 0), 4, 0);

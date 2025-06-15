@@ -7,3 +7,4 @@ export { DroneControlBay } from "./DroneControlBay.js";
 export { MedicalWing } from "./MedicalWing.js";
 export { EngineeringCore } from "./EngineeringCore.js";
 export { XenoResearchLab } from "./XenoResearchLab.js";
+export { FarmRoom } from "./FarmRoom.js";

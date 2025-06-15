@@ -5,12 +5,12 @@ export const Directions = {
   RIGHT: { x: 1, y: 0 },
 };
 
-function roomsOverlap(a, b, spacing = 0) {
+function roomsOverlap(a, b) {
   return (
-    a.x <= b.x + b.width + spacing &&
-    a.x + a.width + spacing >= b.x &&
-    a.y <= b.y + b.height + spacing &&
-    a.y + a.height + spacing >= b.y
+    a.x < b.x + b.width &&
+    a.x + a.width > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.height > b.y
   );
 }
 
@@ -30,53 +30,100 @@ function randomInt(min, max) {
 function getPossibleDoorPositions(targetRoom, rooms, maxHeight, maxWidth) {
   const positions = [];
 
+  const isInBounds = ({ x, y, width, height }) =>
+    x >= 0 && y >= 0 && x + width <= maxWidth && y + height <= maxHeight;
+
+  const hasOverlap = (proposed) => rooms.some((r) => roomsOverlap(proposed, r));
+
   for (const existingRoom of rooms) {
-    // Check each potential door position in the existing room
-    for (const potentialDoor of existingRoom.potentialDoors) {
-      const absX = existingRoom.x + potentialDoor.x;
-      const absY = existingRoom.y + potentialDoor.y;
+    for (const sourceDoor of existingRoom.potentialDoors) {
+      // room is at 50, 50, door is at 0, 2 (on the left side)
+      const absSourceX = existingRoom.x + sourceDoor.x;
+      const absSourceY = existingRoom.y + sourceDoor.y;
+      // absSourceX = 50
+      // absSourceY = 52
 
-      for (const targetPotentialDoor of targetRoom.potentialDoors) {
-        let newRoomX = absX - targetPotentialDoor.x;
-        let newRoomY = absY - targetPotentialDoor.y;
-
-        // Check if new position is within bounds
-        if (
-          newRoomX >= 0 &&
-          newRoomX + targetRoom.width <= maxWidth &&
-          newRoomY >= 0 &&
-          newRoomY + targetRoom.height <= maxHeight &&
-          !roomsOverlap(
-            {
-              x: newRoomX,
-              y: newRoomY,
-              width: targetRoom.width,
-              height: targetRoom.height,
-            },
-            existingRoom
-          )
-        ) {
-          positions.push({
-            x: newRoomX,
-            y: newRoomY,
-            doorX: absX,
-            doorY: absY,
-            connectingRoom: existingRoom,
-          });
+      for (const targetDoor of targetRoom.potentialDoors) {
+        if (!doorsAreCompatible(sourceDoor.side, targetDoor.side)) {
+          continue;
         }
+        // targetRoom = width = 5, height = 5
+        // targetDoor = 4, 3 (on the right side)
+
+        // Calculate new room position to align doors
+        let newRoomX, newRoomY;
+
+        // Calculate meeting point where doors should connect
+        let meetingX = absSourceX;
+        let meetingY = absSourceY;
+
+        // Position new room based on door side
+        switch (targetDoor.side) {
+          case "left":
+            meetingX = meetingX + 1;
+            newRoomX = meetingX;
+            newRoomY = meetingY - targetDoor.y;
+            break;
+          case "right":
+            newRoomX = meetingX - targetRoom.width;
+            newRoomY = meetingY - targetDoor.y;
+            meetingX = meetingX - 1;
+            break;
+          case "top":
+            meetingY = meetingY + 1;
+            newRoomX = meetingX - targetDoor.x;
+            newRoomY = meetingY;
+            break;
+          case "bottom":
+            meetingY = meetingY - 1;
+            newRoomX = meetingX - targetDoor.x;
+            newRoomY = meetingY - (targetRoom.height - 1);
+            break;
+        }
+
+        const proposedRoom = {
+          x: newRoomX,
+          y: newRoomY,
+          width: targetRoom.width,
+          height: targetRoom.height,
+        };
+
+        if (!isInBounds(proposedRoom)) {
+          continue;
+        }
+        if (hasOverlap(proposedRoom)) {
+          continue;
+        }
+
+        positions.push({
+          x: newRoomX,
+          y: newRoomY,
+          existingDoor: {
+            x: absSourceX,
+            y: absSourceY,
+            orientation: sourceDoor.side,
+          },
+          targetDoor: {
+            x: meetingX,
+            y: meetingY,
+            orientation: targetDoor.side,
+          },
+          connectingRoom: existingRoom,
+        });
       }
     }
   }
+  return positions;
+}
 
-  return positions.filter((pos) => {
-    const testRoom = {
-      x: pos.x,
-      y: pos.y,
-      width: targetRoom.width,
-      height: targetRoom.height,
-    };
-    return !rooms.some((r) => roomsOverlap(testRoom, r));
-  });
+function doorsAreCompatible(sourceSide, targetSide) {
+  const opposites = {
+    left: "right",
+    right: "left",
+    top: "bottom",
+    bottom: "top",
+  };
+  return opposites[sourceSide] === targetSide;
 }
 
 export { roomsOverlap, areRoomsAdjacent, randomInt, getPossibleDoorPositions };

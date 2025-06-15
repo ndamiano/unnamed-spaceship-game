@@ -1,7 +1,6 @@
 import { Directions, randomInt } from "./Utils.js";
 import { eventBus } from "./EventBus.js";
 import {
-  RESOURCE_TYPES,
   BASE_RESOURCES,
   modifyResources,
   subtractResources,

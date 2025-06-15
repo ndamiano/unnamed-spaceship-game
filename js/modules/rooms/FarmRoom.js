@@ -11,16 +11,16 @@ export class FarmRoom extends BaseRoom {
     this.width = 7;
     this.height = 5;
 
-    // Right walls (this.width, positive y to go down)
-    this.addPotentialDoor(this.width, 1);
-    this.addPotentialDoor(this.width, 3);
+    // Right walls (this.width -1, positive y to go down)
+    this.addPotentialDoor(this.width - 1, 1, "right");
+    this.addPotentialDoor(this.width - 1, 3, "right");
     // Left walls (-1, positive y to go down)
-    this.addPotentialDoor(-1, 1);
-    this.addPotentialDoor(-1, 3);
+    this.addPotentialDoor(0, 1, "left");
+    this.addPotentialDoor(0, 3, "left");
     // Top Walls (positive x to go right, -1)
-    this.addPotentialDoor(3, -1);
+    this.addPotentialDoor(3, 0, "top");
     // Top Walls (positive x to go right, this.height)
-    this.addPotentialDoor(3, this.height);
+    this.addPotentialDoor(3, this.height - 1, "bottom");
 
     // Create objects for this room
     this.addObject(new HydroponicBed(0, 0), 0, 0);

@@ -10,5 +10,7 @@ export class Floor extends Tile {
     const assetImage = new Image();
     assetImage.src = `assets/tile${this.number}-100x100.png`;
     ctx.drawImage(assetImage, x, y);
+    this.renderSlots(ctx, x, y);
+    // ctx.fillText(x / 100 + "," + y / 100, x, y);
   }
 }

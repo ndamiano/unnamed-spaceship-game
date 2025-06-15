@@ -1,0 +1,17 @@
+{
+  "type": "module",
+  "scripts": {
+    "test": "set NODE_OPTIONS=--experimental-vm-modules && jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.0.0"
+  },
+  "jest": {
+    "transform": {},
+    "testEnvironment": "jsdom",
+    "testMatch": [
+      "**/js/modules/tests/TileSlotTests.js"
+    ]
+  }
+}

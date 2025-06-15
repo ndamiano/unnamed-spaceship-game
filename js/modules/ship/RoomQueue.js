@@ -1,4 +1,3 @@
-import { FarmRoom } from "./rooms/FarmRoom.js";
 import {
   BaseRoom,
   CryoChamber,
@@ -9,7 +8,8 @@ import {
   SpawnRoom,
   TestRoom,
   XenoResearchLab,
-} from "./rooms/index.js";
+  FarmRoom,
+} from "../rooms/index.js";
 
 const roomTypes = [
   { type: BaseRoom, weight: 10 },

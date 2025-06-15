@@ -11,8 +11,8 @@ class BaseRoom {
   }
 
   // Add potential door position (relative coordinates)
-  addPotentialDoor(relX, relY) {
-    this.potentialDoors.push({ x: relX, y: relY });
+  addPotentialDoor(relX, relY, side) {
+    this.potentialDoors.push({ x: relX, y: relY, side: side });
   }
 
   getWidth() {

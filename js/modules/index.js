@@ -1,6 +1,5 @@
 // Core classes
 export { Player } from "./Player.js";
-export { ShipMap } from "./ShipMap.js";
 
 // Room classes
 export { BaseRoom } from "./rooms/BaseRoom.js";
