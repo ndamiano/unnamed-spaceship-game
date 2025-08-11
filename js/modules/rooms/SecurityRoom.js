@@ -3,6 +3,7 @@ import SecurityTerminal from "../objects/SecurityTerminal.js";
 import CombatDroidCradle from "../objects/CombatDroidCradle.js";
 import PowerCell from "../objects/PowerCell.js";
 import ObservationDeck from "../objects/ObservationDeck.js";
+import Terminal from "../objects/Terminal.js";
 
 export class SecurityRoom extends BaseRoom {
   constructor(x, y) {
@@ -24,12 +25,15 @@ export class SecurityRoom extends BaseRoom {
     this.addObject(new ObservationDeck(), 0, 0);
     this.addObject(new ObservationDeck(), 4, 0);
 
-    // Security Terminal in center
-    this.addObject(new SecurityTerminal(), 2, 2);
+    // Security Terminal gets system diagnostics or personal logs
+    this.addObject(new SecurityTerminal(0, 0, "PERSONAL_LOGS"), 2, 2);
 
     // Droid cradle and backup power
     this.addObject(new CombatDroidCradle(), 1, 4);
     this.addObject(new CombatDroidCradle().flip(), 3, 4);
     this.addObject(new PowerCell(), 3, 5);
+    
+    // Add a terminal for security logs
+    this.addObject(new Terminal(0, 0, "SYSTEM_DIAGNOSTICS"), 1, 1);
   }
 }

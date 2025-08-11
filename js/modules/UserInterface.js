@@ -76,6 +76,25 @@ class UserInterface {
   updateStats() {
     const playerStats = getStats();
     const storyCount = storySystem.getDiscoveredCount();
+    const groupProgress = storySystem.getAllGroupProgress();
+    
+    let storyProgressHTML = '';
+    if (groupProgress.length > 0) {
+      storyProgressHTML = '<h3>DATA ARCHIVES</h3>';
+      groupProgress.forEach(group => {
+        if (group.discovered > 0) {
+          const percentage = Math.floor((group.discovered / group.total) * 100);
+          const status = group.complete ? '✓' : '...';
+          storyProgressHTML += `<div style="font-size: 0.8em; color: ${group.complete ? '#44ff44' : '#888'};">
+            ${group.icon} ${group.name}: ${group.discovered}/${group.total} ${status}
+          </div>`;
+        }
+      });
+      
+      if (storyCount > 0) {
+        storyProgressHTML += '<div style="color: #888; font-size: 0.7em; margin-top: 5px;">Press L to review logs</div>';
+      }
+    }
     
     this.statsPanel.innerHTML = `
       <h3>SYSTEM STATUS</h3>
@@ -83,9 +102,7 @@ class UserInterface {
       <div>Nanites: ${playerStats.resources.Nanites}</div>
       <div>Position: ${playerStats.x}, ${playerStats.y}</div>
       
-      <h3>DATA RECOVERY</h3>
-      <div>Fragments Found: ${storyCount}</div>
-      ${storyCount > 0 ? '<div style="color: #888; font-size: 0.8em;">Press L to review logs</div>' : ''}
+      ${storyProgressHTML}
     `;
   }
 

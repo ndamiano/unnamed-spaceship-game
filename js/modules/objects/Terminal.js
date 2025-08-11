@@ -1,38 +1,41 @@
 import { eventBus } from "../EventBus.js";
 import GameObject from "./GameObject.js";
+import { storySystem } from "../StorySystem.js";
 
 export default class Terminal extends GameObject {
-  constructor(x, y, storyFragmentId = null) {
+  constructor(x, y, storyGroupId = null) {
     super(x, y);
     this.name = "terminal";
-    this.storyFragmentId = storyFragmentId || this.getRandomStoryFragment();
-    this.accessed = false;
+    this.storyGroupId = storyGroupId || this.getRandomStoryGroup();
     
     eventBus.on("reset-state", () => {
-      this.accessed = false;
+      // Don't reset story progress - that should persist
     });
   }
 
-  getRandomStoryFragment() {
-    const terminalStories = [
-      "ENGINEERING_TERMINAL_01",
-      "CRYO_CHAMBER_LOG", 
-      "DRONE_POD_MAINTENANCE"
+  getRandomStoryGroup() {
+    const terminalGroups = [
+      "ENGINEERING_LOGS",
+      "MEDICAL_REPORTS", 
+      "SYSTEM_DIAGNOSTICS"
     ];
-    return terminalStories[Math.floor(Math.random() * terminalStories.length)];
+    return terminalGroups[Math.floor(Math.random() * terminalGroups.length)];
   }
 
   onInteract() {
-    if (!this.accessed && this.storyFragmentId) {
+    const nextFragment = storySystem.requestStoryFromGroup(this.storyGroupId);
+    
+    if (nextFragment) {
       // Trigger story discovery
       eventBus.emit("story-discovery", { 
-        fragmentId: this.storyFragmentId 
+        fragmentId: nextFragment 
       });
-      this.accessed = true;
-    } else if (this.accessed) {
-      eventBus.emit("game-message", "Terminal accessed - no new data available");
     } else {
-      eventBus.emit("game-message", "Terminal is offline");
+      // No more fragments in this group
+      const groupProgress = storySystem.getGroupProgress(this.storyGroupId);
+      eventBus.emit("game-message", 
+        `Terminal accessed - data archive complete (${groupProgress.discovered}/${groupProgress.total} files)`
+      );
     }
   }
 
@@ -40,8 +43,9 @@ export default class Terminal extends GameObject {
     // Call parent render
     super.render(ctx, x, y, size);
     
-    // Add visual indicator if story is available
-    if (!this.accessed && this.storyFragmentId) {
+    // Add visual indicator based on group status
+    const nextFragment = storySystem.requestStoryFromGroup(this.storyGroupId);
+    if (nextFragment) {
       // Add a pulsing green dot to indicate interactive content
       ctx.save();
       ctx.fillStyle = "#00ff00";
@@ -49,6 +53,14 @@ export default class Terminal extends GameObject {
       ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.arc(x + size - 10, y + 10, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      // Add a dimmed indicator to show this terminal is exhausted
+      ctx.save();
+      ctx.fillStyle = "#004400";
+      ctx.beginPath();
+      ctx.arc(x + size - 10, y + 10, 3, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
