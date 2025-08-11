@@ -5,6 +5,7 @@ import { InputHandler } from "./InputHandler.js";
 import { GameConfig } from "./Config.js";
 import { registerPlayer } from "./PlayerStats.js";
 import { Ship } from "./ship/Ship.js";
+import { storySystem } from "./StorySystem.js"; // Add this import
 
 export class Game {
   constructor(
@@ -15,6 +16,7 @@ export class Game {
       setupInputHandling: true,
       setupMoveValidation: true,
       setupUI: true,
+      setupStory: true,
       startGameLoop: true,
     }
   ) {
@@ -39,10 +41,23 @@ export class Game {
       console.log("Setting up UI");
       this.setupUI();
     }
+    if (options.setupStory) {
+      this.setupStorySystem();
+    }
     if (options.startGameLoop) {
       this.gameLoop();
     }
   }
+
+  setupStorySystem() {
+    // Story system is already initialized as singleton
+    // We can add any game-specific story setup here
+    console.log("Story system initialized");
+    
+    // Example: Show intro story when game starts
+    eventBus.emit("game-message", "Systems online... accessing memory banks...");
+  }
+
   setupUI() {
     this.userInterface = new UserInterface(this.player);
   }

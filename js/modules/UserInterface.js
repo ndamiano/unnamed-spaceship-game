@@ -1,6 +1,7 @@
 import { eventBus } from "./EventBus.js";
 import { getStats } from "./PlayerStats.js";
 import { UpgradeSystem } from "./UpgradeSystem.js";
+import { storySystem } from "./StorySystem.js";
 
 class UserInterface {
   constructor() {
@@ -23,6 +24,11 @@ class UserInterface {
     // Listen for modal toggle
     eventBus.on("open-upgrade-menu", () => {
       this.showUpgradeModal();
+    });
+
+    // Listen for story discoveries (to update UI)
+    eventBus.on("story-discovery", () => {
+      this.updateStats(); // Refresh to show new story count
     });
 
     // Setup modal close button
@@ -69,10 +75,17 @@ class UserInterface {
 
   updateStats() {
     const playerStats = getStats();
+    const storyCount = storySystem.getDiscoveredCount();
+    
     this.statsPanel.innerHTML = `
-      <h3>Resources</h3>
+      <h3>SYSTEM STATUS</h3>
       <div>Battery: ${playerStats.battery}/${playerStats.maxBattery}</div>
       <div>Nanites: ${playerStats.resources.Nanites}</div>
+      <div>Position: ${playerStats.x}, ${playerStats.y}</div>
+      
+      <h3>DATA RECOVERY</h3>
+      <div>Fragments Found: ${storyCount}</div>
+      ${storyCount > 0 ? '<div style="color: #888; font-size: 0.8em;">Press L to review logs</div>' : ''}
     `;
   }
 
@@ -80,8 +93,20 @@ class UserInterface {
     const messageElement = document.createElement("div");
     messageElement.textContent = `> ${message}`;
     messageElement.style.marginBottom = "5px";
+    
+    // Add different styling for story-related messages
+    if (message.includes("Story fragment")) {
+      messageElement.style.color = "#44ff44";
+    }
+    
     this.messagesPanel.appendChild(messageElement);
     this.messagesPanel.scrollTop = this.messagesPanel.scrollHeight;
+    
+    // Keep message panel from getting too cluttered
+    const messages = this.messagesPanel.children;
+    if (messages.length > 20) {
+      this.messagesPanel.removeChild(messages[0]);
+    }
   }
 }
 
