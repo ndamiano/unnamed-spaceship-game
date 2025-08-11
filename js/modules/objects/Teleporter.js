@@ -3,10 +3,13 @@ import { eventBus } from "../EventBus.js";
 
 export default class Teleporter extends GameObject {
   constructor(x, y) {
-    super(x, y);
-    this.name = "teleporter";
+    super(x, y, false, false, {
+      name: "teleporter"
+    });
   }
-  onInteract() {
+
+  onCustomInteract() {
     eventBus.emit("game-message", "You win!");
+    return true;
   }
 }
