@@ -5,56 +5,87 @@ import { InputHandler } from "./InputHandler.js";
 import { GameConfig } from "./Config.js";
 import { registerPlayer } from "./PlayerStats.js";
 import { Ship } from "./ship/Ship.js";
-import { storySystem } from "./StorySystem.js"; // Add this import
+import { storySystem } from "./StorySystem.js";
+import { gameObjectLoader } from "./objects/GameObjectLoader.js";
 
 export class Game {
-  constructor(
-    options = {
-      setupCanvas: true,
-      setupShip: true,
-      setupPlayer: true,
-      setupInputHandling: true,
-      setupMoveValidation: true,
-      setupUI: true,
-      setupStory: true,
-      startGameLoop: true,
-    }
-  ) {
-    console.log("Initializing game...");
+  constructor(options = {
+    setupCanvas: true,
+    setupShip: true,
+    setupPlayer: true,
+    setupInputHandling: true,
+    setupMoveValidation: true,
+    setupUI: true,
+    setupStory: true,
+    startGameLoop: true,
+  }) {
     this.config = GameConfig;
-    if (options.setupCanvas) {
-      this.setupCanvas();
-    }
-    if (options.setupShip) {
-      this.setupShip();
-    }
-    if (options.setupPlayer) {
-      this.setupPlayer();
-    }
-    if (options.setupInputHandling) {
-      this.setupInputHandling();
-    }
-    if (options.setupMoveValidation) {
-      this.setupMoveValidation();
-    }
-    if (options.setupUI) {
-      console.log("Setting up UI");
-      this.setupUI();
-    }
-    if (options.setupStory) {
-      this.setupStorySystem();
-    }
-    if (options.startGameLoop) {
-      this.gameLoop();
+    this.initialized = false;
+    this.init(options);
+  }
+
+  async init(options) {
+    console.log("Initializing game...");
+    
+    try {
+      // Load game data first
+      console.log("Loading game configurations...");
+      await gameObjectLoader.loadGameObjects();
+      console.log("Game objects loaded");
+      await storySystem.loadStoryFragments();
+      console.log("Story fragments loaded");
+      console.log("Game data loaded successfully");
+
+      // Continue with normal initialization
+      if (options.setupCanvas) {
+        this.setupCanvas();
+      }
+      if (options.setupShip) {
+        this.setupShip();
+      }
+      if (options.setupPlayer) {
+        this.setupPlayer();
+      }
+      if (options.setupInputHandling) {
+        this.setupInputHandling();
+      }
+      if (options.setupMoveValidation) {
+        this.setupMoveValidation();
+      }
+      if (options.setupUI) {
+        console.log("Setting up UI");
+        this.setupUI();
+      }
+      if (options.setupStory) {
+        this.setupStorySystem();
+      }
+      if (options.startGameLoop) {
+        this.gameLoop();
+      }
+
+      this.initialized = true;
+      console.log("Game initialization complete");
+      
+    } catch (error) {
+      console.error("Failed to initialize game:", error);
+      this.showLoadingError(error);
     }
   }
 
+  showLoadingError(error) {
+    // Show a user-friendly error message
+    document.body.innerHTML = `
+      <div style="color: #ff0000; text-align: center; margin-top: 50px; font-family: monospace;">
+        <h2>Game Loading Error</h2>
+        <p>Failed to load game configuration.</p>
+        <p>Error: ${error.message}</p>
+        <button onclick="location.reload()">Retry</button>
+      </div>
+    `;
+  }
+
   setupStorySystem() {
-    // Story system is already initialized as singleton
-    // We can add any game-specific story setup here
-    console.log("Story system initialized");
-    
-    // Example: Show intro story when game starts
+    console.log("Story system initialized with JSON data");
     eventBus.emit("game-message", "Systems online... accessing memory banks...");
   }
 
@@ -67,20 +98,19 @@ export class Game {
   }
 
   setupShip() {
+    console.log("Setting up ship...");
     this.ship = new Ship(250, 250, "colony");
+    console.log("Ship created");
   }
 
   setupPlayer() {
+    console.log("Setting up player...");
     const spawnPoint = this.ship.getSpawnPoint();
+    console.log("Spawn point:", spawnPoint);
     this.player = new Player(spawnPoint.x, spawnPoint.y);
     registerPlayer(this.player);
     this.ship.revealAreaAroundPlayer(this.player.x, this.player.y, 20);
-  }
-
-  setupControls() {
-    document.addEventListener("keydown", (e) => {
-      this.handleKeyPress(e.key);
-    });
+    console.log("Player setup complete");
   }
 
   setupMoveValidation() {
@@ -106,7 +136,11 @@ export class Game {
   }
 
   gameLoop() {
-    this.renderShip();
+    try {
+      this.renderShip();
+    } catch (error) {
+      console.error("Error in game loop:", error);
+    }
     requestAnimationFrame(() => this.gameLoop());
   }
 
@@ -130,13 +164,21 @@ export class Game {
     this.ctx.translate(centerX, centerY);
     this.ctx.translate(-playerCenterX, -playerCenterY);
 
-    this.ship.render(this.ctx, this.config.tileSize);
+    try {
+      this.ship.render(this.ctx, this.config.tileSize);
+    } catch (error) {
+      console.error("Error rendering ship:", error);
+    }
 
     // Restore context state
     this.ctx.restore();
 
     // Render player (always centered)
-    this.player.render(this.ctx, centerX, centerY, this.config.tileSize);
+    try {
+      this.player.render(this.ctx, centerX, centerY, this.config.tileSize);
+    } catch (error) {
+      console.error("Error rendering player:", error);
+    }
   }
 
   setupCanvas() {

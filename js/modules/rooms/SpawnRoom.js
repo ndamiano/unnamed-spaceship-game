@@ -21,8 +21,13 @@ export class SpawnRoom extends BaseRoom {
     this.addPotentialDoor(1, this.height - 1, "bottom");
     this.addPotentialDoor(2, this.height - 1, "bottom");
 
-    // Create objects for this room
-    this.addObject(new GameObject(0, 0, "terminal"), 4, 0);
+    // Create a special terminal with guaranteed story for spawn room
+    const guaranteedTerminal = new GameObject(0, 0, "terminal");
+    // Override the config to guarantee story
+    guaranteedTerminal.guaranteedStory = true;
+    guaranteedTerminal.storyChance = 1.0;
+    this.addObject(guaranteedTerminal, 4, 0);
+    
     this.addObject(new GameObject(0, 0, "dronePod"), 0, 0);
     this.addObject(new GameObject(0, 0, "assemblyArm"), 0, 4);
     this.addObject(new GameObject(0, 0, "assemblyArm").flip(), 4, 4);

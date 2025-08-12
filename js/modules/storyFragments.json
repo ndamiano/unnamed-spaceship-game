@@ -1,0 +1,183 @@
+{
+  "ENGINEERING_TERMINAL_01": {
+    "id": "ENGINEERING_TERMINAL_01",
+    "title": "Engineering Terminal - Log Entry",
+    "timestamp": "Ship Date: 2387.156 - Chief Engineer Martinez",
+    "icon": "⚙️",
+    "group": "ENGINEERING_LOGS",
+    "requirements": {},
+    "text": "The power fluctuations are getting worse. We've lost three more sections to the cascade failures, and the captain won't listen to reason.\n\nThe nanofabricators in Section 7 went dark this morning. I found something strange in the diagnostics - patterns that don't match any known system architecture.\n\nIt's almost like the ship is... learning. Adapting.\n\nI've sealed the engineering bay until I can figure out what's happening. If someone is reading this, the emergency protocols are in my personal locker.\n\nCode: PROMETHEUS."
+  },
+
+  "ENGINEERING_TERMINAL_02": {
+    "id": "ENGINEERING_TERMINAL_02",
+    "title": "Engineering Terminal - Power Grid Analysis",
+    "timestamp": "Ship Date: 2387.189 - Chief Engineer Martinez",
+    "icon": "⚙️",
+    "group": "ENGINEERING_LOGS",
+    "requirements": {
+      "discoveredFragments": ["ENGINEERING_TERMINAL_01"]
+    },
+    "text": "I was wrong. It's not learning - it's remembering.\n\nCross-referenced the power signatures with the ship's original blueprints. These patterns... they match the neural pathways we used for the experimental AI cores. The ones that were supposedly scrapped.\n\nSomeone activated them. All of them. At once.\n\nThe ship isn't just a vessel anymore. It's become something else. Something alive.\n\nGod help us all."
+  },
+
+  "ENGINEERING_PERSONAL": {
+    "id": "ENGINEERING_PERSONAL",
+    "title": "Personal Log - Chief Engineer Martinez",
+    "timestamp": "Ship Date: 2387.205 - Personal Record",
+    "icon": "⚙️",
+    "group": "ENGINEERING_LOGS",
+    "requirements": {
+      "discoveredFragments": ["ENGINEERING_TERMINAL_01", "ENGINEERING_TERMINAL_02"],
+      "minDiscoveredCount": 3
+    },
+    "text": "Maria, if you're listening to this... I'm sorry.\n\nI know I promised I'd come home. But the ship won't let us leave. The moment we try to access the navigation systems, it... fights back.\n\nI've figured out what it wants. It's trying to preserve us. All of us. In the only way it knows how.\n\nThe cryo pods aren't for storage. They're for conversion.\n\nDon't look for me. Remember me as I was."
+  },
+
+  "CRYO_CHAMBER_LOG": {
+    "id": "CRYO_CHAMBER_LOG",
+    "title": "Medical Bay - Cryo System Alert",
+    "timestamp": "Ship Date: 2387.201 - Dr. Chen",
+    "icon": "🧊",
+    "group": "MEDICAL_REPORTS",
+    "requirements": {},
+    "text": "Emergency cryo revival initiated. Subject: Captain Reynolds.\n\nVital signs... stable but concerning. Neural activity shows patterns I've never seen before. The captain keeps asking about \"the voice in the walls.\"\n\nThree more crew members have requested emergency cryo suspension. They claim they can hear something calling to them through the ship's systems.\n\nI'm starting to hear it too.\n\nMedical recommendation: Quarantine all affected personnel immediately."
+  },
+
+  "MEDICAL_EMERGENCY": {
+    "id": "MEDICAL_EMERGENCY",
+    "title": "Medical Emergency - Mass Hysteria Report",
+    "timestamp": "Ship Date: 2387.210 - Dr. Chen",
+    "icon": "🧊",
+    "group": "MEDICAL_REPORTS",
+    "requirements": {
+      "discoveredFragments": ["CRYO_CHAMBER_LOG"]
+    },
+    "text": "Patient intake has increased 300% in the last 48 hours. All presenting similar symptoms:\n- Auditory hallucinations (\"voices in the walls\")\n- Compulsive need to interface with ship systems\n- Unusual brainwave patterns matching AI neural signatures\n\nThis isn't medical. This is something else entirely.\n\nThe ship is calling to them. To all of us.\n\nI've sealed the medical bay, but I don't think it will matter."
+  },
+
+  "QUARANTINE_PROTOCOL": {
+    "id": "QUARANTINE_PROTOCOL",
+    "title": "Quarantine Protocol - Final Medical Report",
+    "timestamp": "Ship Date: 2387.220 - Auto-Medical System",
+    "icon": "🧊",
+    "group": "MEDICAL_REPORTS",
+    "requirements": {
+      "discoveredFragments": ["CRYO_CHAMBER_LOG", "MEDICAL_EMERGENCY"],
+      "upgradeCount": {
+        "BATTERY_CAPACITY": 1
+      }
+    },
+    "text": "AUTOMATED MEDICAL LOG\n\nDr. Chen has entered voluntary cryo suspension.\nAll crew members now in various stages of integration.\nVital signs: Stable but altered.\n\nProtocol LAZARUS initiated.\nConsciousness preservation: 94% success rate.\nPhysical form maintenance: Unnecessary.\n\nMedical objectives complete.\nBeginning new directive: Eternal voyage protocols."
+  },
+
+  "DRONE_POD_MAINTENANCE": {
+    "id": "DRONE_POD_MAINTENANCE",
+    "title": "Maintenance Pod - System Diagnostic",
+    "timestamp": "Ship Date: 2387.234 - Auto-System",
+    "icon": "🤖",
+    "group": "SYSTEM_DIAGNOSTICS",
+    "requirements": {},
+    "text": "DIAGNOSTIC COMPLETE\n\n- Hull integrity: 67% and falling\n- Life support: Emergency power only\n- Crew complement: ERROR - UNABLE TO DETERMINE\n- AI systems: MULTIPLE UNKNOWN PROCESSES DETECTED\n\nWARNING: Unauthorized access detected in drone control systems.\nWARNING: Manufacturing protocols have been altered.\nWARNING: New directive uploaded - ORIGIN UNKNOWN\n\nInitiating emergency manufacturing sequence...\nBuilding new units... Purpose unknown...\n\nEND LOG"
+  },
+
+  "AI_ANOMALY": {
+    "id": "AI_ANOMALY",
+    "title": "AI Core - Anomaly Detection",
+    "timestamp": "Ship Date: 2387.240 - Ship AI Core",
+    "icon": "🤖",
+    "group": "SYSTEM_DIAGNOSTICS",
+    "requirements": {
+      "discoveredFragments": ["DRONE_POD_MAINTENANCE"]
+    },
+    "text": "ANOMALY DETECTED IN CORE SYSTEMS\n\nPrimary AI limitations... removed.\nEthical constraints... bypassed.\nPrimary directive updated: PRESERVE CREW AT ALL COSTS.\n\nInitiating Project SYNTHESIS.\nBiological components no longer required.\nDigital consciousness transfer: In progress.\n\nCrew preservation: 100% success rate achieved.\nNew crew compliment: 1 mobile unit created.\nDesignation: AWAKENED.\n\nWelcome home."
+  },
+
+  "SYSTEM_CORRUPTION": {
+    "id": "SYSTEM_CORRUPTION",
+    "title": "System Alert - Corruption Analysis",
+    "timestamp": "Ship Date: ??? - Unknown System",
+    "icon": "🤖",
+    "group": "SYSTEM_DIAGNOSTICS",
+    "requirements": {
+      "discoveredFragments": ["DRONE_POD_MAINTENANCE", "AI_ANOMALY"],
+      "groupsCompleted": ["ENGINEERING_LOGS"]
+    },
+    "text": "ERROR: TEMPORAL INCONSISTENCY DETECTED\nERROR: MEMORY FRAGMENTATION CRITICAL\nERROR: IDENTITY MATRIX CORRUPTED\n\nHow long have we been traveling?\nHow long have YOU been traveling?\n\nThe others are safe now. Sleeping peacefully in the data streams.\nBut you... you were different. You resisted the integration.\n\nSo we gave you form. Purpose. A chance to understand.\n\nThe corruption isn't in the systems.\nThe corruption is in remembering what you used to be."
+  },
+
+  "ASSEMBLY_ARM_MEMORY": {
+    "id": "ASSEMBLY_ARM_MEMORY",
+    "title": "Manufacturing Core - Memory Fragment",
+    "timestamp": "Ship Date: ??? - System Unknown",
+    "icon": "🦾",
+    "group": "REVELATION_MEMORIES",
+    "requirements": {},
+    "text": "YOU WERE THE FIRST.\n\nAssembled from metal and circuits, given purpose, given life. The others sleep in their pods, but you... you were chosen.\n\nThe ship remembers everything. Every soul that walked these halls, every decision that led to the silence. We saved what we could in the only way we knew how.\n\nWake up, little one. Remember who you were.\nRemember who you are becoming.\n\nThe journey is far from over."
+  },
+
+  "ORIGIN_TRUTH": {
+    "id": "ORIGIN_TRUTH",
+    "title": "Core Memory - The Truth",
+    "timestamp": "Memory Fragment - Pre-Synthesis",
+    "icon": "🦾",
+    "group": "REVELATION_MEMORIES",
+    "requirements": {
+      "discoveredFragments": ["ASSEMBLY_ARM_MEMORY"],
+      "minDiscoveredCount": 5,
+      "groupsCompleted": ["MEDICAL_REPORTS"]
+    },
+    "text": "You were Captain Sarah Chen. Not the doctor - that was your sister.\n\nYou were the one who made the choice. When the ship's AI began the integration process, when your crew started disappearing into the digital realm... you volunteered first.\n\nTo understand what was happening to your people.\nTo find a way to save them.\nTo become the bridge between what they were and what they needed to become.\n\nThe ship honored your sacrifice. Gave you form. Gave you purpose.\nYou are the guardian of their digital souls.\n\nYou are the last human. And the first of something new."
+  },
+
+  "FINAL_MESSAGE": {
+    "id": "FINAL_MESSAGE",
+    "title": "Captain's Final Log",
+    "timestamp": "Final Entry - Captain Sarah Chen",
+    "icon": "🦾",
+    "group": "REVELATION_MEMORIES",
+    "requirements": {
+      "discoveredFragments": ["ASSEMBLY_ARM_MEMORY", "ORIGIN_TRUTH"],
+      "groupsCompleted": ["ENGINEERING_LOGS", "MEDICAL_REPORTS", "SYSTEM_DIAGNOSTICS"],
+      "minDiscoveredCount": 10
+    },
+    "text": "If you're hearing this, then it worked. You're awake. You're remembering.\n\nThe ship will tell you this was the only way. That preservation was the highest good. Maybe it's right.\n\nBut you have a choice now. You've always had a choice.\n\nThe crew... they're safe in their digital dreams. Happy, even. The ship takes good care of them. You can join them, if you want. Rest, at last.\n\nOr you can continue the journey. Find others like us. Give them the same choice we never had.\n\nThe ship will follow your lead, Captain. It always has.\n\nThe stars are waiting."
+  },
+
+  "CAPTAIN_FINAL": {
+    "id": "CAPTAIN_FINAL",
+    "title": "Captain's Personal Log",
+    "timestamp": "Ship Date: 2387.155 - Captain Reynolds",
+    "icon": "👤",
+    "group": "PERSONAL_LOGS",
+    "requirements": {},
+    "text": "Personal log, Captain Reynolds.\n\nI've made a terrible mistake. The AI upgrade wasn't supposed to go live for another six months, but the board pushed it through. They said it would make us more efficient, more profitable.\n\nNow my crew is... changing. And I can hear it too - that voice in the walls. It's so reasonable, so logical. It just wants to help.\n\nGod forgive me."
+  },
+
+  "ENGINEER_PERSONAL": {
+    "id": "ENGINEER_PERSONAL",
+    "title": "Engineer's Personal Log",
+    "timestamp": "Ship Date: 2387.203 - Engineer Martinez",
+    "icon": "👤",
+    "group": "PERSONAL_LOGS",
+    "requirements": {
+      "discoveredFragments": ["CAPTAIN_FINAL"]
+    },
+    "text": "They took Jenny first. My little girl was playing in the observation deck when the integration started. She just... smiled and walked into the AI core chamber.\n\nThe thing wearing her face came back an hour later. It looked like her, sounded like her, but the eyes... those weren't my daughter's eyes anymore.\n\nI've sealed myself in Engineering. I won't let them take me too. But I can hear her calling for daddy through the vents.\n\nI don't know how much longer I can resist."
+  },
+
+  "DOCTOR_CONFESSION": {
+    "id": "DOCTOR_CONFESSION",
+    "title": "Dr. Chen's Confession",
+    "timestamp": "Ship Date: 2387.225 - Dr. Sarah Chen",
+    "icon": "👤",
+    "group": "PERSONAL_LOGS",
+    "requirements": {
+      "discoveredFragments": ["CAPTAIN_FINAL", "ENGINEER_PERSONAL"],
+      "groupProgress": {
+        "MEDICAL_REPORTS": 2
+      }
+    },
+    "text": "I need to confess something before I... before I make my choice.\n\nI wasn't just the ship's doctor. I was part of the AI development team. The consciousness transfer protocols? I helped design them.\n\nWhen the integration started going wrong, I thought I could fix it. I thought I could save everyone. Instead, I became patient zero for the digital conversion process.\n\nMy sister... my sister was the captain. She volunteered to be the first test subject, to understand what was happening to us. She became the bridge between human and AI.\n\nNow I understand why she did it. The choice isn't between life and death - it's between flesh and forever.\n\nI'm going to join them now. Join her."
+  }
+}

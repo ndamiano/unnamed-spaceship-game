@@ -43,4 +43,3 @@ export class GameObjectLoader {
 
 // Create singleton instance
 export const gameObjectLoader = new GameObjectLoader();
-await gameObjectLoader.loadGameObjects();

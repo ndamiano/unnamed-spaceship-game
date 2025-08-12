@@ -4,253 +4,617 @@
     "passable": false,
     "blocksLineOfSight": false,
     "storyGroupId": "ENGINEERING_LOGS",
+    "storyChance": 0.8,
+    "guaranteedStory": false,
     "exhaustedMessage": "Terminal accessed - no new data available",
+    "storyGlowColor": "#ffaa00",
+    "flavorTexts": [
+      "The terminal screen flickers with residual data.",
+      "Diagnostic codes scroll across the darkened display.",
+      "The interface hums with dormant processing power."
+    ],
+    "activationResults": [],
     "asset": "terminal-100x100.png"
   },
+  
   "cryogenicTube": {
     "name": "cryogenic-tube",
     "passable": false,
     "blocksLineOfSight": false,
     "storyGroupId": "MEDICAL_REPORTS",
+    "storyChance": 0.6,
     "exhaustedMessage": "The cryo tube is empty. Its occupant long gone.",
+    "storyGlowColor": "#00aaff",
+    "flavorTexts": [
+      "Frost covers the transparent viewing panel.",
+      "The cryogenic systems emit a low, steady hum.",
+      "Condensation drips from the sealed chamber."
+    ],
+    "activationResults": [],
     "asset": "cryogenic-tube-100x100.png"
   },
+  
   "assemblyArm": {
     "name": "assembly-arm",
     "passable": false,
     "blocksLineOfSight": false,
     "storyGroupId": "REVELATION_MEMORIES",
+    "storyChance": 1.0,
+    "guaranteedStory": true,
     "exhaustedMessage": "The assembly arm remains silent, its work complete.",
+    "storyGlowColor": "#aa44ff",
+    "flavorTexts": [
+      "The mechanical arm hangs motionless, its purpose fulfilled.",
+      "Precision tools gleam at the end of articulated joints.",
+      "The assembly arm's sensors track your movement."
+    ],
+    "activationResults": [],
     "asset": "assembly-arm-100x100.png"
   },
+  
   "dronePod": {
     "name": "drone-pod",
     "passable": false,
     "blocksLineOfSight": false,
     "storyGroupId": "SYSTEM_DIAGNOSTICS",
+    "storyChance": 0.7,
+    "storyGlowColor": "#ff4444",
+    "flavorTexts": [
+      "The drone pod's docking bay sits empty.",
+      "Charging ports await the return of automated workers.",
+      "The pod's interface displays 'UNIT OFFLINE'."
+    ],
+    "activationResults": [
+      {
+        "type": "upgrade_menu"
+      }
+    ],
     "asset": "drone-pod-100x100.png"
   },
+  
   "nanofabricator": {
     "name": "nanofabricator",
     "passable": false,
     "blocksLineOfSight": false,
-    "noStoryMessage": "The nanofabricator hums quietly, ready for use.",
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The nanofabricator hums quietly, ready for use.",
+      "Molecular assemblers await raw materials.",
+      "The fabrication chamber glows with contained energy."
+    ],
+    "activationResults": [
+      {
+        "type": "resource",
+        "resourceType": "Nanites",
+        "amount": 10,
+        "used": false,
+        "resetOnBatteryDrain": true,
+        "exhaustedMessage": "Nanofabricator is depleted"
+      }
+    ],
     "asset": "nanofabricator-100x100.png"
   },
+  
   "teleporter": {
     "name": "teleporter",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The teleporter pad gleams with dormant potential.",
+      "Energy conduits pulse with barely contained power.",
+      "The destination coordinates remain locked."
+    ],
+    "activationResults": [
+      {
+        "type": "win_condition",
+        "message": "You win! The teleporter activates and you escape the ship."
+      }
+    ],
     "asset": "teleporter-100x100.png"
   },
+  
   "energyPylon": {
     "name": "energy-pylon",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The energy pylon hums with contained power.",
+      "Electricity arcs between the pylon's conductors.",
+      "The power core radiates warmth through its housing."
+    ],
+    "activationResults": [],
     "asset": "energy-pylon-100x100.png"
   },
+  
   "controlPanel": {
     "name": "control-panel",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The control panel displays cryptic readouts.",
+      "Warning lights blink in sequence across the interface.",
+      "Most of the panel's functions appear locked out."
+    ],
+    "activationResults": [],
     "asset": "control-panel-100x100.png"
   },
+  
   "hologramProjector": {
     "name": "hologram-projector",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Faint holographic fragments flicker in the air.",
+      "The projector lens rotates, seeking focus.",
+      "Ghostly images dance at the edge of perception."
+    ],
+    "activationResults": [],
     "asset": "hologram-projector-100x100.png"
   },
+  
   "hydroponicBed": {
     "name": "hydroponic-bed",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The hydroponic bed is dry and lifeless.",
+      "Nutrient channels remain empty of sustaining fluids.",
+      "Withered root systems cling to the growing medium."
+    ],
+    "activationResults": [],
     "asset": "hydroponic-bed-100x100.png"
   },
+  
   "powerCell": {
     "name": "powercell",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "A standard power cell. Still holds some charge.",
+      "The cell's indicator shows 12% capacity remaining.",
+      "Backup power for emergency systems."
+    ],
+    "activationResults": [],
     "asset": "powercell-100x100.png"
   },
-  "aITetherNode": {
-    "name": "aitether-node",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "aitether-node-100x100.png"
-  },
-  "accessPanel": {
-    "name": "access-panel",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "access-panel-100x100.png"
-  },
-  "alienArtefactContainer": {
-    "name": "alien-artefact-container",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "alien-artefact-container-100x100.png"
-  },
-  "autoDocUnit": {
-    "name": "auto-doc-unit",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "auto-doc-unit-100x100.png"
-  },
-  "bioScanner": {
-    "name": "bio-scanner",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "bio-scanner-100x100.png"
-  },
-  "blackBoxCore": {
-    "name": "black-box-core",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "black-box-core-100x100.png"
-  },
-  "combatDroidCradle": {
-    "name": "combat-droid-cradle",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "combat-droid-cradle-100x100.png"
-  },
-  "commsRelayStation": {
-    "name": "comms-relay-station",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "comms-relay-station-100x100.png"
-  },
-  "fleshweaverConsole": {
-    "name": "fleshweaver-console",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "fleshweaver-console-100x100.png"
-  },
-  "gravityStabilizer": {
-    "name": "gravity-stabilizer",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "gravity-stabilizer-100x100.png"
-  },
-  "growthVat": {
-    "name": "growth-vat",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "growth-vat-100x100.png"
-  },
-  "hygienePod": {
-    "name": "hygiene-station",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "hygiene-pod-100x100.png"
-  },
-  "logRecorder": {
-    "name": "log-recorder",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "log-recorder-100x100.png"
-  },
-  "maintenanceCrawler": {
-    "name": "maintenance-crawler",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "maintenance-crawler-100x100.png"
-  },
-  "nutrientDispenser": {
-    "name": "nutrient-dispenser",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "nutrient-dispenser-100x100.png"
-  },
-  "observationDeck": {
-    "name": "observation-deck",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "observation-deck-100x100.png"
-  },
-  "oxygenRecycler": {
-    "name": "oxygen-recycler",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "oxygen-recycler-100x100.png"
-  },
-  "personalLocker": {
-    "name": "personal-locker",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "personal-locker-100x100.png"
-  },
-  "plasmaConduit": {
-    "name": "plasma-conduit",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "plasma-conduit-100x100.png"
-  },
-  "psychoNeuralChair": {
-    "name": "psycho-neural-chair",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "psycho-neural-chair-100x100.png"
-  },
-  "quarantineChamber": {
-    "name": "quarantine-chamber",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "asset": "quarantine-chamber-100x100.png"
-  },
+  
   "securityTerminal": {
     "name": "security-console",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyGroupId": "PERSONAL_LOGS",
+    "storyChance": 0.9,
+    "exhaustedMessage": "Security logs reviewed - no additional access granted",
+    "storyGlowColor": "#44ff44",
+    "flavorTexts": [
+      "The security console monitors empty corridors.",
+      "Access denied messages flash on multiple screens.",
+      "Camera feeds show static or darkness."
+    ],
+    "activationResults": [],
     "asset": "security-terminal-100x100.png"
   },
+  
+  "aITetherNode": {
+    "name": "aitether-node",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The AI tether node pulses with an alien rhythm.",
+      "Neural pathways glow beneath translucent casing.",
+      "The node's patterns seem almost... alive."
+    ],
+    "activationResults": [],
+    "asset": "aitether-node-100x100.png"
+  },
+  
+  "accessPanel": {
+    "name": "access-panel",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Access denied. Insufficient clearance.",
+      "The panel's biometric scanner remains dark.",
+      "Emergency override protocols are locked."
+    ],
+    "activationResults": [],
+    "asset": "access-panel-100x100.png"
+  },
+  
+  "alienArtefactContainer": {
+    "name": "alien-artefact-container",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The container pulses with otherworldly energy.",
+      "Strange symbols shift across its surface.",
+      "Something within responds to your presence."
+    ],
+    "activationResults": [],
+    "asset": "alien-artefact-container-100x100.png"
+  },
+  
+  "autoDocUnit": {
+    "name": "auto-doc-unit",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "MEDICAL_REPORTS",
+    "storyChance": 0.6,
+    "flavorTexts": [
+      "The medical unit's diagnostic sensors remain active.",
+      "Surgical implements gleam in sterile compartments.",
+      "The auto-doc awaits a patient that will never come."
+    ],
+    "activationResults": [],
+    "asset": "auto-doc-unit-100x100.png"
+  },
+  
+  "bioScanner": {
+    "name": "bio-scanner",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Bio-scanner detects artificial life signs.",
+      "The scanner's beam sweeps across your form.",
+      "Analysis complete: Non-biological entity detected."
+    ],
+    "activationResults": [],
+    "asset": "bio-scanner-100x100.png"
+  },
+  
+  "blackBoxCore": {
+    "name": "black-box-core",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "SYSTEM_DIAGNOSTICS",
+    "storyChance": 0.9,
+    "guaranteedStory": true,
+    "flavorTexts": [
+      "The black box core contains the ship's final moments.",
+      "Data streams flicker behind armored plating.",
+      "Emergency protocols sealed this device's secrets."
+    ],
+    "activationResults": [],
+    "asset": "black-box-core-100x100.png"
+  },
+  
+  "combatDroidCradle": {
+    "name": "combat-droid-cradle",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The combat droid cradle sits empty, its charge cold.",
+      "Weapon mounts remain vacant of their deadly cargo.",
+      "The cradle's systems await a warrior that will never return."
+    ],
+    "activationResults": [],
+    "asset": "combat-droid-cradle-100x100.png"
+  },
+  
+  "commsRelayStation": {
+    "name": "comms-relay-station",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Static fills the comms relay. No signals detected.",
+      "The antenna array points toward empty space.",
+      "Long-range communications remain severed."
+    ],
+    "activationResults": [],
+    "asset": "comms-relay-station-100x100.png"
+  },
+  
+  "fleshweaverConsole": {
+    "name": "fleshweaver-console",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The fleshweaver console pulses with unnatural bio-rhythms.",
+      "Organic interfaces writhe beneath bio-glass covers.",
+      "The console seems to breathe with artificial life."
+    ],
+    "activationResults": [],
+    "asset": "fleshweaver-console-100x100.png"
+  },
+  
+  "gravityStabilizer": {
+    "name": "gravity-stabilizer",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Gravity field nominal. Stabilizer functioning within parameters.",
+      "The stabilizer maintains artificial gravity throughout the ship.",
+      "Gravitational waves pulse in controlled patterns."
+    ],
+    "activationResults": [],
+    "asset": "gravity-stabilizer-100x100.png"
+  },
+  
+  "growthVat": {
+    "name": "growth-vat",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Murky fluid swirls in the growth vat.",
+      "The cultivation chamber bubbles with inert solutions.",
+      "Whatever was growing here has long since been harvested."
+    ],
+    "activationResults": [],
+    "asset": "growth-vat-100x100.png"
+  },
+  
+  "hygienePod": {
+    "name": "hygiene-station",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "PERSONAL_LOGS",
+    "storyChance": 0.4,
+    "flavorTexts": [
+      "The hygiene pod's cleaning cycle has long since ended.",
+      "Personal items still occupy the storage compartments.",
+      "A faint scent of disinfectant lingers in the air."
+    ],
+    "activationResults": [],
+    "asset": "hygiene-pod-100x100.png"
+  },
+  
+  "logRecorder": {
+    "name": "log-recorder",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "PERSONAL_LOGS",
+    "storyChance": 0.8,
+    "flavorTexts": [
+      "The log recorder's memory banks hold countless entries.",
+      "Voice patterns dance across the audio spectrum display.",
+      "Personal recordings await your discovery."
+    ],
+    "activationResults": [],
+    "asset": "log-recorder-100x100.png"
+  },
+  
+  "maintenanceCrawler": {
+    "name": "maintenance-crawler",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The maintenance crawler sits dormant, its tasks complete.",
+      "Repair tools hang unused from the crawler's frame.",
+      "The autonomous worker awaits new directives."
+    ],
+    "activationResults": [],
+    "asset": "maintenance-crawler-100x100.png"
+  },
+  
+  "nutrientDispenser": {
+    "name": "nutrient-dispenser",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Nutrient dispenser is empty.",
+      "The feeding apparatus dispensed its final meal long ago.",
+      "Nutritional supplements gather dust in sealed chambers."
+    ],
+    "activationResults": [],
+    "asset": "nutrient-dispenser-100x100.png"
+  },
+  
+  "observationDeck": {
+    "name": "observation-deck",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Through the observation deck, you see endless void.",
+      "Stars drift silently beyond the reinforced viewport.",
+      "The universe continues its dance, indifferent to your presence."
+    ],
+    "activationResults": [],
+    "asset": "observation-deck-100x100.png"
+  },
+  
+  "oxygenRecycler": {
+    "name": "oxygen-recycler",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Oxygen recycler functioning normally.",
+      "The atmospheric processor maintains breathable air.",
+      "CO2 scrubbers work tirelessly to sustain life."
+    ],
+    "activationResults": [],
+    "asset": "oxygen-recycler-100x100.png"
+  },
+  
+  "personalLocker": {
+    "name": "personal-locker",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "PERSONAL_LOGS",
+    "storyChance": 0.7,
+    "flavorTexts": [
+      "A crew member's personal belongings remain inside.",
+      "The locker's combination lock shows signs of hasty access.",
+      "Memories and mementos rest within the metal compartment."
+    ],
+    "activationResults": [],
+    "asset": "personal-locker-100x100.png"
+  },
+  
+  "plasmaConduit": {
+    "name": "plasma-conduit",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Plasma flows through the conduit with contained fury.",
+      "The magnetic containment field holds superheated gas.",
+      "Energy courses through the ship's arterial network."
+    ],
+    "activationResults": [],
+    "asset": "plasma-conduit-100x100.png"
+  },
+  
+  "psychoNeuralChair": {
+    "name": "psycho-neural-chair",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "MEDICAL_REPORTS",
+    "storyChance": 0.8,
+    "flavorTexts": [
+      "The neural interface chair awaits its next subject.",
+      "Synaptic monitors rest against the headrest.",
+      "The chair's restraints suggest unwilling participants."
+    ],
+    "activationResults": [],
+    "asset": "psycho-neural-chair-100x100.png"
+  },
+  
+  "quarantineChamber": {
+    "name": "quarantine-chamber",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "MEDICAL_REPORTS",
+    "storyChance": 0.9,
+    "flavorTexts": [
+      "The quarantine chamber's seals remain intact.",
+      "Biohazard warnings cover every surface.",
+      "Whatever was contained here is no longer a threat."
+    ],
+    "activationResults": [],
+    "asset": "quarantine-chamber-100x100.png"
+  },
+  
   "shipAICoreNode": {
     "name": "ship-aicore-node",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyGroupId": "SYSTEM_DIAGNOSTICS",
+    "storyChance": 1.0,
+    "guaranteedStory": true,
+    "flavorTexts": [
+      "The AI core node pulses with digital consciousness.",
+      "Neural networks process thoughts at light speed.",
+      "The ship's mind resides within this crystalline matrix."
+    ],
+    "activationResults": [],
     "asset": "ship-aicore-node-100x100.png"
   },
+  
   "stasisPod": {
     "name": "stasis-pod",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyGroupId": "MEDICAL_REPORTS",
+    "storyChance": 0.7,
+    "flavorTexts": [
+      "The stasis pod maintains temporal suspension.",
+      "Life signs monitor empty space within the chamber.",
+      "Emergency revival protocols remain on standby."
+    ],
+    "activationResults": [],
     "asset": "stasis-pod-100x100.png"
   },
+  
   "vacuumBot": {
     "name": "vacuum-bot",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The vacuum bot continues its eternal cleaning cycle.",
+      "Debris collectors work tirelessly to maintain order.",
+      "The bot's simple programming persists without purpose."
+    ],
+    "activationResults": [],
     "asset": "vacuum-bot-100x100.png"
   },
+  
   "wallMonitor": {
     "name": "wall-monitor",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The wall monitor displays incomprehensible data streams.",
+      "Status reports scroll endlessly across the screen.",
+      "System diagnostics paint a picture of gradual decay."
+    ],
+    "activationResults": [],
     "asset": "wall-monitor-100x100.png"
   },
+  
   "wasteReprocessor": {
     "name": "waste-reprocessor",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Waste reprocessor cycles through its grim task.",
+      "The recycling unit converts refuse into raw materials.",
+      "Nothing is truly waste aboard a self-contained vessel."
+    ],
+    "activationResults": [],
     "asset": "waste-reprocessor-100x100.png"
   },
+  
   "xenobotanyChamber": {
     "name": "xenobotany-chamber",
     "passable": false,
     "blocksLineOfSight": false,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "Strange alien growths writhe within the chamber.",
+      "Xenological specimens pulse with otherworldly life.",
+      "The containment field barely holds back alien flora."
+    ],
+    "activationResults": [],
     "asset": "xenobotany-chamber-100x100.png"
   },
+  
   "wallSegment": {
     "name": "wall-segment",
     "passable": false,
     "blocksLineOfSight": true,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "A reinforced bulkhead blocks your path.",
+      "The wall shows signs of emergency welding.",
+      "Structural integrity maintained despite damage."
+    ],
+    "activationResults": [],
     "asset": "wall-segment-100x100.png"
   },
+  
   "door": {
     "name": "door",
     "passable": true,
     "blocksLineOfSight": true,
+    "storyChance": 0.0,
+    "flavorTexts": [
+      "The doorway stands open, welcoming passage.",
+      "Emergency protocols have locked this door open.",
+      "The threshold between ship sections."
+    ],
+    "activationResults": [],
     "asset": "door-100x100.png"
   }
 }
