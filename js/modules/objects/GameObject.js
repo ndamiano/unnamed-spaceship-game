@@ -3,16 +3,6 @@ import { eventBus } from "../EventBus.js";
 import { storySystem } from "../StorySystem.js";
 import { gameObjectLoader } from "./GameObjectLoader.js";
 
-// Pre-defined story glow colors to avoid switch statements
-const STORY_GLOW_COLORS = {
-  'ENGINEERING_LOGS': '#ffaa00',
-  'MEDICAL_REPORTS': '#00aaff',
-  'SYSTEM_DIAGNOSTICS': '#ff4444',
-  'REVELATION_MEMORIES': '#aa44ff',
-  'PERSONAL_LOGS': '#44ff44',
-  'DEFAULT': '#00ff00'
-};
-
 export default class GameObject extends Tile {
   constructor(x, y, objectType) {
     const config = gameObjectLoader.getObjectConfig(objectType);
@@ -57,11 +47,6 @@ export default class GameObject extends Tile {
     this.objectType = objectType;
     this.config = config;
     this.assetPath = this.name ? `assets/${this.name}-100x100.png` : null;
-    
-    // Pre-compute story glow color
-    this.storyGlowColor = config.storyGlowColor || 
-                         STORY_GLOW_COLORS[this.storyGroupId] || 
-                         STORY_GLOW_COLORS.DEFAULT;
   }
 
   _setupStoryManagement() {
@@ -94,6 +79,14 @@ export default class GameObject extends Tile {
   hasAvailableStory() {
     this.determineAvailableStoryEvents();
     return this.availableStoryEvents.length > 0;
+  }
+
+  hasActivationResults() {
+    return this.activationResults && this.activationResults.length > 0;
+  }
+
+  isActivatable() {
+    return this.hasAvailableStory() || this.hasActivationResults();
   }
 
   consumeNextStoryEvent() {
@@ -208,9 +201,9 @@ export default class GameObject extends Tile {
   }
 
   render(ctx, x, y, size) {
-    // Render glow effect first if has available story
-    if (this.hasAvailableStory()) {
-      this.renderStoryGlow(ctx, x, y, size);
+    // Render glow effect first if object is activatable
+    if (this.isActivatable()) {
+      this.renderGlow(ctx, x, y, size);
     }
     
     // Handle flipped rendering
@@ -236,17 +229,29 @@ export default class GameObject extends Tile {
     }
   }
 
-  renderStoryGlow(ctx, x, y, size) {
+  renderGlow(ctx, x, y, size) {
     ctx.save();
+    
+    // Determine glow color based on object type
+    let glowColor;
+    if (this.hasAvailableStory()) {
+      glowColor = '#ffffff'; // White for story objects
+    } else if (this.hasActivationResults()) {
+      glowColor = '#035170'; // Light blue for other activatable objects
+    } else {
+      console.log("Should exit");
+      ctx.restore();
+      return; // No glow needed
+    }
     
     const gradient = ctx.createRadialGradient(
       x + size/2, y + size/2, size/4,
       x + size/2, y + size/2, size/2
     );
     
-    gradient.addColorStop(0, this.storyGlowColor + '40');
-    gradient.addColorStop(0.7, this.storyGlowColor + '20');
-    gradient.addColorStop(1, this.storyGlowColor + '00');
+    gradient.addColorStop(0, glowColor + '40');
+    gradient.addColorStop(0.7, glowColor + '20');
+    gradient.addColorStop(1, glowColor + '00');
     
     ctx.fillStyle = gradient;
     ctx.fillRect(x - size*0.1, y - size*0.1, size*1.2, size*1.2);
