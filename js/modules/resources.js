@@ -4,9 +4,9 @@
 
 // Available resource types
 export const RESOURCE_TYPES = {
-  NANITES: "Nanites",
-  SHIP_PARTS: "Ship Parts",
-  RESEARCH_POINTS: "Research Points",
+  NANITES: 'Nanites',
+  SHIP_PARTS: 'Ship Parts',
+  RESEARCH_POINTS: 'Research Points',
 };
 
 // Base structure for player resources
@@ -24,7 +24,7 @@ export const BASE_RESOURCES = {
  */
 export function hasMoreResources(resourcesA, resourcesB) {
   return Object.values(RESOURCE_TYPES).every(
-    (type) => (resourcesA[type] || 0) >= (resourcesB[type] || 0)
+    type => (resourcesA[type] || 0) >= (resourcesB[type] || 0)
   );
 }
 
@@ -37,7 +37,7 @@ export function hasMoreResources(resourcesA, resourcesB) {
 export function modifyResources(baseResources, deltaResources) {
   const newResources = { ...baseResources };
 
-  Object.values(RESOURCE_TYPES).forEach((type) => {
+  Object.values(RESOURCE_TYPES).forEach(type => {
     if (deltaResources[type] !== undefined) {
       newResources[type] += deltaResources[type];
       // Ensure resources don't go below 0
@@ -50,9 +50,11 @@ export function modifyResources(baseResources, deltaResources) {
 
 // Convenience methods
 export const addResources = (base, delta) => modifyResources(base, delta);
+
 export const subtractResources = (base, delta) => {
   const negativeDelta = Object.fromEntries(
     Object.entries(delta).map(([type, amount]) => [type, -amount])
   );
+
   return modifyResources(base, negativeDelta);
 };

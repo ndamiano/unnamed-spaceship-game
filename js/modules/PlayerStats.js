@@ -2,7 +2,7 @@ let playerInstance = null;
 
 function getStats() {
   if (!playerInstance) {
-    throw new Error("Player instance not registered with PlayerStats");
+    throw new Error('Player instance not registered with PlayerStats');
   }
 
   return Object.freeze({
@@ -13,7 +13,7 @@ function getStats() {
     harvestMultiplier: playerInstance.harvestMultiplier,
     movementCost: playerInstance.movementCost,
     resources: playerInstance.resources,
-    getUpgradeCount: (upgradeId) => playerInstance.upgrades.get(upgradeId) || 0,
+    getUpgradeCount: upgradeId => playerInstance.upgrades.get(upgradeId) || 0,
   });
 }
 

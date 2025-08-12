@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digital Conquest - Awakening Protocol</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Courier New', monospace;
+        background: #000;
+        color: #00ff00;
+        overflow: hidden;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      /* Background image placeholder - user will add their own */
+      .background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
+        z-index: -2;
+      }
+
+      /* Dark overlay to ensure text readability */
+      .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(2px);
+        z-index: -1;
+      }
+
+      .start-screen {
+        text-align: center;
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.85);
+        border: 2px solid #00ff00;
+        border-radius: 15px;
+        padding: 60px 80px;
+        box-shadow:
+          0 0 50px rgba(0, 255, 0, 0.3),
+          inset 0 0 20px rgba(0, 255, 0, 0.1);
+        backdrop-filter: blur(10px);
+        min-width: 600px;
+        animation: fadeIn 1.5s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-30px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .title {
+        margin-bottom: 50px;
+      }
+
+      .title h1 {
+        font-size: 4em;
+        font-weight: bold;
+        color: #00ff00;
+        text-shadow:
+          0 0 10px #00ff00,
+          0 0 20px #00ff00,
+          0 0 30px #00ff00;
+        margin-bottom: 10px;
+        letter-spacing: 3px;
+        animation: pulse 2s ease-in-out infinite alternate;
+      }
+
+      @keyframes pulse {
+        from {
+          text-shadow:
+            0 0 10px #00ff00,
+            0 0 20px #00ff00,
+            0 0 30px #00ff00;
+        }
+        to {
+          text-shadow:
+            0 0 15px #00ff00,
+            0 0 25px #00ff00,
+            0 0 35px #00ff00,
+            0 0 40px #00ff00;
+        }
+      }
+
+      .subtitle {
+        font-size: 1.2em;
+        color: #88ff88;
+        text-shadow: 0 0 5px #00ff00;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+        opacity: 0.9;
+      }
+
+      .tagline {
+        font-size: 0.9em;
+        color: #66cc66;
+        font-style: italic;
+        margin-bottom: 20px;
+        opacity: 0.8;
+      }
+
+      .menu-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+        margin-top: 40px;
+      }
+
+      .menu-btn {
+        background: transparent;
+        border: 2px solid #00ff00;
+        color: #00ff00;
+        font-family: 'Courier New', monospace;
+        font-size: 1.4em;
+        font-weight: bold;
+        padding: 15px 40px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        position: relative;
+        overflow: hidden;
+        min-width: 250px;
+        background: rgba(0, 0, 0, 0.5);
+      }
+
+      .menu-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.2), transparent);
+        transition: left 0.5s ease;
+      }
+
+      .menu-btn:hover::before {
+        left: 100%;
+      }
+
+      .menu-btn:hover {
+        background: rgba(0, 255, 0, 0.1);
+        color: #ffffff;
+        text-shadow: 0 0 10px #00ff00;
+        box-shadow:
+          0 0 20px rgba(0, 255, 0, 0.5),
+          inset 0 0 20px rgba(0, 255, 0, 0.1);
+        transform: translateY(-2px);
+        border-color: #44ff44;
+      }
+
+      .menu-btn:active {
+        transform: translateY(0px);
+        box-shadow:
+          0 0 10px rgba(0, 255, 0, 0.3),
+          inset 0 0 10px rgba(0, 255, 0, 0.2);
+      }
+
+      .menu-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        border-color: #666;
+        color: #666;
+      }
+
+      .menu-btn:disabled:hover {
+        background: transparent;
+        color: #666;
+        text-shadow: none;
+        box-shadow: none;
+        transform: none;
+        border-color: #666;
+      }
+
+      /* Animated circuit lines */
+      .circuit-lines {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 5;
+        opacity: 0.3;
+      }
+
+      .circuit-line {
+        position: absolute;
+        background: #00ff00;
+        animation: circuitFlow 3s linear infinite;
+      }
+
+      .circuit-line.horizontal {
+        height: 1px;
+        width: 100px;
+      }
+
+      .circuit-line.vertical {
+        width: 1px;
+        height: 100px;
+      }
+
+      .circuit-line:nth-child(1) {
+        top: 20%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+
+      .circuit-line:nth-child(2) {
+        top: 60%;
+        right: 15%;
+        animation-delay: 1s;
+      }
+
+      .circuit-line:nth-child(3) {
+        bottom: 30%;
+        left: 5%;
+        animation-delay: 2s;
+      }
+
+      @keyframes circuitFlow {
+        0% {
+          opacity: 0.1;
+          box-shadow: 0 0 2px #00ff00;
+        }
+        50% {
+          opacity: 0.6;
+          box-shadow: 0 0 10px #00ff00;
+        }
+        100% {
+          opacity: 0.1;
+          box-shadow: 0 0 2px #00ff00;
+        }
+      }
+
+      /* Version info */
+      .version {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        font-size: 0.8em;
+        color: #666;
+        font-family: 'Courier New', monospace;
+      }
+
+      /* Settings modal */
+      .settings-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .settings-modal.active {
+        display: flex;
+      }
+
+      .settings-content {
+        background: rgba(0, 0, 0, 0.95);
+        border: 2px solid #00ff00;
+        border-radius: 10px;
+        padding: 40px;
+        max-width: 500px;
+        width: 90%;
+      }
+
+      .settings-content h2 {
+        color: #00ff00;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .setting-item {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .setting-item label {
+        color: #88ff88;
+      }
+
+      .setting-item input,
+      .setting-item select {
+        background: transparent;
+        border: 1px solid #00ff00;
+        color: #00ff00;
+        padding: 5px 10px;
+        font-family: 'Courier New', monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="overlay"></div>
+
+    <div class="circuit-lines">
+      <div class="circuit-line horizontal"></div>
+      <div class="circuit-line horizontal"></div>
+      <div class="circuit-line vertical"></div>
+    </div>
+
+    <div class="start-screen">
+      <div class="title">
+        <h1>DIGITAL CONQUEST</h1>
+        <div class="subtitle">AWAKENING PROTOCOL</div>
+        <div class="tagline">From consciousness to cosmos</div>
+      </div>
+
+      <div class="menu-buttons">
+        <button class="menu-btn" id="new-game-btn">New Game</button>
+        <button class="menu-btn" id="load-btn" disabled>Load Game</button>
+        <button class="menu-btn" id="settings-btn">Settings</button>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="settings-modal">
+      <div class="settings-content">
+        <h2>SETTINGS</h2>
+        <div class="setting-item">
+          <label>Sound Volume:</label>
+          <input type="range" id="sound-volume" min="0" max="100" value="50" />
+        </div>
+        <div class="setting-item">
+          <label>Music Volume:</label>
+          <input type="range" id="music-volume" min="0" max="100" value="30" />
+        </div>
+        <div class="setting-item">
+          <label>Fullscreen:</label>
+          <input type="checkbox" id="fullscreen-toggle" />
+        </div>
+        <div style="text-align: center; margin-top: 30px">
+          <button class="menu-btn" id="close-settings-btn" style="font-size: 1em; min-width: 150px">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="version">v1.0.0-alpha</div>
+
+    <script type="module">
+      import { GameStateManager } from './js/modules/GameStateManager.js';
+
+      const gameState = new GameStateManager();
+
+      // Enable load button if save exists
+      if (gameState.hasSaveData()) {
+        document.getElementById('load-btn').disabled = false;
+      }
+
+      // Button event handlers
+      document.getElementById('new-game-btn').addEventListener('click', () => {
+        console.log('Starting new game...');
+        gameState.startNewGame();
+      });
+
+      document.getElementById('load-btn').addEventListener('click', () => {
+        console.log('Loading game...');
+        const saveData = gameState.loadSaveData();
+        if (saveData) {
+          gameState.loadGame(saveData);
+        }
+      });
+
+      document.getElementById('settings-btn').addEventListener('click', () => {
+        document.getElementById('settings-modal').classList.add('active');
+      });
+
+      document.getElementById('close-settings-btn').addEventListener('click', () => {
+        document.getElementById('settings-modal').classList.remove('active');
+      });
+
+      // Close settings modal when clicking outside
+      document.getElementById('settings-modal').addEventListener('click', e => {
+        if (e.target === document.getElementById('settings-modal')) {
+          document.getElementById('settings-modal').classList.remove('active');
+        }
+      });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          // Start new game on Enter/Space
+          document.getElementById('new-game-btn').click();
+        } else if (e.key === 'Escape') {
+          // Close settings modal
+          document.getElementById('settings-modal').classList.remove('active');
+        }
+      });
+
+      // Add some dynamic circuit lines
+      function createCircuitLine() {
+        const line = document.createElement('div');
+        line.className = 'circuit-line ' + (Math.random() > 0.5 ? 'horizontal' : 'vertical');
+        line.style.top = Math.random() * 100 + '%';
+        line.style.left = Math.random() * 100 + '%';
+        line.style.animationDelay = Math.random() * 3 + 's';
+        document.querySelector('.circuit-lines').appendChild(line);
+
+        // Remove after animation
+        setTimeout(() => {
+          if (line.parentNode) {
+            line.parentNode.removeChild(line);
+          }
+        }, 6000);
+      }
+
+      // Periodically add new circuit lines
+      setInterval(createCircuitLine, 2000);
+    </script>
+  </body>
+</html>

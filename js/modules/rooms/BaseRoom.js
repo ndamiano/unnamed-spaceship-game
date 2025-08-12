@@ -18,6 +18,7 @@ class BaseRoom {
   getWidth() {
     return this.width;
   }
+
   getHeight() {
     return this.height;
   }
@@ -41,11 +42,11 @@ class BaseRoom {
   }
 
   hasDoor(x, y) {
-    return this.doors.some((door) => door.x === x && door.y === y);
+    return this.doors.some(door => door.x === x && door.y === y);
   }
 
   removeDoor(x, y) {
-    this.doors = this.doors.filter((door) => !(door.x === x && door.y === y));
+    this.doors = this.doors.filter(door => !(door.x === x && door.y === y));
   }
 
   generateObjects() {

@@ -14,10 +14,12 @@ export class GameObjectLoader {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         return response.json();
       })
       .then(data => {
         this.gameObjects = data;
+
         return data;
       })
       .catch(error => {
@@ -30,13 +32,17 @@ export class GameObjectLoader {
 
   getGameObjects() {
     if (!this.gameObjects) {
-      throw new Error('Game objects not loaded yet. Call loadGameObjects() first.');
+      throw new Error(
+        'Game objects not loaded yet. Call loadGameObjects() first.'
+      );
     }
+
     return this.gameObjects;
   }
 
   getObjectConfig(objectType) {
     const objects = this.getGameObjects();
+
     return objects[objectType] || null;
   }
 }

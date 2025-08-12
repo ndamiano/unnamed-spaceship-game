@@ -18,7 +18,7 @@ export class Tile {
   }
 
   setSlot(side, object) {
-    if (["top", "right", "bottom", "left"].includes(side)) {
+    if (['top', 'right', 'bottom', 'left'].includes(side)) {
       this.slots[side] = object;
     }
   }
@@ -35,7 +35,7 @@ export class Tile {
 
   renderSlots(ctx, x, y) {
     // Render each slot's content if it exists
-    for (const [side, object] of Object.entries(this.slots)) {
+    for (const [_side, object] of Object.entries(this.slots)) {
       if (object && object.render) {
         object.render(ctx, x, y, 100); // Assuming standard tile size of 100
       }

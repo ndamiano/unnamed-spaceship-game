@@ -9,7 +9,7 @@ import {
   EngineeringBayRoom,
   HolographicsLabRoom,
   XenobotanyRoom,
-} from "../rooms/index.js";
+} from '../rooms/index.js';
 
 const roomTypes = [
   { type: BaseRoom, weight: 10 },
@@ -23,7 +23,7 @@ const roomTypes = [
 ];
 
 class RoomQueue {
-  constructor(shipType = "colony", maxSize = 25) {
+  constructor(shipType = 'colony', maxSize = 25) {
     this.queue = [];
     this.shipType = shipType;
     this.maxSize = maxSize;
@@ -72,7 +72,7 @@ class RoomQueue {
 
   getWeightedRoom() {
     const totalWeight = roomTypes.reduce((sum, room) => sum + room.weight, 0);
-    let random = Math.random() * totalWeight;
+    const random = Math.random() * totalWeight;
     let weightSum = 0;
 
     for (const room of roomTypes) {
@@ -81,6 +81,7 @@ class RoomQueue {
         return new room.type(0, 0);
       }
     }
+
     return new BaseRoom(0, 0); // fallback
   }
 }

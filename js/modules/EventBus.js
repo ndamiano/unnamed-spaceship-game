@@ -3,6 +3,7 @@ class EventBus {
     if (EventBus.instance) {
       return EventBus.instance;
     }
+
     this.listeners = {};
     EventBus.instance = this;
   }
@@ -11,6 +12,7 @@ class EventBus {
     if (!this.listeners[event]) {
       this.listeners[event] = [];
     }
+
     this.listeners[event].push(callback);
   }
 
@@ -18,6 +20,7 @@ class EventBus {
     if (!this.listeners[event]) return;
 
     const index = this.listeners[event].indexOf(callback);
+
     if (index !== -1) {
       this.listeners[event].splice(index, 1);
     }
@@ -26,7 +29,7 @@ class EventBus {
   emit(event, data = {}) {
     if (!this.listeners[event]) return;
 
-    this.listeners[event].forEach((callback) => {
+    this.listeners[event].forEach(callback => {
       try {
         callback(data);
       } catch (e) {
@@ -37,4 +40,5 @@ class EventBus {
 }
 
 const eventBus = new EventBus();
+
 export { eventBus };

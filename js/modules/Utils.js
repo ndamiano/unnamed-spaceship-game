@@ -17,11 +17,12 @@ function roomsOverlap(a, b) {
 
 function doorsAreCompatible(sourceSide, targetSide) {
   const opposites = {
-    left: "right",
-    right: "left",
-    top: "bottom",
-    bottom: "top",
+    left: 'right',
+    right: 'left',
+    top: 'bottom',
+    bottom: 'top',
   };
+
   return opposites[sourceSide] === targetSide;
 }
 
@@ -30,13 +31,18 @@ export function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export function getPossibleDoorPositions(targetRoom, rooms, maxHeight, maxWidth) {
+export function getPossibleDoorPositions(
+  targetRoom,
+  rooms,
+  maxHeight,
+  maxWidth
+) {
   const positions = [];
 
   const isInBounds = ({ x, y, width, height }) =>
     x >= 0 && y >= 0 && x + width <= maxWidth && y + height <= maxHeight;
 
-  const hasOverlap = (proposed) => rooms.some((r) => roomsOverlap(proposed, r));
+  const hasOverlap = proposed => rooms.some(r => roomsOverlap(proposed, r));
 
   for (const existingRoom of rooms) {
     for (const sourceDoor of existingRoom.potentialDoors) {
@@ -55,22 +61,22 @@ export function getPossibleDoorPositions(targetRoom, rooms, maxHeight, maxWidth)
 
         // Position new room based on door side
         switch (targetDoor.side) {
-          case "left":
+          case 'left':
             meetingX = meetingX + 1;
             newRoomX = meetingX;
             newRoomY = meetingY - targetDoor.y;
             break;
-          case "right":
+          case 'right':
             newRoomX = meetingX - targetRoom.width;
             newRoomY = meetingY - targetDoor.y;
             meetingX = meetingX - 1;
             break;
-          case "top":
+          case 'top':
             meetingY = meetingY + 1;
             newRoomX = meetingX - targetDoor.x;
             newRoomY = meetingY;
             break;
-          case "bottom":
+          case 'bottom':
             meetingY = meetingY - 1;
             newRoomX = meetingX - targetDoor.x;
             newRoomY = meetingY - (targetRoom.height - 1);
@@ -87,6 +93,7 @@ export function getPossibleDoorPositions(targetRoom, rooms, maxHeight, maxWidth)
         if (!isInBounds(proposedRoom)) {
           continue;
         }
+
         if (hasOverlap(proposedRoom)) {
           continue;
         }
@@ -109,5 +116,6 @@ export function getPossibleDoorPositions(targetRoom, rooms, maxHeight, maxWidth)
       }
     }
   }
+
   return positions;
 }

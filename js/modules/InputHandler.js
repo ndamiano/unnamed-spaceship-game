@@ -1,5 +1,5 @@
-import { Directions } from "./Utils.js";
-import { eventBus } from "./EventBus.js";
+import { Directions } from './Utils.js';
+import { eventBus } from './EventBus.js';
 
 class InputHandler {
   constructor() {
@@ -13,12 +13,13 @@ class InputHandler {
   }
 
   setupControls() {
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener('keydown', e => {
       const key = e.key.toLowerCase();
+
       if (this.directions[key]) {
-        eventBus.emit("attempt-move", this.directions[key]);
-      } else if (key === "e") {
-        eventBus.emit("attempt-interact");
+        eventBus.emit('attempt-move', this.directions[key]);
+      } else if (key === 'e') {
+        eventBus.emit('attempt-interact');
       }
     });
   }

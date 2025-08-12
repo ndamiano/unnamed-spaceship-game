@@ -1,11 +1,29 @@
 {
+  "name": "digital-conquest",
+  "version": "1.0.0",
+  "description": "A tile-based exploration game with procedural spaceship generation",
+  "author": "Nick Damiano",
   "type": "module",
   "scripts": {
-    "test": "set NODE_OPTIONS=--experimental-vm-modules && jest"
+    "test": "set NODE_OPTIONS=--experimental-vm-modules && jest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:js": "prettier --write \"**/*.{js,mjs}\"",
+    "format:html": "prettier --write \"**/*.html\"",
+    "format:css": "prettier --write \"**/*.css\"",
+    "format:json": "prettier --write \"**/*.json\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:check": "eslint .",
+    "format-and-lint": "npm run format && npm run lint:fix",
+    "check-all": "npm run format:check && npm run lint:check"
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "jest-environment-jsdom": "^30.0.0"
+    "jest-environment-jsdom": "^30.0.0",
+    "prettier": "^3.1.0",
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0"
   },
   "jest": {
     "transform": {},
@@ -13,5 +31,12 @@
     "testMatch": [
       "**/js/modules/tests/TileSlotTests.js"
     ]
-  }
+  },
+  "keywords": [
+    "game",
+    "javascript",
+    "procedural-generation",
+    "exploration",
+    "incremental"
+  ]
 }

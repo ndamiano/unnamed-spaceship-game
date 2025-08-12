@@ -1,23 +1,25 @@
-import { Tile } from "../Tile.js";
-import { eventBus } from "../EventBus.js";
-import { storySystem } from "../StorySystem.js";
-import { gameObjectLoader } from "./GameObjectLoader.js";
+import { Tile } from '../Tile.js';
+import { eventBus } from '../EventBus.js';
+import { storySystem } from '../StorySystem.js';
+import { gameObjectLoader } from './GameObjectLoader.js';
 
 export default class GameObject extends Tile {
   constructor(x, y, objectType) {
     const config = gameObjectLoader.getObjectConfig(objectType);
+
     if (!config) {
       console.error(`Unknown object type: ${objectType}`);
       super(x, y, false, false);
       this._setupFallback(objectType);
+
       return;
     }
-    
+
     super(x, y, config.passable, config.blocksLineOfSight);
     this._setupFromConfig(config, objectType);
     this._setupStoryManagement();
     this._setupEventHandlers();
-    
+
     // Register this object with the story system if it has story content
     if (this.storyGroupId) {
       storySystem.registerStoryObject(this);
@@ -28,8 +30,8 @@ export default class GameObject extends Tile {
     this.name = objectType;
     this.objectType = objectType;
     this.assetPath = null;
-    this.config = { flavorTexts: ["An unknown object."] };
-    this.selectedFlavorText = "An unknown object.";
+    this.config = { flavorTexts: ['An unknown object.'] };
+    this.selectedFlavorText = 'An unknown object.';
     this.storyGroupId = null;
     this.activationResults = [];
     this.availableStoryFragments = new Set(); // Track available fragments for this object
@@ -42,11 +44,12 @@ export default class GameObject extends Tile {
     this.guaranteedStory = config.guaranteedStory || false;
     this.exhaustedMessage = config.exhaustedMessage || null;
     this.activationResults = config.activationResults || [];
-    
+
     // Pick flavor text once and stick with it
-    this.flavorTexts = config.flavorTexts || ["An unremarkable object."];
-    this.selectedFlavorText = this.flavorTexts[Math.floor(Math.random() * this.flavorTexts.length)];
-    
+    this.flavorTexts = config.flavorTexts || ['An unremarkable object.'];
+    this.selectedFlavorText =
+      this.flavorTexts[Math.floor(Math.random() * this.flavorTexts.length)];
+
     // Visual properties - pre-compute asset path
     this.flipped = false;
     this.name = config.name;
@@ -62,42 +65,50 @@ export default class GameObject extends Tile {
   }
 
   _setupEventHandlers() {
-    eventBus.on("reset-state", () => this.onReset());
+    eventBus.on('reset-state', () => this.onReset());
   }
 
   // Method to remove a specific story fragment from this object
   removeStoryFragment(fragmentId) {
     this.availableStoryFragments.delete(fragmentId);
-    
+
     // Remove from available story events if it's there
-    this.availableStoryEvents = this.availableStoryEvents.filter(event => 
-      event.type !== 'fragment' || event.fragmentId !== fragmentId
+    this.availableStoryEvents = this.availableStoryEvents.filter(
+      event => event.type !== 'fragment' || event.fragmentId !== fragmentId
     );
   }
 
   determineAvailableStoryEvents() {
     if (this.storyEventDetermined) return;
-    
+
     this.availableStoryEvents = [];
-    
-    if (this.storyGroupId && (this.guaranteedStory || (this.storyChance > 0 && Math.random() <= this.storyChance))) {
-      const availableFragment = storySystem.requestStoryFromGroup(this.storyGroupId);
+
+    if (
+      this.storyGroupId &&
+      (this.guaranteedStory ||
+        (this.storyChance > 0 && Math.random() <= this.storyChance))
+    ) {
+      const availableFragment = storySystem.requestStoryFromGroup(
+        this.storyGroupId
+      );
+
       if (availableFragment) {
         // Add the fragment to our available set
         this.availableStoryFragments.add(availableFragment);
-        
+
         this.availableStoryEvents.push({
           type: 'fragment',
-          fragmentId: availableFragment
+          fragmentId: availableFragment,
         });
       }
     }
-    
+
     this.storyEventDetermined = true;
   }
 
   hasAvailableStory() {
     this.determineAvailableStoryEvents();
+
     return this.availableStoryEvents.length > 0;
   }
 
@@ -111,18 +122,20 @@ export default class GameObject extends Tile {
 
   consumeNextStoryEvent() {
     if (this.availableStoryEvents.length === 0) return false;
-    
+
     const storyEvent = this.availableStoryEvents.shift();
-    
+
     switch (storyEvent.type) {
       case 'fragment':
         // Remove from our available fragments set
         this.availableStoryFragments.delete(storyEvent.fragmentId);
-        
-        eventBus.emit("story-discovery", { fragmentId: storyEvent.fragmentId });
+
+        eventBus.emit('story-discovery', { fragmentId: storyEvent.fragmentId });
+
         return true;
       case 'message':
-        eventBus.emit("game-message", storyEvent.content);
+        eventBus.emit('game-message', storyEvent.content);
+
         return true;
       default:
         return false;
@@ -131,6 +144,7 @@ export default class GameObject extends Tile {
 
   flip() {
     this.flipped = !this.flipped;
+
     return this;
   }
 
@@ -138,16 +152,17 @@ export default class GameObject extends Tile {
     // Try to consume a story event first
     if (this.hasAvailableStory()) {
       this.consumeNextStoryEvent();
+
       return;
     }
-    
+
     // Process activation results
     for (const result of this.activationResults) {
       if (this.processActivationResult(result)) {
         return; // Only process first matching activation result
       }
     }
-    
+
     // Fallback to flavor text or exhausted message
     this._handleDefaultInteraction();
   }
@@ -155,57 +170,72 @@ export default class GameObject extends Tile {
   _handleDefaultInteraction() {
     if (this.storyGroupId) {
       const groupProgress = storySystem.getGroupProgress(this.storyGroupId);
-      const message = this.exhaustedMessage || 
+      const message =
+        this.exhaustedMessage ||
         `Data archive complete (${groupProgress.discovered}/${groupProgress.total} files)`;
-      eventBus.emit("game-message", message);
+
+      eventBus.emit('game-message', message);
     } else {
-      eventBus.emit("game-message", this.selectedFlavorText);
+      eventBus.emit('game-message', this.selectedFlavorText);
     }
   }
 
   processActivationResult(result) {
     const handlers = {
-      'message': () => {
-        eventBus.emit("game-message", result.value);
+      message: () => {
+        eventBus.emit('game-message', result.value);
+
         return true;
       },
-      'resource': () => this._handleResourceResult(result),
-      'upgrade_menu': () => {
-        eventBus.emit("open-upgrade-menu");
+      resource: () => this._handleResourceResult(result),
+      upgrade_menu: () => {
+        eventBus.emit('open-upgrade-menu');
+
         return true;
       },
-      'win_condition': () => {
-        eventBus.emit("game-message", result.message || "You win!");
+      win_condition: () => {
+        eventBus.emit('game-message', result.message || 'You win!');
+
         return true;
       },
-      'conditional': () => {
+      conditional: () => {
         if (this.checkConditions(result.conditions)) {
           return this.processActivationResult(result.result);
         }
+
         return false;
-      }
+      },
     };
 
     const handler = handlers[result.type];
+
     return handler ? handler() : false;
   }
 
   _handleResourceResult(result) {
     if (!result.used) {
-      eventBus.emit("add-resource", {
+      eventBus.emit('add-resource', {
         type: result.resourceType,
         amount: result.amount,
       });
-      eventBus.emit("game-message", `Collected ${result.amount} ${result.resourceType}`);
+      eventBus.emit(
+        'game-message',
+        `Collected ${result.amount} ${result.resourceType}`
+      );
       result.used = true;
+
       return true;
     } else {
-      eventBus.emit("game-message", result.exhaustedMessage || "This resource has been depleted");
+      eventBus.emit(
+        'game-message',
+        result.exhaustedMessage || 'This resource has been depleted'
+      );
+
       return true;
     }
   }
 
-  checkConditions(conditions) {
+  checkConditions(_conditions) {
     // Implement condition checking logic here
     return true;
   }
@@ -231,7 +261,7 @@ export default class GameObject extends Tile {
     if (this.isActivatable()) {
       this.renderGlow(ctx, x, y, size);
     }
-    
+
     // Handle flipped rendering
     if (this.flipped) {
       ctx.save();
@@ -246,41 +276,48 @@ export default class GameObject extends Tile {
   renderAsset(ctx, x, y, size) {
     if (this.assetPath) {
       const assetImage = new Image();
+
       assetImage.src = this.assetPath;
       ctx.drawImage(assetImage, x, y);
     } else {
       // Fallback rendering
-      ctx.fillStyle = "#f00";
+      ctx.fillStyle = '#f00';
       ctx.fillRect(x, y, size, size);
     }
   }
 
   renderGlow(ctx, x, y, size) {
     ctx.save();
-    
+
     // Determine glow color based on object type
     let glowColor;
+
     if (this.hasAvailableStory()) {
       glowColor = '#ffffff'; // White for story objects
     } else if (this.hasActivationResults()) {
       glowColor = '#035170'; // Light blue for other activatable objects
     } else {
       ctx.restore();
+
       return; // No glow needed
     }
-    
+
     const gradient = ctx.createRadialGradient(
-      x + size/2, y + size/2, size/4,
-      x + size/2, y + size/2, size/2
+      x + size / 2,
+      y + size / 2,
+      size / 4,
+      x + size / 2,
+      y + size / 2,
+      size / 2
     );
-    
+
     gradient.addColorStop(0, glowColor + '40');
     gradient.addColorStop(0.7, glowColor + '20');
     gradient.addColorStop(1, glowColor + '00');
-    
+
     ctx.fillStyle = gradient;
-    ctx.fillRect(x - size*0.1, y - size*0.1, size*1.2, size*1.2);
-    
+    ctx.fillRect(x - size * 0.1, y - size * 0.1, size * 1.2, size * 1.2);
+
     ctx.restore();
   }
 }

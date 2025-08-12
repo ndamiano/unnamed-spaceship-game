@@ -1,8 +1,8 @@
-import GameObject from "../objects/GameObject.js";
+import GameObject from '../objects/GameObject.js';
 
 export class Door extends GameObject {
   constructor(x, y, direction) {
-    super(x, y, "door");
+    super(x, y, 'door');
     this.direction = direction;
     this.passable = true;
     this.blocksLineOfSight = true;
@@ -11,19 +11,19 @@ export class Door extends GameObject {
   }
 
   render(ctx, x, y, tileSize) {
-    ctx.fillStyle = "#888"; // Default wall color
+    ctx.fillStyle = '#888'; // Default wall color
     // Adjust rendering based on direction
     switch (this.direction) {
-      case "top":
+      case 'top':
         ctx.fillRect(x, y, tileSize, tileSize * 0.1);
         break;
-      case "bottom":
+      case 'bottom':
         ctx.fillRect(x, y + tileSize * 0.9, tileSize, tileSize * 0.1);
         break;
-      case "left":
+      case 'left':
         ctx.fillRect(x, y, tileSize * 0.1, tileSize);
         break;
-      case "right":
+      case 'right':
         ctx.fillRect(x + tileSize * 0.9, y, tileSize * 0.1, tileSize);
         break;
     }
