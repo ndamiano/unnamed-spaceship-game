@@ -17,6 +17,11 @@ export default class GameObject extends Tile {
     this._setupFromConfig(config, objectType);
     this._setupStoryManagement();
     this._setupEventHandlers();
+    
+    // Register this object with the story system if it has story content
+    if (this.storyGroupId) {
+      storySystem.registerStoryObject(this);
+    }
   }
 
   _setupFallback(objectType) {
@@ -27,6 +32,7 @@ export default class GameObject extends Tile {
     this.selectedFlavorText = "An unknown object.";
     this.storyGroupId = null;
     this.activationResults = [];
+    this.availableStoryFragments = new Set(); // Track available fragments for this object
   }
 
   _setupFromConfig(config, objectType) {
@@ -47,6 +53,7 @@ export default class GameObject extends Tile {
     this.objectType = objectType;
     this.config = config;
     this.assetPath = this.name ? `assets/${this.name}-100x100.png` : null;
+    this.availableStoryFragments = new Set(); // Track available fragments for this object
   }
 
   _setupStoryManagement() {
@@ -58,6 +65,16 @@ export default class GameObject extends Tile {
     eventBus.on("reset-state", () => this.onReset());
   }
 
+  // Method to remove a specific story fragment from this object
+  removeStoryFragment(fragmentId) {
+    this.availableStoryFragments.delete(fragmentId);
+    
+    // Remove from available story events if it's there
+    this.availableStoryEvents = this.availableStoryEvents.filter(event => 
+      event.type !== 'fragment' || event.fragmentId !== fragmentId
+    );
+  }
+
   determineAvailableStoryEvents() {
     if (this.storyEventDetermined) return;
     
@@ -66,6 +83,9 @@ export default class GameObject extends Tile {
     if (this.storyGroupId && (this.guaranteedStory || (this.storyChance > 0 && Math.random() <= this.storyChance))) {
       const availableFragment = storySystem.requestStoryFromGroup(this.storyGroupId);
       if (availableFragment) {
+        // Add the fragment to our available set
+        this.availableStoryFragments.add(availableFragment);
+        
         this.availableStoryEvents.push({
           type: 'fragment',
           fragmentId: availableFragment
@@ -96,6 +116,9 @@ export default class GameObject extends Tile {
     
     switch (storyEvent.type) {
       case 'fragment':
+        // Remove from our available fragments set
+        this.availableStoryFragments.delete(storyEvent.fragmentId);
+        
         eventBus.emit("story-discovery", { fragmentId: storyEvent.fragmentId });
         return true;
       case 'message':
@@ -188,15 +211,18 @@ export default class GameObject extends Tile {
   }
 
   onReset() {
-    // Reset story events
-    this.storyEventDetermined = false;
-    this.availableStoryEvents = [];
-    
     // Reset activation results that can be used again
     for (const result of this.activationResults) {
       if (result.type === 'resource' && result.resetOnBatteryDrain) {
         result.used = false;
       }
+    }
+  }
+
+  // Cleanup method when object is destroyed
+  destroy() {
+    if (this.storyGroupId) {
+      storySystem.unregisterStoryObject(this);
     }
   }
 
@@ -239,7 +265,6 @@ export default class GameObject extends Tile {
     } else if (this.hasActivationResults()) {
       glowColor = '#035170'; // Light blue for other activatable objects
     } else {
-      console.log("Should exit");
       ctx.restore();
       return; // No glow needed
     }

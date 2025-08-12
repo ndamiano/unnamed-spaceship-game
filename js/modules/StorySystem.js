@@ -43,6 +43,7 @@ class StorySystem {
     this.currentModal = null;
     this.storyFragments = null;
     this.loadPromise = null;
+    this.registeredObjects = new Set(); // Track all objects with story content
     this.setupEventListeners();
     this.setupModalElements();
   }
@@ -77,6 +78,25 @@ class StorySystem {
       throw new Error('Story fragments not loaded yet. Call loadStoryFragments() first.');
     }
     return this.storyFragments;
+  }
+
+  // Register an object that has story content
+  registerStoryObject(gameObject) {
+    this.registeredObjects.add(gameObject);
+  }
+
+  // Unregister an object (for cleanup)
+  unregisterStoryObject(gameObject) {
+    this.registeredObjects.delete(gameObject);
+  }
+
+  // Remove a specific fragment from all registered objects
+  removeFragmentFromAllObjects(fragmentId) {
+    for (const obj of this.registeredObjects) {
+      if (obj.removeStoryFragment) {
+        obj.removeStoryFragment(fragmentId);
+      }
+    }
   }
 
   setupEventListeners() {
@@ -238,6 +258,9 @@ class StorySystem {
       order: this.journalEntries.size
     });
     this.currentModal = fragmentId;
+
+    // Remove this fragment from all objects that have it
+    this.removeFragmentFromAllObjects(fragmentId);
 
     // Update group progress
     if (fragment.group) {
