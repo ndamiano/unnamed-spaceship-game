@@ -39,6 +39,7 @@ class StorySystem {
   constructor() {
     this.discoveredFragments = new Set();
     this.discoveredGroups = new Map();
+    this.journalEntries = new Map(); // Store discovered fragments with metadata
     this.currentModal = null;
     this.storyFragments = null;
     this.loadPromise = null;
@@ -88,6 +89,28 @@ class StorySystem {
     eventBus.on("show-story", (fragmentId) => {
       this.showStoryModal(fragmentId);
     });
+
+    // Listen for journal requests
+    eventBus.on("open-journal", () => {
+      this.showJournal();
+    });
+
+    // Setup keyboard listener for L key
+    document.addEventListener("keydown", (e) => {
+      if (e.key.toLowerCase() === "l" && !this.isModalOpen()) {
+        this.showJournal();
+      }
+    });
+  }
+
+  isModalOpen() {
+    const storyModal = document.getElementById("story-modal");
+    const upgradeModal = document.getElementById("new-upgrade-modal");
+    const journalModal = document.getElementById("journal-modal");
+    
+    return (storyModal && storyModal.classList.contains("active")) ||
+           (upgradeModal && upgradeModal.classList.contains("active")) ||
+           (journalModal && journalModal.classList.contains("active"));
   }
 
   setupModalElements() {
@@ -96,12 +119,10 @@ class StorySystem {
     this.timestampEl = document.getElementById("story-timestamp");
     this.iconEl = document.getElementById("story-icon");
     this.textEl = document.getElementById("story-text");
-    this.saveBtn = document.getElementById("save-story-btn");
     this.closeBtn = document.getElementById("close-story-btn");
 
     // Setup event listeners for modal buttons
     this.closeBtn.addEventListener("click", () => this.closeStoryModal());
-    this.saveBtn.addEventListener("click", () => this.saveStoryFragment());
     
     // Close modal when clicking outside
     this.modal.addEventListener("click", (e) => {
@@ -209,8 +230,13 @@ class StorySystem {
       return;
     }
 
-    // Mark as discovered
+    // Mark as discovered and add to journal
     this.discoveredFragments.add(fragmentId);
+    this.journalEntries.set(fragmentId, {
+      fragment: fragment,
+      discoveredAt: new Date(),
+      order: this.journalEntries.size
+    });
     this.currentModal = fragmentId;
 
     // Update group progress
@@ -243,20 +269,112 @@ class StorySystem {
     this.typewriterEffect(fragment.text);
   }
 
+  showJournal() {
+    if (this.journalEntries.size === 0) {
+      eventBus.emit("game-message", "No journal entries found");
+      return;
+    }
+
+    // Create journal modal if it doesn't exist
+    this.createJournalModal();
+    
+    // Populate journal content
+    this.populateJournal();
+    
+    // Show journal modal
+    const journalModal = document.getElementById("journal-modal");
+    journalModal.classList.add("active");
+  }
+
+  createJournalModal() {
+    let journalModal = document.getElementById("journal-modal");
+    
+    if (!journalModal) {
+      journalModal = document.createElement("div");
+      journalModal.id = "journal-modal";
+      journalModal.className = "story-modal";
+      journalModal.innerHTML = `
+        <div class="story-content">
+          <div class="story-header">
+            <div class="story-icon">📖</div>
+            <div class="story-meta">
+              <h3 class="story-title">Personal Journal</h3>
+              <p class="story-timestamp">Discovered Data Fragments</p>
+            </div>
+          </div>
+          
+          <div class="story-text" id="journal-content"></div>
+          
+          <div class="story-actions">
+            <button class="btn" id="close-journal-btn">Close</button>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById("game-container").appendChild(journalModal);
+      
+      // Setup event listeners
+      document.getElementById("close-journal-btn").addEventListener("click", () => {
+        journalModal.classList.remove("active");
+      });
+      
+      journalModal.addEventListener("click", (e) => {
+        if (e.target === journalModal) {
+          journalModal.classList.remove("active");
+        }
+      });
+      
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && journalModal.classList.contains("active")) {
+          journalModal.classList.remove("active");
+        }
+      });
+    }
+  }
+
+  populateJournal() {
+    const journalContent = document.getElementById("journal-content");
+    const entries = Array.from(this.journalEntries.values())
+      .sort((a, b) => a.order - b.order);
+    
+    let content = "";
+    
+    // Group entries by story group
+    const groupedEntries = {};
+    entries.forEach(entry => {
+      const groupId = entry.fragment.group || "MISC";
+      if (!groupedEntries[groupId]) {
+        groupedEntries[groupId] = [];
+      }
+      groupedEntries[groupId].push(entry);
+    });
+    
+    // Display entries by group
+    Object.entries(groupedEntries).forEach(([groupId, groupEntries]) => {
+      const group = STORY_GROUPS[groupId];
+      const groupName = group ? group.name : "Miscellaneous";
+      const groupIcon = group ? group.icon : "📄";
+      
+      content += `\n${groupIcon} ${groupName}\n${"=".repeat(groupName.length + 3)}\n\n`;
+      
+      groupEntries.forEach(entry => {
+        const fragment = entry.fragment;
+        content += `${fragment.icon} ${fragment.title}\n`;
+        content += `${fragment.timestamp}\n\n`;
+        content += `${fragment.text}\n\n`;
+        content += `${"─".repeat(50)}\n\n`;
+      });
+    });
+    
+    journalContent.textContent = content;
+  }
+
   closeStoryModal() {
     this.modal.classList.remove("active");
     this.currentModal = null;
     
     // Resume game (if paused)
     eventBus.emit("game-resumed");
-  }
-
-  saveStoryFragment() {
-    if (this.currentModal) {
-      eventBus.emit("game-message", "Story fragment saved to personal logs");
-      // You could add logic here to save to localStorage or player data
-    }
-    this.closeStoryModal();
   }
 
   typewriterEffect(text) {
@@ -319,6 +437,10 @@ class StorySystem {
     
     // Return first available fragment that meets requirements
     return availableFragments[0];
+  }
+
+  getJournalEntryCount() {
+    return this.journalEntries.size;
   }
 }
 

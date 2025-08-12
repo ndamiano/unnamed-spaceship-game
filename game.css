@@ -37,7 +37,7 @@ canvas {
   box-sizing: border-box;
 }
 
-/* Upgrade Modal Styles */
+/* Legacy Upgrade Modal Styles - kept for compatibility but hidden */
 .modal {
   display: none;
   position: absolute;
@@ -124,8 +124,7 @@ canvas {
   color: #000;
 }
 
-/* Story Modal Styles - Add these to your existing game.css */
-
+/* Story Modal Styles */
 .story-modal {
   position: fixed;
   top: 0;
@@ -149,12 +148,15 @@ canvas {
   border: 2px solid #00ff00;
   border-radius: 10px;
   padding: 30px;
-  max-width: 800px;
-  max-height: 70vh;
-  overflow-y: auto;
+  width: 800px;
+  height: 70vh;
+  max-width: 90vw;
+  max-height: 90vh;
   box-shadow: 0 0 50px rgba(0, 255, 0, 0.3);
   position: relative;
   animation: modalSlideIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes modalSlideIn {
@@ -174,6 +176,7 @@ canvas {
   margin-bottom: 20px;
   border-bottom: 1px solid #00ff00;
   padding-bottom: 15px;
+  flex-shrink: 0;
 }
 
 .story-icon {
@@ -188,6 +191,7 @@ canvas {
   color: #000;
   font-weight: bold;
   font-size: 1.2em;
+  flex-shrink: 0;
 }
 
 .story-meta {
@@ -213,7 +217,9 @@ canvas {
   color: #ccffcc;
   font-family: monospace;
   white-space: pre-wrap;
-  min-height: 200px;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
 }
 
 .story-actions {
@@ -221,6 +227,7 @@ canvas {
   text-align: right;
   border-top: 1px solid #00ff00;
   padding-top: 15px;
+  flex-shrink: 0;
 }
 
 .btn {
@@ -247,6 +254,157 @@ canvas {
 .btn.secondary:hover {
   background: #888;
   color: #000;
+}
+
+/* New Upgrade Modal using story modal styling */
+.upgrade-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.upgrade-modal.active {
+  display: flex;
+}
+
+.upgrade-content {
+  background: linear-gradient(135deg, #0a1a0a, #1a2a1a);
+  border: 2px solid #00ff00;
+  border-radius: 10px;
+  padding: 30px;
+  width: 800px;
+  height: 70vh;
+  max-width: 90vw;
+  max-height: 90vh;
+  box-shadow: 0 0 50px rgba(0, 255, 0, 0.3);
+  position: relative;
+  animation: modalSlideIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.upgrade-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #00ff00;
+  padding-bottom: 15px;
+  flex-shrink: 0;
+}
+
+.upgrade-icon {
+  width: 40px;
+  height: 40px;
+  background: #00ff00;
+  border-radius: 50%;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: bold;
+  font-size: 1.2em;
+  flex-shrink: 0;
+}
+
+.upgrade-title {
+  font-size: 1.2em;
+  color: #00ff00;
+  margin: 0;
+  font-family: monospace;
+}
+
+.upgrade-grid-container {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.upgrade-card {
+  background: rgba(0, 255, 0, 0.05);
+  border: 1px solid #00ff00;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.upgrade-card:hover {
+  background: rgba(0, 255, 0, 0.1);
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+}
+
+.upgrade-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #00ff00;
+  font-family: monospace;
+  font-size: 1.1em;
+}
+
+.upgrade-card p {
+  margin: 10px 0;
+  color: #ccffcc;
+  font-family: monospace;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.upgrade-card .upgrade-cost {
+  margin: 15px 0 10px 0;
+  color: #ffaa00;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.upgrade-card .upgrade-buy-btn {
+  background: transparent;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-family: monospace;
+  width: 100%;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.upgrade-card .upgrade-buy-btn:hover {
+  background: #00ff00;
+  color: #000;
+}
+
+.upgrade-card .upgrade-buy-btn:disabled {
+  border-color: #555;
+  color: #555;
+  cursor: not-allowed;
+}
+
+.upgrade-card .upgrade-buy-btn:disabled:hover {
+  background: transparent;
+  color: #555;
+}
+
+.upgrade-actions {
+  margin-top: 20px;
+  text-align: right;
+  border-top: 1px solid #00ff00;
+  padding-top: 15px;
+  flex-shrink: 0;
 }
 
 /* Typewriter effect */

@@ -7,9 +7,11 @@ class UserInterface {
   constructor() {
     this.statsPanel = document.getElementById("stats-panel");
     this.messagesPanel = document.getElementById("messages-panel");
-    this.upgradeModal = document.getElementById("upgrade-modal");
-    this.upgradesGrid = document.querySelector(".upgrades-grid");
-    this.closeModalBtn = document.getElementById("close-modal");
+    
+    // Use new upgrade modal
+    this.upgradeModal = document.getElementById("new-upgrade-modal");
+    this.upgradeGrid = document.getElementById("upgrade-grid");
+    this.closeUpgradeBtn = document.getElementById("close-upgrade-btn");
 
     // Listen for player updates
     eventBus.on("player-updated", () => {
@@ -31,45 +33,81 @@ class UserInterface {
       this.updateStats(); // Refresh to show new story count
     });
 
-    // Setup modal close button
-    this.closeModalBtn.addEventListener("click", () => {
-      this.hideUpgradeModal();
-    });
+    // Setup modal event listeners
+    this.setupUpgradeModalEvents();
 
     // Initial render
     this.updateStats();
   }
 
+  setupUpgradeModalEvents() {
+    // Setup upgrade modal close button
+    this.closeUpgradeBtn.addEventListener("click", () => {
+      this.hideUpgradeModal();
+    });
+
+    // Close modal when clicking outside
+    this.upgradeModal.addEventListener("click", (e) => {
+      if (e.target === this.upgradeModal) {
+        this.hideUpgradeModal();
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.upgradeModal.classList.contains("active")) {
+        this.hideUpgradeModal();
+      }
+    });
+  }
+
   showUpgradeModal() {
     this.renderUpgradeItems();
-    this.upgradeModal.style.display = "flex";
+    this.upgradeModal.classList.add("active");
   }
 
   hideUpgradeModal() {
-    this.upgradeModal.style.display = "none";
+    this.upgradeModal.classList.remove("active");
   }
 
   renderUpgradeItems() {
-    this.upgradesGrid.innerHTML = "";
+    this.upgradeGrid.innerHTML = "";
     const upgrades = UpgradeSystem.getAvailableUpgrades();
+    const playerStats = getStats();
 
     for (const [id, upgrade] of Object.entries(upgrades)) {
-      const upgradeEl = document.createElement("div");
-      upgradeEl.className = "upgrade-item";
-      upgradeEl.innerHTML = `
-        <h3>${upgrade.name}</h3>
+      const canAfford = UpgradeSystem.canAffordUpgrade(id, playerStats.resources);
+      const currentCount = playerStats.getUpgradeCount(id);
+      
+      const upgradeCard = document.createElement("div");
+      upgradeCard.className = "upgrade-card";
+      
+      // Show current level if upgrade is repeatable and has been purchased
+      const levelDisplay = upgrade.repeatable && currentCount > 0 
+        ? ` (Level ${currentCount})` 
+        : '';
+      
+      upgradeCard.innerHTML = `
+        <h3>${upgrade.name}${levelDisplay}</h3>
         <p>${upgrade.description}</p>
         <div class="upgrade-cost">Cost: ${Object.entries(upgrade.cost)
           .map(([type, amount]) => `${amount} ${type}`)
           .join(", ")}</div>
-        <button class="buy-btn" data-upgrade-id="${id}">Purchase</button>
+        <button class="upgrade-buy-btn" data-upgrade-id="${id}" ${!canAfford ? 'disabled' : ''}>
+          ${canAfford ? 'Purchase' : 'Insufficient Resources'}
+        </button>
       `;
 
-      upgradeEl.querySelector(".buy-btn").addEventListener("click", () => {
-        UpgradeSystem.purchaseUpgrade(id);
-      });
+      const buyBtn = upgradeCard.querySelector(".upgrade-buy-btn");
+      if (canAfford) {
+        buyBtn.addEventListener("click", () => {
+          UpgradeSystem.purchaseUpgrade(id);
+          // Refresh the modal to update costs and availability
+          this.renderUpgradeItems();
+        });
+      }
 
-      this.upgradesGrid.appendChild(upgradeEl);
+      this.upgradeGrid.appendChild(upgradeCard);
     }
   }
 
@@ -92,7 +130,7 @@ class UserInterface {
       });
       
       if (storyCount > 0) {
-        storyProgressHTML += '<div style="color: #888; font-size: 0.7em; margin-top: 5px;">Press L to review logs</div>';
+        storyProgressHTML += '<div style="color: #888; font-size: 0.7em; margin-top: 5px;">Press L to open journal</div>';
       }
     }
     

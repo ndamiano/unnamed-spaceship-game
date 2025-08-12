@@ -12,8 +12,8 @@
     <div id="game-container">
       <canvas id="gameCanvas"></canvas>
       
-      <!-- Existing upgrade modal -->
-      <div id="upgrade-modal" class="modal">
+      <!-- Legacy upgrade modal - kept for compatibility -->
+      <div id="upgrade-modal" class="modal" style="display: none;">
         <div class="modal-content">
           <h2>Upgrades</h2>
           <div class="upgrades-grid"></div>
@@ -21,7 +21,27 @@
         </div>
       </div>
 
-      <!-- New story modal -->
+      <!-- New upgrade modal using story modal styling -->
+      <div id="new-upgrade-modal" class="upgrade-modal">
+        <div class="upgrade-content">
+          <div class="upgrade-header">
+            <div class="upgrade-icon">⚡</div>
+            <div class="upgrade-meta">
+              <h3 class="upgrade-title">Ship Upgrades</h3>
+            </div>
+          </div>
+          
+          <div class="upgrade-grid-container">
+            <div class="upgrade-grid" id="upgrade-grid"></div>
+          </div>
+          
+          <div class="upgrade-actions">
+            <button class="btn" id="close-upgrade-btn">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Story modal -->
       <div id="story-modal" class="story-modal">
         <div class="story-content">
           <div class="story-header">
@@ -35,7 +55,6 @@
           <div class="story-text" id="story-text"></div>
           
           <div class="story-actions">
-            <button class="btn secondary" id="save-story-btn">Save for Later</button>
             <button class="btn" id="close-story-btn">Continue</button>
           </div>
         </div>
