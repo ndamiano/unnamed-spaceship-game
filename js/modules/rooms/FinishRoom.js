@@ -1,7 +1,5 @@
 import { BaseRoom } from "./BaseRoom.js";
-import Teleporter from "../objects/Teleporter.js";
-import ControlPanel from "../objects/ControlPanel.js";
-import EnergyPylon from "../objects/EnergyPylon.js";
+import GameObject from "../objects/GameObject.js";
 
 export class FinishRoom extends BaseRoom {
   constructor(x, y) {
@@ -11,17 +9,17 @@ export class FinishRoom extends BaseRoom {
 
     // Central teleporter
     this.addObject(
-      new Teleporter(0, 0),
+      new GameObject(0, 0, "teleporter"),
       Math.floor(this.width / 2),
       Math.floor(this.height / 2)
     );
 
     // Symmetric energy pylons flanking the teleporter
-    this.addObject(new EnergyPylon(), 1, 2);
-    this.addObject(new EnergyPylon(), 3, 2);
+    this.addObject(new GameObject(0, 0, "energyPylon"), 1, 2);
+    this.addObject(new GameObject(0, 0, "energyPylon"), 3, 2);
 
     // A control panel near the bottom
-    this.addObject(new ControlPanel(), 2, 1);
+    this.addObject(new GameObject(0, 0, "controlPanel"), 2, 1);
 
     // Door placements
     this.addPotentialDoor(this.width - 1, 2, "right");

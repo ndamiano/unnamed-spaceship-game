@@ -2,7 +2,7 @@ import GameObject from "../objects/GameObject.js";
 
 export class WallSegment extends GameObject {
   constructor(x, y, direction) {
-    super(x, y);
+    super(x, y, "wallSegment");
     this.direction = direction;
     this.passable = false;
     this.blocksLineOfSight = true;

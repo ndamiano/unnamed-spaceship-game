@@ -1,8 +1,0 @@
-import GameObject from "./GameObject.js";
-
-export default class AccessPanel extends GameObject {
-  constructor(x, y) {
-    super(x, y);
-    this.name = "access-panel";
-  }
-}

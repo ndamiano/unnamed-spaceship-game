@@ -1,0 +1,256 @@
+{
+  "terminal": {
+    "name": "terminal",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "ENGINEERING_LOGS",
+    "exhaustedMessage": "Terminal accessed - no new data available",
+    "asset": "terminal-100x100.png"
+  },
+  "cryogenicTube": {
+    "name": "cryogenic-tube",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "MEDICAL_REPORTS",
+    "exhaustedMessage": "The cryo tube is empty. Its occupant long gone.",
+    "asset": "cryogenic-tube-100x100.png"
+  },
+  "assemblyArm": {
+    "name": "assembly-arm",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "REVELATION_MEMORIES",
+    "exhaustedMessage": "The assembly arm remains silent, its work complete.",
+    "asset": "assembly-arm-100x100.png"
+  },
+  "dronePod": {
+    "name": "drone-pod",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "SYSTEM_DIAGNOSTICS",
+    "asset": "drone-pod-100x100.png"
+  },
+  "nanofabricator": {
+    "name": "nanofabricator",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "noStoryMessage": "The nanofabricator hums quietly, ready for use.",
+    "asset": "nanofabricator-100x100.png"
+  },
+  "teleporter": {
+    "name": "teleporter",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "teleporter-100x100.png"
+  },
+  "energyPylon": {
+    "name": "energy-pylon",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "energy-pylon-100x100.png"
+  },
+  "controlPanel": {
+    "name": "control-panel",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "control-panel-100x100.png"
+  },
+  "hologramProjector": {
+    "name": "hologram-projector",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "hologram-projector-100x100.png"
+  },
+  "hydroponicBed": {
+    "name": "hydroponic-bed",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "hydroponic-bed-100x100.png"
+  },
+  "powerCell": {
+    "name": "powercell",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "powercell-100x100.png"
+  },
+  "aITetherNode": {
+    "name": "aitether-node",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "aitether-node-100x100.png"
+  },
+  "accessPanel": {
+    "name": "access-panel",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "access-panel-100x100.png"
+  },
+  "alienArtefactContainer": {
+    "name": "alien-artefact-container",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "alien-artefact-container-100x100.png"
+  },
+  "autoDocUnit": {
+    "name": "auto-doc-unit",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "auto-doc-unit-100x100.png"
+  },
+  "bioScanner": {
+    "name": "bio-scanner",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "bio-scanner-100x100.png"
+  },
+  "blackBoxCore": {
+    "name": "black-box-core",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "black-box-core-100x100.png"
+  },
+  "combatDroidCradle": {
+    "name": "combat-droid-cradle",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "combat-droid-cradle-100x100.png"
+  },
+  "commsRelayStation": {
+    "name": "comms-relay-station",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "comms-relay-station-100x100.png"
+  },
+  "fleshweaverConsole": {
+    "name": "fleshweaver-console",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "fleshweaver-console-100x100.png"
+  },
+  "gravityStabilizer": {
+    "name": "gravity-stabilizer",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "gravity-stabilizer-100x100.png"
+  },
+  "growthVat": {
+    "name": "growth-vat",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "growth-vat-100x100.png"
+  },
+  "hygienePod": {
+    "name": "hygiene-station",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "hygiene-pod-100x100.png"
+  },
+  "logRecorder": {
+    "name": "log-recorder",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "log-recorder-100x100.png"
+  },
+  "maintenanceCrawler": {
+    "name": "maintenance-crawler",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "maintenance-crawler-100x100.png"
+  },
+  "nutrientDispenser": {
+    "name": "nutrient-dispenser",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "nutrient-dispenser-100x100.png"
+  },
+  "observationDeck": {
+    "name": "observation-deck",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "observation-deck-100x100.png"
+  },
+  "oxygenRecycler": {
+    "name": "oxygen-recycler",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "oxygen-recycler-100x100.png"
+  },
+  "personalLocker": {
+    "name": "personal-locker",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "personal-locker-100x100.png"
+  },
+  "plasmaConduit": {
+    "name": "plasma-conduit",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "plasma-conduit-100x100.png"
+  },
+  "psychoNeuralChair": {
+    "name": "psycho-neural-chair",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "psycho-neural-chair-100x100.png"
+  },
+  "quarantineChamber": {
+    "name": "quarantine-chamber",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "quarantine-chamber-100x100.png"
+  },
+  "securityTerminal": {
+    "name": "security-console",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "security-terminal-100x100.png"
+  },
+  "shipAICoreNode": {
+    "name": "ship-aicore-node",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "ship-aicore-node-100x100.png"
+  },
+  "stasisPod": {
+    "name": "stasis-pod",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "stasis-pod-100x100.png"
+  },
+  "vacuumBot": {
+    "name": "vacuum-bot",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "vacuum-bot-100x100.png"
+  },
+  "wallMonitor": {
+    "name": "wall-monitor",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "wall-monitor-100x100.png"
+  },
+  "wasteReprocessor": {
+    "name": "waste-reprocessor",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "waste-reprocessor-100x100.png"
+  },
+  "xenobotanyChamber": {
+    "name": "xenobotany-chamber",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "asset": "xenobotany-chamber-100x100.png"
+  },
+  "wallSegment": {
+    "name": "wall-segment",
+    "passable": false,
+    "blocksLineOfSight": true,
+    "asset": "wall-segment-100x100.png"
+  },
+  "door": {
+    "name": "door",
+    "passable": true,
+    "blocksLineOfSight": true,
+    "asset": "door-100x100.png"
+  }
+}

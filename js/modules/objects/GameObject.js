@@ -1,20 +1,22 @@
 import { Tile } from "../Tile.js";
 import { eventBus } from "../EventBus.js";
 import { storySystem } from "../StorySystem.js";
+import { gameObjectLoader } from "./GameObjectLoader.js";
 
 export default class GameObject extends Tile {
-  constructor(x, y, passable = false, blocksLineOfSight = false, options = {}) {
-    super(x, y, passable, blocksLineOfSight);
+  constructor(x, y, objectType) {
+    const config = gameObjectLoader.getGameObjects()[objectType];
+    super(x, y, config.passable, config.blocksLineOfSight);
     
     // Story configuration
-    this.storyGroupId = options.storyGroupId || null;
-    this.storyMessage = options.storyMessage || null;
-    this.noStoryMessage = options.noStoryMessage || "Nothing of interest here.";
-    this.exhaustedMessage = options.exhaustedMessage || null;
+    this.storyGroupId = config.storyGroupId || null;
+    this.storyMessage = config.storyMessage || null;
+    this.noStoryMessage = config.noStoryMessage || "Nothing of interest here.";
+    this.exhaustedMessage = config.exhaustedMessage || null;
     
     // Visual properties
     this.flipped = false;
-    this.name = options.name || null;
+    this.name = config.name || null;
     
     // Reset handling
     eventBus.on("reset-state", () => {

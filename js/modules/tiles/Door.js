@@ -2,7 +2,7 @@ import GameObject from "../objects/GameObject.js";
 
 export class Door extends GameObject {
   constructor(x, y, direction) {
-    super(x, y);
+    super(x, y, "door");
     this.direction = direction;
     this.passable = true;
     this.blocksLineOfSight = true;

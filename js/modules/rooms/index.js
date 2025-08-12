@@ -1,7 +1,6 @@
 export { BaseRoom } from "./BaseRoom.js";
 export { FinishRoom } from "./FinishRoom.js";
 export { SpawnRoom } from "./SpawnRoom.js";
-export { TestRoom } from "./TestRoom.js";
 export { FarmRoom } from "./FarmRoom.js";
 export { CryoChamberRoom } from "./CryoChamberRoom.js";
 export { SecurityRoom } from "./SecurityRoom.js";

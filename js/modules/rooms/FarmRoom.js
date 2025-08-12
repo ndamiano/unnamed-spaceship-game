@@ -1,8 +1,5 @@
 import { BaseRoom } from "./BaseRoom.js";
-import Terminal from "../objects/Terminal.js";
-import DronePod from "../objects/DronePod.js";
-import AssemblyArm from "../objects/AssemblyArm.js";
-import HydroponicBed from "../objects/HydroponicBed.js";
+import GameObject from "../objects/GameObject.js";
 
 export class FarmRoom extends BaseRoom {
   constructor(x, y) {
@@ -24,13 +21,13 @@ export class FarmRoom extends BaseRoom {
 
     // Hydroponic rows
     for (let x = 1; x <= 5; x++) {
-      this.addObject(new HydroponicBed(), x, 1);
-      this.addObject(new HydroponicBed(), x, 3);
+      this.addObject(new GameObject(0, 0, "hydroponicBed"), x, 1);
+      this.addObject(new GameObject(0, 0, "hydroponicBed"), x, 3);
     }
 
     // Maintenance + control
-    this.addObject(new DronePod(), 0, 0);
-    this.addObject(new AssemblyArm(), 6, 0);
-    this.addObject(new Terminal(), 3, 1);
+    this.addObject(new GameObject(0, 0, "dronePod"), 0, 0);
+    this.addObject(new GameObject(0, 0, "assemblyArm"), 6, 0);
+    this.addObject(new GameObject(0, 0, "terminal"), 3, 1);
   }
 }

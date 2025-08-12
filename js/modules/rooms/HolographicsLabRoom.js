@@ -1,7 +1,5 @@
 import { BaseRoom } from "./BaseRoom.js";
-import HologramProjector from "../objects/HologramProjector.js";
-import CommsRelayStation from "../objects/CommsRelayStation.js";
-import Terminal from "../objects/Terminal.js";
+import GameObject from "../objects/GameObject.js";
 
 export class HolographicsLabRoom extends BaseRoom {
   constructor(x, y) {
@@ -13,9 +11,9 @@ export class HolographicsLabRoom extends BaseRoom {
     this.addPotentialDoor(2, 0, "top");
     this.addPotentialDoor(2, this.height - 1, "bottom");
 
-    this.addObject(new HologramProjector(), 1, 1);
-    this.addObject(new HologramProjector(), 3, 1);
-    this.addObject(new CommsRelayStation(), 2, 2);
-    this.addObject(new Terminal(), 2, 3);
+    this.addObject(new GameObject(0, 0, "hologramProjector"), 1, 1);
+    this.addObject(new GameObject(0, 0, "hologramProjector"), 3, 1);
+    this.addObject(new GameObject(0, 0, "commsRelayStation"), 2, 2);
+    this.addObject(new GameObject(0, 0, "terminal"), 2, 3);
   }
 }
