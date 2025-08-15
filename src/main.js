@@ -1,6 +1,6 @@
-import { Game } from './src/core/game.js';
-import { GameStateManager } from './src/systems/save/game-state-manager.js';
-import { eventBus } from './src/core/event-bus.js';
+import { Game } from './core/game.js';
+import { GameStateManager } from './systems/save/game-state-manager.js';
+import { eventBus } from './core/event-bus.js';
 
 class GameLoader {
   constructor() {
