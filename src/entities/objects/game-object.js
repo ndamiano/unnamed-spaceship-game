@@ -1,6 +1,6 @@
-// Updated GameObject.js with better story restoration
+// src/entities/objects/game-object.js
 import { Tile } from '../../world/tiles/tile.js';
-import { eventBus } from '../../core/event-bus.js';
+import { GameEvents, GameEventListeners } from '../../core/game-events.js';
 import { storySystem } from '../../systems/story/story-system.js';
 import { gameObjectLoader } from './game-object-loader.js';
 
@@ -70,7 +70,7 @@ export default class GameObject extends Tile {
   }
 
   _setupEventHandlers() {
-    eventBus.on('reset-state', () => this.onReset());
+    GameEventListeners.on('reset-state', () => this.onReset());
   }
 
   // Method to remove a specific story fragment from this object
@@ -205,11 +205,11 @@ export default class GameObject extends Tile {
         // Remove from our available fragments set
         this.availableStoryFragments.delete(storyEvent.fragmentId);
 
-        eventBus.emit('story-discovery', { fragmentId: storyEvent.fragmentId });
+        GameEvents.Story.discovery(storyEvent.fragmentId);
 
         return true;
       case 'message':
-        eventBus.emit('game-message', storyEvent.content);
+        GameEvents.Game.message(storyEvent.content);
 
         return true;
       default:
@@ -258,27 +258,27 @@ export default class GameObject extends Tile {
         this.exhaustedMessage ||
         `Data archive complete (${groupProgress.discovered}/${groupProgress.total} files)`;
 
-      eventBus.emit('game-message', message);
+      GameEvents.Game.message(message);
     } else {
-      eventBus.emit('game-message', this.selectedFlavorText);
+      GameEvents.Game.message(this.selectedFlavorText);
     }
   }
 
   processActivationResult(result) {
     const handlers = {
       message: () => {
-        eventBus.emit('game-message', result.value);
+        GameEvents.Game.message(result.value);
 
         return true;
       },
       resource: () => this._handleResourceResult(result),
       upgrade_menu: () => {
-        eventBus.emit('open-upgrade-menu');
+        GameEvents.UI.openUpgrades();
 
         return true;
       },
       win_condition: () => {
-        eventBus.emit('game-message', result.message || 'You win!');
+        GameEvents.Game.message(result.message || 'You win!');
 
         return true;
       },
@@ -298,20 +298,15 @@ export default class GameObject extends Tile {
 
   _handleResourceResult(result) {
     if (!result.used) {
-      eventBus.emit('add-resource', {
-        type: result.resourceType,
-        amount: result.amount,
-      });
-      eventBus.emit(
-        'game-message',
+      GameEvents.Resources.add(result.resourceType, result.amount);
+      GameEvents.Game.message(
         `Collected ${result.amount} ${result.resourceType}`
       );
       result.used = true;
 
       return true;
     } else {
-      eventBus.emit(
-        'game-message',
+      GameEvents.Game.message(
         result.exhaustedMessage || 'This resource has been depleted'
       );
 

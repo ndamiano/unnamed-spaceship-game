@@ -1,4 +1,4 @@
-import { eventBus } from '../../core/event-bus.js';
+import { GameEvents, GameEventListeners } from '../../core/game-events.js';
 import { getStats } from '../../entities/player/player-stats.js';
 
 // Story groups - collections of related fragments
@@ -159,35 +159,37 @@ class StorySystem {
   }
 
   setupEventListeners() {
-    // Listen for story discovery events
-    eventBus.on('story-discovery', data => {
-      this.showStoryModal(data.fragmentId);
-    });
+    GameEventListeners.register({
+      // Story discovery events
+      'story-discovery': data => {
+        this.showStoryModal(data.fragmentId);
+      },
 
-    // Listen for story modal requests
-    eventBus.on('show-story', fragmentId => {
-      this.showStoryModal(fragmentId);
-    });
+      // Story modal requests
+      'show-story': fragmentId => {
+        this.showStoryModal(fragmentId);
+      },
 
-    // Listen for journal requests
-    eventBus.on('open-journal', () => {
-      this.showJournal();
-    });
+      // Journal requests
+      'open-journal': () => {
+        this.showJournal();
+      },
 
-    // Listen for restore events
-    eventBus.on('restore-story-state', storyData => {
-      this.restoreState(storyData);
-    });
+      // Restore events
+      'restore-story-state': storyData => {
+        this.restoreState(storyData);
+      },
 
-    // Listen for object registration events (from restored objects)
-    eventBus.on('register-story-object', obj => {
-      this.registerStoryObject(obj);
+      // Object registration events (from restored objects)
+      'register-story-object': obj => {
+        this.registerStoryObject(obj);
+      },
     });
 
     // Setup keyboard listener for L key
     document.addEventListener('keydown', e => {
       if (e.key.toLowerCase() === 'l' && !this.isModalOpen()) {
-        this.showJournal();
+        GameEvents.Story.openJournal();
       }
     });
   }
@@ -318,16 +320,13 @@ class StorySystem {
     }
 
     if (this.discoveredFragments.has(fragmentId)) {
-      eventBus.emit('game-message', "You've already accessed this information");
+      GameEvents.Game.message("You've already accessed this information");
 
       return;
     }
 
     if (!this.checkRequirements(fragment.requirements)) {
-      eventBus.emit(
-        'game-message',
-        'Insufficient access credentials for this data'
-      );
+      GameEvents.Game.message('Insufficient access credentials for this data');
 
       return;
     }
@@ -372,7 +371,7 @@ class StorySystem {
       message += ` (${groupProgress.length}/${totalInGroup} in series)`;
     }
 
-    eventBus.emit('game-message', message);
+    GameEvents.Game.message(message);
 
     // Start typewriter effect
     this.typewriterEffect(fragment.text);
@@ -380,7 +379,7 @@ class StorySystem {
 
   showJournal() {
     if (this.journalEntries.size === 0) {
-      eventBus.emit('game-message', 'No journal entries found');
+      GameEvents.Game.message('No journal entries found');
 
       return;
     }
@@ -490,7 +489,7 @@ class StorySystem {
     this.currentModal = null;
 
     // Resume game (if paused)
-    eventBus.emit('game-resumed');
+    GameEvents.Game.resumed();
   }
 
   typewriterEffect(text) {
@@ -569,8 +568,7 @@ class StorySystem {
     console.log(
       `Story state restored: ${this.discoveredFragments.size} fragments discovered`
     );
-    eventBus.emit(
-      'game-message',
+    GameEvents.Game.message(
       `Story progress restored: ${this.discoveredFragments.size} fragments recovered`
     );
   }

@@ -3,7 +3,7 @@ import { RoomQueue } from './room-queue.js';
 import { Floor } from '../tiles/floor.js';
 import { WallSegment } from '../tiles/wall-segment.js';
 import { Door } from '../tiles/door.js';
-import { eventBus } from '../../core/event-bus.js';
+import { GameEventListeners } from '../../core/game-events.js';
 
 class ShipMap {
   constructor(width, height, type) {
@@ -14,7 +14,7 @@ class ShipMap {
     this.rooms = [];
 
     // Setup event listeners
-    eventBus.on('player-updated', player => {
+    GameEventListeners.on('player-updated', player => {
       this.revealAreaAroundPlayer(player.x, player.y, 2);
     });
 

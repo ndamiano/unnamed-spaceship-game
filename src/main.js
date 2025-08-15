@@ -1,6 +1,6 @@
 import { Game } from './core/game.js';
 import { GameStateManager } from './systems/save/game-state-manager.js';
-import { eventBus } from './core/event-bus.js';
+import { GameEvents, GameEventListeners } from './core/game-events.js';
 
 class GameLoader {
   constructor() {
@@ -14,7 +14,7 @@ class GameLoader {
 
   setupEventListeners() {
     // Listen for game initialization completion
-    eventBus.on('game-initialized', () => {
+    GameEventListeners.on('game-initialized', () => {
       console.log('Game initialization complete - checking for restore data');
 
       if (this.pendingSaveData) {
@@ -75,17 +75,17 @@ class GameLoader {
 
     // Restore player state
     if (saveData.player) {
-      eventBus.emit('restore-player-state', saveData.player);
+      GameEvents.Save.restorePlayer(saveData.player);
     }
 
     // Restore ship state
     if (saveData.ship) {
-      eventBus.emit('restore-ship-state', saveData.ship);
+      GameEvents.Save.restoreShip(saveData.ship);
     }
 
     // Restore story progress
     if (saveData.story) {
-      eventBus.emit('restore-story-state', saveData.story);
+      GameEvents.Save.restoreStory(saveData.story);
     }
 
     console.log('Game restoration events emitted');

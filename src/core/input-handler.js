@@ -1,5 +1,5 @@
 import { Directions } from '../utils/directions.js';
-import { eventBus } from './event-bus.js';
+import { GameEvents } from './game-events.js';
 
 class InputHandler {
   constructor() {
@@ -17,9 +17,9 @@ class InputHandler {
       const key = e.key.toLowerCase();
 
       if (this.directions[key]) {
-        eventBus.emit('attempt-move', this.directions[key]);
+        GameEvents.Player.attemptMove(this.directions[key]);
       } else if (key === 'e') {
-        eventBus.emit('attempt-interact');
+        GameEvents.Player.attemptInteract();
       }
     });
   }

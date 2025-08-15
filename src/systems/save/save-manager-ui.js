@@ -1,4 +1,4 @@
-import { eventBus } from '../../core/event-bus.js';
+import { GameEvents, GameEventListeners } from '../../core/game-events.js';
 
 export class SaveManagerUI {
   constructor(gameStateManager) {
@@ -125,7 +125,7 @@ export class SaveManagerUI {
     });
 
     // Listen for save manager open requests
-    eventBus.on('open-save-manager', () => {
+    GameEventListeners.on('open-save-manager', () => {
       this.open();
     });
   }
@@ -286,14 +286,14 @@ export class SaveManagerUI {
       );
 
       if (success) {
-        eventBus.emit('game-message', `Game saved to slot ${newSlot}`);
+        GameEvents.Game.message(`Game saved to slot ${newSlot}`);
         await this.refreshSaves();
       } else {
-        eventBus.emit('game-message', 'Failed to create save');
+        GameEvents.Game.message('Failed to create save');
       }
     } catch (error) {
       console.error('Failed to create new save:', error);
-      eventBus.emit('game-message', 'Error creating save');
+      GameEvents.Game.message('Error creating save');
     }
   }
 
@@ -303,14 +303,14 @@ export class SaveManagerUI {
       const success = await this.gameState.saveGame(gameData, 'auto');
 
       if (success) {
-        eventBus.emit('game-message', 'Quick save complete');
+        GameEvents.Game.message('Quick save complete');
         await this.refreshSaves();
       } else {
-        eventBus.emit('game-message', 'Quick save failed');
+        GameEvents.Game.message('Quick save failed');
       }
     } catch (error) {
       console.error('Quick save failed:', error);
-      eventBus.emit('game-message', 'Quick save error');
+      GameEvents.Game.message('Quick save error');
     }
   }
 
@@ -324,11 +324,11 @@ export class SaveManagerUI {
         if (saveData) {
           await this.gameState.loadGame(saveData);
         } else {
-          eventBus.emit('game-message', 'Failed to load save');
+          GameEvents.Game.message('Failed to load save');
         }
       } catch (error) {
         console.error('Failed to load save:', error);
-        eventBus.emit('game-message', 'Error loading save');
+        GameEvents.Game.message('Error loading save');
       }
     }
   }
@@ -340,14 +340,14 @@ export class SaveManagerUI {
         const success = await this.gameState.saveGame(gameData, slot);
 
         if (success) {
-          eventBus.emit('game-message', `Save overwritten in slot ${slot}`);
+          GameEvents.Game.message(`Save overwritten in slot ${slot}`);
           await this.refreshSaves();
         } else {
-          eventBus.emit('game-message', 'Failed to overwrite save');
+          GameEvents.Game.message('Failed to overwrite save');
         }
       } catch (error) {
         console.error('Failed to overwrite save:', error);
-        eventBus.emit('game-message', 'Error overwriting save');
+        GameEvents.Game.message('Error overwriting save');
       }
     }
   }
@@ -356,11 +356,11 @@ export class SaveManagerUI {
     if (confirm(`Delete save from slot ${slot}? This cannot be undone.`)) {
       try {
         this.gameState.deleteSaveData(slot);
-        eventBus.emit('game-message', `Save deleted from slot ${slot}`);
+        GameEvents.Game.message(`Save deleted from slot ${slot}`);
         await this.refreshSaves();
       } catch (error) {
         console.error('Failed to delete save:', error);
-        eventBus.emit('game-message', 'Error deleting save');
+        GameEvents.Game.message('Error deleting save');
       }
     }
   }
@@ -379,13 +379,13 @@ export class SaveManagerUI {
         a.click();
         URL.revokeObjectURL(url);
 
-        eventBus.emit('game-message', `Save exported from slot ${slot}`);
+        GameEvents.Game.message(`Save exported from slot ${slot}`);
       } else {
-        eventBus.emit('game-message', 'Export failed');
+        GameEvents.Game.message('Export failed');
       }
     } catch (error) {
       console.error('Export failed:', error);
-      eventBus.emit('game-message', 'Export error');
+      GameEvents.Game.message('Export error');
     }
   }
 
@@ -408,14 +408,14 @@ export class SaveManagerUI {
       const success = await this.gameState.importSave(text, slot);
 
       if (success) {
-        eventBus.emit('game-message', `Save imported to slot ${slot}`);
+        GameEvents.Game.message(`Save imported to slot ${slot}`);
         await this.refreshSaves();
       } else {
-        eventBus.emit('game-message', 'Import failed - invalid save file');
+        GameEvents.Game.message('Import failed - invalid save file');
       }
     } catch (error) {
       console.error('Import failed:', error);
-      eventBus.emit('game-message', 'Import error');
+      GameEvents.Game.message('Import error');
     }
 
     // Clear file input
@@ -426,11 +426,11 @@ export class SaveManagerUI {
     if (confirm('Remove old saves, keeping only the 10 most recent?')) {
       try {
         this.gameState.cleanupOldSaves(10);
-        eventBus.emit('game-message', 'Old saves cleaned up');
+        GameEvents.Game.message('Old saves cleaned up');
         this.refreshSaves();
       } catch (error) {
         console.error('Cleanup failed:', error);
-        eventBus.emit('game-message', 'Cleanup failed');
+        GameEvents.Game.message('Cleanup failed');
       }
     }
   }

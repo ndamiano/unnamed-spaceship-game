@@ -1,4 +1,4 @@
-import { eventBus } from '../core/event-bus.js';
+import { GameEventListeners } from '../core/game-events.js';
 import { getStats } from '../entities/player/player-stats.js';
 import { UpgradeSystem } from '../systems/upgrades/upgrade-system.js';
 import { storySystem } from '../systems/story/story-system.js';
@@ -13,31 +13,31 @@ class UserInterface {
     this.upgradeGrid = document.getElementById('upgrade-grid');
     this.closeUpgradeBtn = document.getElementById('close-upgrade-btn');
 
-    // Listen for player updates
-    eventBus.on('player-updated', () => {
-      this.updateStats();
-    });
-
-    // Listen for game messages
-    eventBus.on('game-message', message => {
-      this.addMessage(message);
-    });
-
-    // Listen for modal toggle
-    eventBus.on('open-upgrade-menu', () => {
-      this.showUpgradeModal();
-    });
-
-    // Listen for story discoveries (to update UI)
-    eventBus.on('story-discovery', () => {
-      this.updateStats(); // Refresh to show new story count
-    });
-
-    // Setup modal event listeners
+    this.setupEventListeners();
     this.setupUpgradeModalEvents();
 
     // Initial render
     this.updateStats();
+  }
+
+  setupEventListeners() {
+    GameEventListeners.register({
+      'player-updated': () => {
+        this.updateStats();
+      },
+
+      'game-message': message => {
+        this.addMessage(message);
+      },
+
+      'open-upgrade-menu': () => {
+        this.showUpgradeModal();
+      },
+
+      'story-discovery': () => {
+        this.updateStats(); // Refresh to show new story count
+      },
+    });
   }
 
   setupUpgradeModalEvents() {

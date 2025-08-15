@@ -2,7 +2,7 @@ import {
   RESOURCE_TYPES,
   hasMoreResources,
 } from '../resources/resource-manager.js';
-import { eventBus } from '../../core/event-bus.js';
+import { GameEvents } from '../../core/game-events.js';
 import { getStats } from '../../entities/player/player-stats.js';
 
 // Available upgrades with their costs
@@ -51,7 +51,7 @@ class UpgradeSystem {
     const def = UPGRADE_DEFS[upgradeId];
 
     if (!def) return false;
-    eventBus.emit('purchase-upgrade', def);
+    GameEvents.Upgrades.purchase(def);
 
     return this.canAffordUpgrade(upgradeId, getStats().resources);
   }

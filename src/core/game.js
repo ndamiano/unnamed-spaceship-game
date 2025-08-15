@@ -1,5 +1,5 @@
 import { UserInterface } from '../ui/user-interface.js';
-import { eventBus } from '../core/event-bus.js';
+import { GameEvents, GameEventListeners } from './game-events.js';
 import { Player } from '../entities/player/player.js';
 import { InputHandler } from './input-handler.js';
 import { GameConfig } from '../config/game-config.js';
@@ -81,7 +81,7 @@ export class Game {
       console.log('Game initialization complete');
 
       // Emit initialization complete event
-      eventBus.emit('game-initialized');
+      GameEvents.Game.initialized();
     } catch (error) {
       console.error('Failed to initialize game:', error);
       this.showLoadingError(error);
@@ -121,10 +121,7 @@ export class Game {
 
   setupStorySystem() {
     console.log('Story system initialized with JSON data');
-    eventBus.emit(
-      'game-message',
-      'Systems online... accessing memory banks...'
-    );
+    GameEvents.Game.message('Systems online... accessing memory banks...');
   }
 
   setupUI() {
@@ -184,26 +181,24 @@ export class Game {
   }
 
   setupMoveValidation() {
-    eventBus.on('attempt-move', direction => {
-      eventBus.emit('player-direction-change', direction);
-      const newX = this.player.x + direction.x;
-      const newY = this.player.y + direction.y;
+    GameEventListeners.register({
+      'attempt-move': direction => {
+        GameEvents.Player.directionChange(direction);
+        const newX = this.player.x + direction.x;
+        const newY = this.player.y + direction.y;
 
-      if (this.ship.canMoveTo(newX, newY, direction)) {
-        eventBus.emit('player-move', {
-          x: newX,
-          y: newY,
-          direction,
-        });
-      }
-    });
+        if (this.ship.canMoveTo(newX, newY, direction)) {
+          GameEvents.Player.move(newX, newY, direction);
+        }
+      },
 
-    eventBus.on('attempt-interact', () => {
-      const direction = this.player.direction;
-      const targetX = this.player.x + direction.x;
-      const targetY = this.player.y + direction.y;
+      'attempt-interact': () => {
+        const direction = this.player.direction;
+        const targetX = this.player.x + direction.x;
+        const targetY = this.player.y + direction.y;
 
-      this.ship.attemptInteract(targetX, targetY);
+        this.ship.attemptInteract(targetX, targetY);
+      },
     });
   }
 

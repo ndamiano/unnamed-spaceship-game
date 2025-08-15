@@ -1,5 +1,5 @@
 import { Directions } from '../../utils/directions.js';
-import { eventBus } from '../../core/event-bus.js';
+import { GameEvents, GameEventListeners } from '../../core/game-events.js';
 import {
   BASE_RESOURCES,
   modifyResources,
@@ -33,7 +33,6 @@ class Player {
     assetImage.src = `assets/player-100x100.png`;
 
     ctx.save();
-
     ctx.translate(centerX, centerY);
 
     if (this.direction === Directions.UP) {
@@ -49,59 +48,57 @@ class Player {
   }
 
   registerEventHandlers() {
-    eventBus.on('player-move', ({ x, y, direction }) => {
-      this.x = x;
-      this.y = y;
-      this.direction = direction;
+    GameEventListeners.register({
+      'player-move': ({ x, y, direction }) => {
+        this.x = x;
+        this.y = y;
+        this.direction = direction;
+        this.battery -= this.movementCost;
+        this.updatePlaytime();
+        GameEvents.Player.updated(getStats());
+      },
 
-      this.battery -= this.movementCost;
-      this.updatePlaytime();
-      eventBus.emit('player-updated', getStats());
+      'player-direction-change': direction => {
+        this.direction = direction;
+        GameEvents.Player.updated(this);
+      },
+
+      'player-updated': player => {
+        if (player.battery <= 0) {
+          GameEvents.Game.message(
+            'As you feel your battery getting close to empty, you return to your charging pod.'
+          );
+          GameEvents.Game.resetState();
+          this.reset();
+        }
+      },
+
+      'purchase-upgrade': upgrade_def => {
+        if (UpgradeSystem.canAffordUpgrade(upgrade_def.id, this.resources)) {
+          this.resources = subtractResources(this.resources, upgrade_def.cost);
+          const currentCount = this.upgrades.get(upgrade_def.id) ?? 0;
+
+          this.upgrades.set(upgrade_def.id, currentCount + 1);
+          GameEvents.Player.updated();
+          GameEvents.Game.message('Upgrade purchased: ' + upgrade_def.name);
+        }
+      },
+
+      'add-resource': ({ type, amount }) => {
+        const toAdd = amount * this.harvestMultiplier;
+
+        this.resources = modifyResources(this.resources, {
+          [type]: toAdd,
+        });
+        GameEvents.Player.updated(getStats());
+      },
+
+      'restore-player-state': playerData => {
+        this.restoreState(playerData);
+      },
     });
 
-    eventBus.on('player-direction-change', direction => {
-      this.direction = direction;
-      eventBus.emit('player-updated', this);
-    });
-
-    eventBus.on('player-updated', player => {
-      if (player.battery <= 0) {
-        eventBus.emit(
-          'game-message',
-          'As you feel your battery getting close to empty, you return to your charging pod.'
-        );
-        eventBus.emit('reset-state');
-        this.reset();
-      }
-    });
-
-    eventBus.on('purchase-upgrade', upgrade_def => {
-      if (UpgradeSystem.canAffordUpgrade(upgrade_def.id, this.resources)) {
-        this.resources = subtractResources(this.resources, upgrade_def.cost);
-        const currentCount = this.upgrades.get(upgrade_def.id) ?? 0;
-
-        this.upgrades.set(upgrade_def.id, currentCount + 1);
-        eventBus.emit('player-updated');
-        eventBus.emit('game-message', 'Upgrade purchased: ' + upgrade_def.name);
-      }
-    });
-
-    // Resource event handlers
-    eventBus.on('add-resource', ({ type, amount }) => {
-      const toAdd = amount * this.harvestMultiplier;
-
-      this.resources = modifyResources(this.resources, {
-        [type]: toAdd,
-      });
-      eventBus.emit('player-updated', getStats());
-    });
-
-    // Save/Load event handlers
-    eventBus.on('restore-player-state', playerData => {
-      this.restoreState(playerData);
-    });
-
-    eventBus.emit('player-updated', this);
+    GameEvents.Player.updated(this);
   }
 
   interact(object) {
@@ -170,11 +167,8 @@ class Player {
     // Reset playtime tracking
     this.playtimeStart = Date.now();
 
-    eventBus.emit('player-updated', getStats());
-    eventBus.emit(
-      'game-message',
-      'Welcome back! Your progress has been restored.'
-    );
+    GameEvents.Player.updated(getStats());
+    GameEvents.Game.message('Welcome back! Your progress has been restored.');
   }
 
   // Get current state for saving

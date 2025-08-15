@@ -1,9 +1,8 @@
-// Fixed Ship.js - Properly restore map functionality
 import { ShipMap } from './ship-map.js';
 import { SpawnRoom } from '../rooms/index.js';
 import { getStats } from '../../entities/player/player-stats.js';
 import { Directions } from '../../utils/index.js';
-import { eventBus } from '../../core/event-bus.js';
+import { GameEvents, GameEventListeners } from '../../core/game-events.js';
 import { Floor } from '../tiles/floor.js';
 import { WallSegment } from '../tiles/wall-segment.js';
 import { Door } from '../tiles/door.js';
@@ -18,7 +17,7 @@ export class Ship {
     this.isRestored = false;
 
     // Listen for save/restore events
-    eventBus.on('restore-ship-state', shipData => {
+    GameEventListeners.on('restore-ship-state', shipData => {
       this.restoreState(shipData);
     });
   }
@@ -322,8 +321,7 @@ export class Ship {
     this.createMapFromSaveData(shipData);
 
     console.log(`Ship state restored: ${shipData.tiles.length} tiles loaded`);
-    eventBus.emit(
-      'game-message',
+    GameEvents.Game.message(
       `Ship layout restored: ${shipData.tiles.length} areas loaded`
     );
   }
@@ -368,7 +366,7 @@ export class Ship {
     map.revealAreaAroundPlayer = tempMap.revealAreaAroundPlayer.bind(map);
 
     // Set up event listeners for player movement reveals
-    eventBus.on('player-updated', player => {
+    GameEventListeners.on('player-updated', player => {
       map.revealAreaAroundPlayer(player.x, player.y, 2);
     });
 
@@ -455,7 +453,6 @@ export class Ship {
       // Restore story fragments
       if (objectData.sf && Array.isArray(objectData.sf)) {
         obj.availableStoryFragments = new Set(objectData.sf);
-        console.log(obj);
         console.log('Restored story fragments:', objectData.sf);
       } else {
         obj.availableStoryFragments = new Set();
@@ -520,7 +517,7 @@ export class Ship {
             obj.x,
             obj.y
           );
-          eventBus.emit('register-story-object', obj);
+          GameEvents.Story.registerObject(obj);
         }, 100);
       }
     } catch (error) {
