@@ -1,3 +1,4 @@
+// Updated StorySystem.js with improved save/restore handling
 import { eventBus } from './EventBus.js';
 import { getStats } from './PlayerStats.js';
 
@@ -49,6 +50,7 @@ class StorySystem {
     this.loadPromise = null;
     this.registeredObjects = new Set();
     this.isRestored = false;
+    this.restorationInProgress = false;
 
     this.setupEventListeners();
     this.setupModalElements();
@@ -97,17 +99,62 @@ class StorySystem {
   }
 
   registerStoryObject(gameObject) {
+    console.log(
+      'Registering story object:',
+      gameObject.objectType,
+      'at',
+      gameObject.x,
+      gameObject.y
+    );
     this.registeredObjects.add(gameObject);
+
+    // If we're in the middle of restoration, don't remove fragments that the object should have
+    if (!this.restorationInProgress) {
+      // During normal gameplay, remove fragments that have already been discovered
+      this.removeDiscoveredFragmentsFromObject(gameObject);
+    }
   }
 
   unregisterStoryObject(gameObject) {
     this.registeredObjects.delete(gameObject);
   }
 
+  removeDiscoveredFragmentsFromObject(gameObject) {
+    // Remove any fragments that have already been discovered from this object
+    if (gameObject.availableStoryFragments) {
+      for (const fragmentId of this.discoveredFragments) {
+        gameObject.availableStoryFragments.delete(fragmentId);
+      }
+
+      // Also remove from available story events
+      if (gameObject.availableStoryEvents) {
+        gameObject.availableStoryEvents =
+          gameObject.availableStoryEvents.filter(
+            event =>
+              event.type !== 'fragment' ||
+              !this.discoveredFragments.has(event.fragmentId)
+          );
+      }
+    }
+  }
+
   removeFragmentFromAllObjects(fragmentId) {
+    console.log('Removing fragment from all objects:', fragmentId);
     for (const obj of this.registeredObjects) {
       if (obj.removeStoryFragment) {
         obj.removeStoryFragment(fragmentId);
+      } else {
+        // Fallback removal
+        if (obj.availableStoryFragments) {
+          obj.availableStoryFragments.delete(fragmentId);
+        }
+
+        if (obj.availableStoryEvents) {
+          obj.availableStoryEvents = obj.availableStoryEvents.filter(
+            event =>
+              event.type !== 'fragment' || event.fragmentId !== fragmentId
+          );
+        }
       }
     }
   }
@@ -131,6 +178,11 @@ class StorySystem {
     // Listen for restore events
     eventBus.on('restore-story-state', storyData => {
       this.restoreState(storyData);
+    });
+
+    // Listen for object registration events (from restored objects)
+    eventBus.on('register-story-object', obj => {
+      this.registerStoryObject(obj);
     });
 
     // Setup keyboard listener for L key
@@ -162,10 +214,10 @@ class StorySystem {
     this.closeBtn = document.getElementById('close-story-btn');
 
     // Setup event listeners for modal buttons
-    this.closeBtn.addEventListener('click', () => this.closeStoryModal());
+    this.closeBtn?.addEventListener('click', () => this.closeStoryModal());
 
     // Close modal when clicking outside
-    this.modal.addEventListener('click', e => {
+    this.modal?.addEventListener('click', e => {
       if (e.target === this.modal) {
         this.closeStoryModal();
       }
@@ -173,7 +225,7 @@ class StorySystem {
 
     // Close modal with Escape key
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && this.modal.classList.contains('active')) {
+      if (e.key === 'Escape' && this.modal?.classList.contains('active')) {
         this.closeStoryModal();
       }
     });
@@ -465,6 +517,7 @@ class StorySystem {
       return;
     }
 
+    this.restorationInProgress = true;
     this.isRestored = true;
 
     // Restore discovered fragments
@@ -473,11 +526,9 @@ class StorySystem {
       Array.isArray(storyData.discoveredFragments)
     ) {
       this.discoveredFragments = new Set(storyData.discoveredFragments);
-
-      // Remove restored fragments from all objects
-      storyData.discoveredFragments.forEach(fragmentId => {
-        this.removeFragmentFromAllObjects(fragmentId);
-      });
+      console.log(
+        `Restored ${this.discoveredFragments.size} discovered fragments`
+      );
     }
 
     // Restore discovered groups
@@ -503,6 +554,18 @@ class StorySystem {
         });
       }
     }
+
+    // After a short delay, remove discovered fragments from newly registered objects
+    setTimeout(() => {
+      console.log(
+        'Story restoration complete - cleaning up registered objects'
+      );
+      for (const obj of this.registeredObjects) {
+        this.removeDiscoveredFragmentsFromObject(obj);
+      }
+
+      this.restorationInProgress = false;
+    }, 100);
 
     console.log(
       `Story state restored: ${this.discoveredFragments.size} fragments discovered`

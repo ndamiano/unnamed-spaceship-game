@@ -53,6 +53,16 @@ export default [
         HTMLAudioElement: 'readonly',
         HTMLVideoElement: 'readonly',
 
+        // Saving/Loading
+        TextDecoder: 'readonly',
+        TextEncoder: 'readonly',
+        CompressionStream: 'readonly',
+        DecompressionStream: 'readonly',
+        atob: 'readonly',
+        btoa: 'readonly',
+        confirm: 'readonly',
+        prompt: 'readonly',
+
         // Node globals (for build scripts if needed)
         process: 'readonly',
         Buffer: 'readonly',

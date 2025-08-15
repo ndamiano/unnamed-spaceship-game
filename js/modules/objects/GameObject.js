@@ -1,3 +1,4 @@
+// Updated GameObject.js with better story restoration
 import { Tile } from '../Tile.js';
 import { eventBus } from '../EventBus.js';
 import { storySystem } from '../StorySystem.js';
@@ -34,7 +35,9 @@ export default class GameObject extends Tile {
     this.selectedFlavorText = 'An unknown object.';
     this.storyGroupId = null;
     this.activationResults = [];
-    this.availableStoryFragments = new Set(); // Track available fragments for this object
+    this.availableStoryFragments = new Set();
+    this.availableStoryEvents = [];
+    this.storyEventDetermined = false;
   }
 
   _setupFromConfig(config, objectType) {
@@ -56,7 +59,9 @@ export default class GameObject extends Tile {
     this.objectType = objectType;
     this.config = config;
     this.assetPath = this.name ? `assets/${this.name}-100x100.png` : null;
-    this.availableStoryFragments = new Set(); // Track available fragments for this object
+    this.availableStoryFragments = new Set();
+    this.availableStoryEvents = [];
+    this.storyEventDetermined = false;
   }
 
   _setupStoryManagement() {
@@ -78,8 +83,62 @@ export default class GameObject extends Tile {
     );
   }
 
+  // Restore story state (called during save loading)
+  restoreStoryState(storyData) {
+    console.log(
+      'Restoring story state for object:',
+      this.objectType,
+      storyData
+    );
+
+    // Restore story configuration
+    if (storyData.storyGroupId) {
+      this.storyGroupId = storyData.storyGroupId;
+    }
+
+    if (storyData.storyChance !== undefined) {
+      this.storyChance = storyData.storyChance;
+    }
+
+    if (storyData.guaranteedStory) {
+      this.guaranteedStory = storyData.guaranteedStory;
+    }
+
+    // Restore determined state
+    this.storyEventDetermined = storyData.storyEventDetermined || false;
+
+    // Restore available fragments
+    if (storyData.availableStoryFragments) {
+      this.availableStoryFragments = new Set(storyData.availableStoryFragments);
+    }
+
+    // Restore available story events
+    if (storyData.availableStoryEvents) {
+      this.availableStoryEvents = storyData.availableStoryEvents.map(event => ({
+        type: event.type,
+        fragmentId: event.fragmentId,
+        content: event.content,
+      }));
+    }
+
+    console.log('Story state restored:', {
+      storyGroupId: this.storyGroupId,
+      fragmentsCount: this.availableStoryFragments.size,
+      eventsCount: this.availableStoryEvents.length,
+      determined: this.storyEventDetermined,
+    });
+  }
+
   determineAvailableStoryEvents() {
     if (this.storyEventDetermined) return;
+
+    console.log(
+      'Determining story events for:',
+      this.objectType,
+      'at',
+      this.x,
+      this.y
+    );
 
     this.availableStoryEvents = [];
 
@@ -93,6 +152,13 @@ export default class GameObject extends Tile {
       );
 
       if (availableFragment) {
+        console.log(
+          'Adding story fragment:',
+          availableFragment,
+          'to object:',
+          this.objectType
+        );
+
         // Add the fragment to our available set
         this.availableStoryFragments.add(availableFragment);
 
@@ -100,10 +166,17 @@ export default class GameObject extends Tile {
           type: 'fragment',
           fragmentId: availableFragment,
         });
+      } else {
+        console.log('No available fragments for group:', this.storyGroupId);
       }
     }
 
     this.storyEventDetermined = true;
+    console.log(
+      'Story events determined:',
+      this.availableStoryEvents.length,
+      'events available'
+    );
   }
 
   hasAvailableStory() {
@@ -127,6 +200,8 @@ export default class GameObject extends Tile {
 
     switch (storyEvent.type) {
       case 'fragment':
+        console.log('Consuming story fragment:', storyEvent.fragmentId);
+
         // Remove from our available fragments set
         this.availableStoryFragments.delete(storyEvent.fragmentId);
 
@@ -149,8 +224,17 @@ export default class GameObject extends Tile {
   }
 
   onInteract() {
+    console.log(
+      'Interacting with object:',
+      this.objectType,
+      'at',
+      this.x,
+      this.y
+    );
+
     // Try to consume a story event first
     if (this.hasAvailableStory()) {
+      console.log('Object has available story, consuming...');
       this.consumeNextStoryEvent();
 
       return;
@@ -247,6 +331,47 @@ export default class GameObject extends Tile {
         result.used = false;
       }
     }
+  }
+
+  // Get current state for saving
+  getSaveState() {
+    // Make sure story events are determined before saving
+    if (!this.storyEventDetermined && this.storyGroupId) {
+      console.log(
+        'Determining story events before save for:',
+        this.objectType,
+        'at',
+        this.x,
+        this.y
+      );
+      this.determineAvailableStoryEvents();
+    }
+
+    const saveState = {
+      objectType: this.objectType,
+      x: this.x,
+      y: this.y,
+      flipped: this.flipped,
+      storyEventDetermined: this.storyEventDetermined,
+      availableStoryFragments: Array.from(this.availableStoryFragments),
+      availableStoryEvents: this.availableStoryEvents,
+      storyGroupId: this.storyGroupId,
+      storyChance: this.storyChance,
+      guaranteedStory: this.guaranteedStory,
+      activationResults: this.activationResults.map(result => ({
+        ...result,
+        used: result.used || false,
+      })),
+    };
+
+    console.log('GameObject save state for', this.objectType, ':', {
+      storyEvents: saveState.availableStoryEvents.length,
+      storyFragments: saveState.availableStoryFragments.length,
+      storyGroupId: saveState.storyGroupId,
+      determined: saveState.storyEventDetermined,
+    });
+
+    return saveState;
   }
 
   // Cleanup method when object is destroyed

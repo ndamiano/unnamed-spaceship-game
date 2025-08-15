@@ -7,7 +7,6 @@ import { eventBus } from '../EventBus.js';
 import { Floor } from '../tiles/Floor.js';
 import { WallSegment } from '../tiles/WallSegment.js';
 import { Door } from '../tiles/Door.js';
-import GameObject from '../objects/GameObject.js';
 
 export class Ship {
   constructor(width, height, type = 'colony') {
@@ -279,6 +278,10 @@ export class Ship {
       data.sf = Array.from(obj.availableStoryFragments); // sf = story fragments
     }
 
+    if (obj.availableStoryEvents && obj.availableStoryEvents.length > 0) {
+      data.se = Array.from(obj.availableStoryEvents); // se = story events
+    }
+
     // Save activation results state (only if modified)
     if (obj.activationResults && obj.activationResults.length > 0) {
       const modifiedResults = obj.activationResults.filter(
@@ -325,16 +328,18 @@ export class Ship {
   }
 
   // Create a completely new map from save data (no mixing with generated content)
-  createMapFromSaveData(shipData) {
+  async createMapFromSaveData(shipData) {
     console.log('Creating clean map from save data...');
 
     // Create a fresh ShipMap but without running generation
     this.map = this.createEmptyShipMap();
 
-    // Restore all saved tiles
-    shipData.tiles.forEach(tileData => {
-      this.restoreSingleTile(tileData);
-    });
+    // Restore all saved tiles (now with async support)
+    const restorePromises = shipData.tiles.map(tileData =>
+      this.restoreSingleTile(tileData)
+    );
+
+    await Promise.all(restorePromises);
 
     console.log('Clean map created from save data');
   }
@@ -370,7 +375,7 @@ export class Ship {
   }
 
   // Restore a single tile from save data
-  restoreSingleTile(tileData) {
+  async restoreSingleTile(tileData) {
     const [x, y, flags, extras] = tileData;
 
     // Get the tile from the map
@@ -399,9 +404,9 @@ export class Ship {
         this.restoreSlotsToTile(tile, extras.s);
       }
 
-      // Restore object
+      // Restore object (now async)
       if (extras.o) {
-        this.restoreObjectToTile(tile, extras.o);
+        await this.restoreObjectToTile(tile, extras.o);
       }
     }
   }
@@ -435,26 +440,157 @@ export class Ship {
   }
 
   // Restore object to an existing tile
-  restoreObjectToTile(tile, objectData) {
-    // Create the object
-    const obj = new GameObject(tile.x, tile.y, objectData.t);
+  async restoreObjectToTile(tile, objectData) {
+    console.log('Restoring object from data:', objectData);
 
-    // Restore object state
-    obj.flipped = !!objectData.f;
-    obj.storyEventDetermined = !!objectData.d;
-    obj.availableStoryFragments = new Set(objectData.sf || []);
+    try {
+      // Import GameObject dynamically to avoid circular imports
+      const { default: GameObject } = await import('../objects/GameObject.js');
 
-    // Restore activation results
-    if (objectData.ar && obj.activationResults) {
-      objectData.ar.forEach(({ i, u }) => {
-        if (obj.activationResults[i]) {
-          obj.activationResults[i].used = !!u;
-        }
+      // Create the object
+      const obj = new GameObject(tile.x, tile.y, objectData.t);
+
+      // Restore basic object state
+      obj.flipped = !!objectData.f;
+      obj.storyEventDetermined = !!objectData.d;
+
+      // Restore story fragments
+      if (objectData.sf && Array.isArray(objectData.sf)) {
+        obj.availableStoryFragments = new Set(objectData.sf);
+        console.log(obj);
+        console.log('Restored story fragments:', objectData.sf);
+      } else {
+        obj.availableStoryFragments = new Set();
+      }
+
+      // Restore story events
+      if (objectData.se && Array.isArray(objectData.se)) {
+        obj.availableStoryEvents = objectData.se.map(event => ({
+          type: event.type,
+          fragmentId: event.fragmentId,
+          content: event.content,
+        }));
+        console.log('Restored story events:', objectData.se);
+      } else {
+        obj.availableStoryEvents = [];
+      }
+
+      // Restore story configuration if saved
+      if (objectData.sg) {
+        obj.storyGroupId = objectData.sg;
+        console.log('Restored story group:', objectData.sg);
+      }
+
+      if (objectData.sc !== undefined) {
+        obj.storyChance = objectData.sc;
+      }
+
+      if (objectData.gs) {
+        obj.guaranteedStory = true;
+      }
+
+      // Restore activation results
+      if (objectData.ar && obj.activationResults) {
+        objectData.ar.forEach(({ i, u }) => {
+          if (obj.activationResults[i]) {
+            obj.activationResults[i].used = !!u;
+          }
+        });
+      }
+
+      // Set the object on the tile
+      tile.object = obj;
+      tile.passable = obj.passable;
+
+      console.log('Object restored:', {
+        type: obj.objectType,
+        position: [obj.x, obj.y],
+        storyGroupId: obj.storyGroupId,
+        fragmentsCount: obj.availableStoryFragments.size,
+        eventsCount: obj.availableStoryEvents.length,
+        determined: obj.storyEventDetermined,
+        hasActivatableStory: obj.hasAvailableStory(),
       });
-    }
 
-    // Set the object on the tile
-    tile.object = obj;
-    tile.passable = obj.passable;
+      // Re-register with story system using event bus
+      if (obj.storyGroupId) {
+        setTimeout(() => {
+          console.log(
+            'Re-registering object with story system:',
+            obj.objectType,
+            'at',
+            obj.x,
+            obj.y
+          );
+          eventBus.emit('register-story-object', obj);
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Failed to restore object:', error);
+
+      // Fallback: create a minimal object structure
+      const obj = {
+        x: tile.x,
+        y: tile.y,
+        objectType: objectData.t,
+        flipped: !!objectData.f,
+        storyEventDetermined: !!objectData.d,
+        availableStoryFragments: new Set(objectData.sf || []),
+        availableStoryEvents: (objectData.se || []).map(event => ({
+          type: event.type,
+          fragmentId: event.fragmentId,
+          content: event.content,
+        })),
+        storyGroupId: objectData.sg || null,
+        storyChance: objectData.sc || 0,
+        guaranteedStory: !!objectData.gs,
+        activationResults: [],
+        passable: false,
+
+        // Essential methods
+        hasAvailableStory() {
+          return this.availableStoryEvents.length > 0;
+        },
+
+        isActivatable() {
+          return (
+            this.hasAvailableStory() ||
+            (this.activationResults && this.activationResults.length > 0)
+          );
+        },
+
+        render(ctx, x, y, size) {
+          // Basic rendering fallback
+          if (this.isActivatable()) {
+            ctx.save();
+            ctx.fillStyle = this.hasAvailableStory()
+              ? '#ffffff40'
+              : '#03517040';
+            ctx.fillRect(
+              x - size * 0.1,
+              y - size * 0.1,
+              size * 1.2,
+              size * 1.2
+            );
+            ctx.restore();
+          }
+
+          // Draw basic object representation
+          ctx.fillStyle = '#f00';
+          ctx.fillRect(x, y, size, size);
+        },
+      };
+
+      tile.object = obj;
+      tile.passable = obj.passable;
+
+      console.log(
+        'Fallback object created:',
+        obj.objectType,
+        'at',
+        obj.x,
+        obj.y
+      );
+    }
   }
 }

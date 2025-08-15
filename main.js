@@ -1,5 +1,5 @@
 import { Game } from './js/modules/Game.js';
-import { GameStateManager } from './js/modules/GameStateManager.js';
+import { GameStateManager } from './js/modules/save/GameStateManager.js';
 import { eventBus } from './js/modules/EventBus.js';
 
 class GameLoader {
@@ -66,6 +66,8 @@ class GameLoader {
     if (saveData && saveData.player) {
       console.log('Game initialized with save data context');
     }
+
+    window.game = this.game;
   }
 
   restoreGameState(saveData) {
