@@ -7,7 +7,7 @@ import { registerPlayer } from '../entities/player/player-stats.js';
 import { Ship } from '../world/ship/ship.js';
 import { storySystem } from '../systems/story/story-system.js';
 import { gameObjectLoader } from '../entities/objects/game-object-loader.js';
-import { RenderingSystem } from '../rendering/rendering-system.js';
+import { Renderer } from '../rendering/renderer.js';
 
 export class Game {
   constructor(
@@ -27,11 +27,8 @@ export class Game {
     this.initialized = false;
     this.saveData = null;
     this.isRestoringFromSave = false;
-    this.renderingSystem = null;
+    this.renderer = null;
     this.lastFrameTime = 0;
-
-    this.shipRenderables = new Map();
-    this.objectRenderables = new Map();
 
     console.log('Game instance created, call init() to start initialization');
   }
@@ -50,7 +47,7 @@ export class Game {
       this.checkForSaveRestore();
 
       if (this.options.setupCanvas) {
-        await this.setupRenderingSystem();
+        await this.setupRenderer();
       }
 
       if (this.options.setupShip) {
@@ -121,30 +118,25 @@ export class Game {
     `;
   }
 
-  async setupRenderingSystem() {
-    console.log('Setting up rendering system...');
+  async setupRenderer() {
+    console.log('Setting up renderer...');
 
     this.canvas = document.getElementById('gameCanvas');
     if (!this.canvas) {
       throw new Error('Canvas element not found');
     }
 
-    this.renderingSystem = new RenderingSystem(
-      this.canvas,
-      this.config,
-      gameObjectLoader
-    );
+    this.renderer = new Renderer(this.canvas, this.config, gameObjectLoader);
 
     console.log('Loading game assets...');
-    const assetsLoaded = await this.renderingSystem.loadAssets();
+    const assetsLoaded = await this.renderer.loadGameAssets();
 
     if (!assetsLoaded) {
       throw new Error('Failed to load game assets');
     }
 
     console.log('Assets loaded successfully');
-    this.renderingSystem.start();
-    this.renderingSystem.setCameraBounds(-1000, -1000, 1000, 1000);
+    this.renderer.start();
   }
 
   setupStorySystem() {
@@ -169,10 +161,10 @@ export class Game {
 
     this.ship = new Ship(width, height, type);
 
-    if (this.renderingSystem) {
+    if (this.renderer) {
       const padding = 500;
 
-      this.renderingSystem.setCameraBounds(
+      this.renderer.setCameraBounds(
         -padding,
         -padding,
         width * this.config.tileSize + padding,
@@ -206,13 +198,10 @@ export class Game {
     this.player = new Player(spawnX, spawnY);
     registerPlayer(this.player);
 
-    if (this.renderingSystem) {
-      this.createPlayerRenderable();
-      this.createShipRenderables();
-
+    if (this.renderer) {
+      // Set up camera to follow player
       const game = this;
-
-      this.renderingSystem.followTarget({
+      const followTarget = {
         get x() {
           return (
             game.player.x * game.config.tileSize + game.config.tileSize / 2
@@ -223,7 +212,9 @@ export class Game {
             game.player.y * game.config.tileSize + game.config.tileSize / 2
           );
         },
-      });
+      };
+
+      this.renderer.setFollowTarget(followTarget);
     }
 
     const explorationRadius = this.isRestoringFromSave ? 5 : 20;
@@ -235,264 +226,6 @@ export class Game {
     );
 
     console.log('Player setup complete');
-  }
-
-  createPlayerRenderable() {
-    const worldX = this.player.x * this.config.tileSize;
-    const worldY = this.player.y * this.config.tileSize;
-
-    const playerRenderable = this.renderingSystem.createSpriteRenderable(
-      worldX,
-      worldY,
-      'assets/player-100x100.png',
-      {
-        layer: 10,
-        width: this.config.tileSize,
-        height: this.config.tileSize,
-      }
-    );
-
-    this.player.renderable = playerRenderable;
-    this.renderingSystem.addToScene(playerRenderable);
-    this.updatePlayerRenderable();
-
-    console.log('Player renderable created');
-  }
-
-  createShipRenderables() {
-    console.log('Creating ship renderables...');
-    this.clearShipRenderables();
-
-    for (let y = 0; y < this.ship.height; y++) {
-      for (let x = 0; x < this.ship.width; x++) {
-        const tile = this.ship.map.getTile(x, y);
-
-        if (tile && tile.visible) {
-          this.createTileRenderable(tile, x, y);
-        }
-      }
-    }
-  }
-
-  createTileRenderable(tile, x, y) {
-    const worldX = x * this.config.tileSize;
-    const worldY = y * this.config.tileSize;
-    const tileKey = `${x},${y}`;
-
-    const floorAsset = `assets/tile${tile.number || 1}-100x100.png`;
-    const floorRenderable = this.renderingSystem.createSpriteRenderable(
-      worldX,
-      worldY,
-      floorAsset,
-      {
-        layer: 0,
-        width: this.config.tileSize,
-        height: this.config.tileSize,
-      }
-    );
-
-    this.renderingSystem.addToScene(floorRenderable);
-    this.shipRenderables.set(`floor_${tileKey}`, floorRenderable);
-
-    this.createSlotRenderables(tile, x, y);
-
-    if (tile.object) {
-      this.createObjectRenderable(tile.object, x, y);
-    }
-  }
-
-  createSlotRenderables(tile, x, y) {
-    const worldX = x * this.config.tileSize;
-    const worldY = y * this.config.tileSize;
-    const tileKey = `${x},${y}`;
-
-    ['top', 'right', 'bottom', 'left'].forEach(side => {
-      const slot = tile.getSlot(side);
-
-      if (slot) {
-        let slotRenderable;
-
-        if (slot.constructor.name === 'WallSegment') {
-          const wallColor = '#333333';
-          let wallX = worldX,
-            wallY = worldY,
-            wallWidth,
-            wallHeight;
-
-          switch (side) {
-            case 'top':
-              wallWidth = this.config.tileSize;
-              wallHeight = this.config.tileSize * 0.1;
-              break;
-            case 'bottom':
-              wallY = worldY + this.config.tileSize * 0.9;
-              wallWidth = this.config.tileSize;
-              wallHeight = this.config.tileSize * 0.1;
-              break;
-            case 'left':
-              wallWidth = this.config.tileSize * 0.1;
-              wallHeight = this.config.tileSize;
-              break;
-            case 'right':
-              wallX = worldX + this.config.tileSize * 0.9;
-              wallWidth = this.config.tileSize * 0.1;
-              wallHeight = this.config.tileSize;
-              break;
-          }
-
-          slotRenderable = this.renderingSystem.createRectRenderable(
-            wallX,
-            wallY,
-            wallWidth,
-            wallHeight,
-            wallColor,
-            {
-              layer: 2,
-            }
-          );
-        } else if (slot.constructor.name === 'Door') {
-          const doorColor = '#888888';
-          let doorX = worldX,
-            doorY = worldY,
-            doorWidth,
-            doorHeight;
-
-          switch (side) {
-            case 'top':
-              doorWidth = this.config.tileSize;
-              doorHeight = this.config.tileSize * 0.1;
-              break;
-            case 'bottom':
-              doorY = worldY + this.config.tileSize * 0.9;
-              doorWidth = this.config.tileSize;
-              doorHeight = this.config.tileSize * 0.1;
-              break;
-            case 'left':
-              doorWidth = this.config.tileSize * 0.1;
-              doorHeight = this.config.tileSize;
-              break;
-            case 'right':
-              doorX = worldX + this.config.tileSize * 0.9;
-              doorWidth = this.config.tileSize * 0.1;
-              doorHeight = this.config.tileSize;
-              break;
-          }
-
-          slotRenderable = this.renderingSystem.createRectRenderable(
-            doorX,
-            doorY,
-            doorWidth,
-            doorHeight,
-            doorColor,
-            {
-              layer: 2,
-            }
-          );
-        }
-
-        if (slotRenderable) {
-          this.renderingSystem.addToScene(slotRenderable);
-          this.shipRenderables.set(`${side}_${tileKey}`, slotRenderable);
-        }
-      }
-    });
-  }
-
-  createObjectRenderable(object, x, y) {
-    const worldX = x * this.config.tileSize;
-    const worldY = y * this.config.tileSize;
-    const objectKey = `${x},${y}`;
-
-    if (object.isActivatable && object.isActivatable()) {
-      console.log('In here!');
-      const glowColor =
-        object.hasAvailableStory && object.hasAvailableStory()
-          ? '#ffffff'
-          : '#035170';
-      const glowRenderable = this.renderingSystem.createGlowRenderable(
-        worldX + this.config.tileSize / 2,
-        worldY + this.config.tileSize / 2,
-        this.config.tileSize,
-        glowColor,
-        1
-      );
-
-      glowRenderable.layer = 4;
-      glowRenderable.enablePulsing(2, 0.5, 1.5);
-
-      this.renderingSystem.addToScene(glowRenderable);
-      this.objectRenderables.set(`glow_${objectKey}`, glowRenderable);
-    }
-
-    let assetPath;
-
-    if (object.assetPath) {
-      assetPath = object.assetPath;
-    } else if (object.name) {
-      assetPath = `assets/${object.name}-100x100.png`;
-    } else {
-      assetPath = `assets/${object.objectType}-100x100.png`;
-    }
-
-    const objectRenderable = this.renderingSystem.createSpriteRenderable(
-      worldX,
-      worldY,
-      assetPath,
-      {
-        layer: 5,
-        width: this.config.tileSize,
-        height: this.config.tileSize,
-        flipX: object.flipped,
-      }
-    );
-
-    this.renderingSystem.addToScene(objectRenderable);
-    this.objectRenderables.set(`object_${objectKey}`, objectRenderable);
-  }
-
-  clearShipRenderables() {
-    this.shipRenderables.forEach(renderable => {
-      this.renderingSystem.removeFromScene(renderable);
-    });
-    this.shipRenderables.clear();
-
-    this.objectRenderables.forEach(renderable => {
-      this.renderingSystem.removeFromScene(renderable);
-    });
-    this.objectRenderables.clear();
-  }
-
-  updateVisibleTiles() {
-    for (let y = 0; y < this.ship.height; y++) {
-      for (let x = 0; x < this.ship.width; x++) {
-        const tile = this.ship.map.getTile(x, y);
-        const tileKey = `${x},${y}`;
-
-        if (tile && tile.visible) {
-          if (!this.shipRenderables.has(`floor_${tileKey}`)) {
-            this.createTileRenderable(tile, x, y);
-          }
-        }
-      }
-    }
-  }
-
-  updatePlayerRenderable() {
-    if (!this.player.renderable) return;
-
-    const worldX = this.player.x * this.config.tileSize;
-    const worldY = this.player.y * this.config.tileSize;
-
-    this.player.renderable.setPosition(worldX, worldY);
-
-    let rotation = 0;
-    const { direction } = this.player;
-
-    if (direction.x === 0 && direction.y === -1) rotation = Math.PI;
-    else if (direction.x === 1 && direction.y === 0) rotation = -Math.PI / 2;
-    else if (direction.x === -1 && direction.y === 0) rotation = Math.PI / 2;
-
-    this.player.renderable.setRotation(rotation);
   }
 
   setupMoveValidation() {
@@ -515,12 +248,8 @@ export class Game {
     });
 
     GameEvents.Player.Listeners.move(() => {
-      this.updatePlayerRenderable();
-      this.updateVisibleTiles();
-    });
-
-    GameEvents.Player.Listeners.directionChange(() => {
-      this.updatePlayerRenderable();
+      // Update visible tiles when player moves
+      this.ship.revealAreaAroundPlayer(this.player.x, this.player.y, 2);
     });
   }
 
@@ -531,7 +260,7 @@ export class Game {
   }
 
   gameLoop() {
-    if (!this.initialized || !this.config || !this.renderingSystem) {
+    if (!this.initialized || !this.config || !this.renderer) {
       console.warn('Game loop called before initialization complete');
 
       return;
@@ -544,7 +273,9 @@ export class Game {
 
     try {
       this.updateGame(deltaTime);
-      this.renderingSystem.render(deltaTime);
+
+      // Render call
+      this.renderer.render(this.ship, this.player, deltaTime);
     } catch (error) {
       console.error('Error in game loop:', error);
     }
