@@ -18,7 +18,7 @@ class ShipMap {
       this.revealAreaAroundPlayer(player.x, player.y, 2);
     });
 
-    this.generateLayout();
+    // Don't generate layout in constructor anymore - it will be called explicitly
   }
 
   createEmptyGrid() {
@@ -43,9 +43,12 @@ class ShipMap {
     }
   }
 
-  generateLayout() {
+  async generateLayout() {
     const maxRooms = 25;
     const roomQueue = new RoomQueue(this.type, maxRooms);
+
+    // Initialize the room queue (this loads definitions and creates rooms)
+    await roomQueue.initialize();
 
     let nextRoom = roomQueue.getNextRoom();
 

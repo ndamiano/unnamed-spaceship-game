@@ -39,6 +39,33 @@ export const GameEvents = {
     },
   },
 
+  Initialization: {
+    Emit: {
+      dataLoaded: () => eventBus.emit('init-data-loaded'),
+      rendererReady: () => eventBus.emit('init-renderer-ready'),
+      shipInitialized: () => eventBus.emit('init-ship-initialized'),
+      playerReady: () => eventBus.emit('init-player-ready'),
+      inputReady: () => eventBus.emit('init-input-ready'),
+      uiReady: () => eventBus.emit('init-ui-ready'),
+      storyReady: () => eventBus.emit('init-story-ready'),
+      gameLoopReady: () => eventBus.emit('init-gameloop-ready'),
+      allSystemsReady: () => eventBus.emit('init-all-systems-ready'),
+    },
+    Listeners: {
+      dataLoaded: callback => eventBus.on('init-data-loaded', callback),
+      rendererReady: callback => eventBus.on('init-renderer-ready', callback),
+      shipInitialized: callback =>
+        eventBus.on('init-ship-initialized', callback),
+      playerReady: callback => eventBus.on('init-player-ready', callback),
+      inputReady: callback => eventBus.on('init-input-ready', callback),
+      uiReady: callback => eventBus.on('init-ui-ready', callback),
+      storyReady: callback => eventBus.on('init-story-ready', callback),
+      gameLoopReady: callback => eventBus.on('init-gameloop-ready', callback),
+      allSystemsReady: callback =>
+        eventBus.on('init-all-systems-ready', callback),
+    },
+  },
+
   Story: {
     Emit: {
       discovery: fragmentId => eventBus.emit('story-discovery', { fragmentId }),

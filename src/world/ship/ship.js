@@ -1,5 +1,4 @@
 import { ShipMap } from './ship-map.js';
-import { SpawnRoom } from '../rooms/index.js';
 import { getStats } from '../../entities/player/player-stats.js';
 import { Directions } from '../../utils/index.js';
 import { eventBus } from '../../core/event-bus.js';
@@ -24,7 +23,8 @@ export class Ship {
   }
 
   getSpawnPoint() {
-    const spawnRoom = this.map.rooms.find(room => room instanceof SpawnRoom);
+    console.log(this.map.rooms[0]);
+    const spawnRoom = this.map.rooms.find(room => room.id == 'spawn');
 
     return {
       x: Math.floor(spawnRoom.x + spawnRoom.width / 2),

@@ -1,3 +1,4 @@
+// src/entities/player/player.js
 import { Directions } from '../../utils/directions.js';
 import { GameEvents } from '../../core/game-events.js';
 import {
@@ -27,7 +28,21 @@ class Player {
     // Rendering
     this.renderable = null; // Will be set by Game class
 
+    // Don't register event handlers in constructor
+    this.eventHandlersRegistered = false;
+  }
+
+  // Call this after the player is registered with PlayerStats
+  initializeEventHandlers() {
+    if (this.eventHandlersRegistered) {
+      return; // Prevent double registration
+    }
+
     this.registerEventHandlers();
+    this.eventHandlersRegistered = true;
+
+    // Now it's safe to emit the initial update
+    GameEvents.Player.Emit.updated(getStats());
   }
 
   registerEventHandlers() {
@@ -79,8 +94,6 @@ class Player {
     GameEvents.Save.Listeners.restorePlayer(playerData => {
       this.restoreState(playerData);
     });
-
-    GameEvents.Player.Emit.updated(this);
   }
 
   interact(object) {
@@ -141,10 +154,6 @@ class Player {
       }
     }
 
-    if (playerData.spawnPoint) {
-      this.spawnPoint = { ...playerData.spawnPoint };
-    }
-
     if (playerData.direction) {
       this.direction = playerData.direction;
     }
@@ -155,7 +164,10 @@ class Player {
       GameEvents.Player.Emit.move(this.x, this.y, this.direction);
     }
 
-    GameEvents.Player.Emit.updated(getStats());
+    if (this.eventHandlersRegistered) {
+      GameEvents.Player.Emit.updated(getStats());
+    }
+
     GameEvents.Game.Emit.message(
       'Welcome back! Your progress has been restored.'
     );

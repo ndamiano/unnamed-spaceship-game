@@ -1,45 +1,22 @@
-import {
-  BaseRoom,
-  CryoChamberRoom,
-  FinishRoom,
-  SpawnRoom,
-  FarmRoom,
-  SecurityRoom,
-  DroneHangarRoom,
-  EngineeringBayRoom,
-  HolographicsLabRoom,
-  XenobotanyRoom,
-} from '../../world/rooms/index.js';
+import { roomFactory } from '../rooms/room-factory.js';
 
-const roomTypes = [
-  { type: BaseRoom, weight: 10 },
-  { type: CryoChamberRoom, weight: 10 },
-  { type: SecurityRoom, weight: 10 },
-  { type: DroneHangarRoom, weight: 10 },
-  { type: EngineeringBayRoom, weight: 10 },
-  { type: HolographicsLabRoom, weight: 10 },
-  { type: XenobotanyRoom, weight: 10 },
-  { type: FarmRoom, weight: 10 },
-];
-
-class RoomQueue {
+export class RoomQueue {
   constructor(shipType = 'colony', maxSize = 25) {
     this.queue = [];
     this.shipType = shipType;
     this.maxSize = maxSize;
-    this.initialize();
+    this.roomTypes = [];
   }
 
-  /**
-   * Initializes the queue, and fills it.
-   * Currently, this is simple:
-   * It adds a spawn room
-   * Adds maxSize - 1 standard rooms
-   * Adds a finish room
-   */
-  initialize() {
+  async initialize() {
+    // Load room definitions
+    await roomFactory.loadRoomDefinitions();
+
+    // Get room types for this ship type
+    this.roomTypes = roomFactory.getRoomTypesForShip(this.shipType);
+
     // Always start with spawn room
-    this.queue.push(new SpawnRoom(0, 0));
+    this.queue.push(roomFactory.getSpawnRoom(0, 0));
 
     // Add the normal rooms
     for (let i = 0; i < this.maxSize; i++) {
@@ -47,43 +24,39 @@ class RoomQueue {
     }
 
     // Add the finish
-    this.queue.push(new FinishRoom(0, 0));
+    this.queue.push(roomFactory.getFinishRoom(0, 0));
   }
 
-  /**
-   * Gets the next room instance
-   * @returns {BaseRoom} Room instance
-   */
   getNextRoom() {
     if (this.queue.length > 0) {
       return this.queue.shift();
     }
 
-    // Default to standard rooms after queue is exhausted
     return null;
   }
 
-  /**
-   * Adds a standard room to the queue
-   */
   addStandardRoom() {
-    this.queue.push(this.getWeightedRoom());
+    const roomType = this.getWeightedRoomType();
+    const room = roomFactory.createRoom(roomType, 0, 0);
+
+    this.queue.push(room);
   }
 
-  getWeightedRoom() {
-    const totalWeight = roomTypes.reduce((sum, room) => sum + room.weight, 0);
+  getWeightedRoomType() {
+    const totalWeight = this.roomTypes.reduce(
+      (sum, room) => sum + room.weight,
+      0
+    );
     const random = Math.random() * totalWeight;
     let weightSum = 0;
 
-    for (const room of roomTypes) {
-      weightSum += room.weight;
+    for (const roomType of this.roomTypes) {
+      weightSum += roomType.weight;
       if (random <= weightSum) {
-        return new room.type(0, 0);
+        return roomType.id;
       }
     }
 
-    return new BaseRoom(0, 0); // fallback
+    return this.roomTypes[0]?.id || 'storage'; // fallback
   }
 }
-
-export { RoomQueue };

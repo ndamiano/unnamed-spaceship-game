@@ -29,63 +29,147 @@ export class Game {
     this.isRestoringFromSave = false;
     this.renderer = null;
     this.lastFrameTime = 0;
+    this.initializationSteps = new Set();
 
-    console.log('Game instance created, call init() to start initialization');
+    console.log(
+      'Game instance created, setting up event-driven initialization'
+    );
+    this.setupInitializationFlow();
+  }
+
+  setupInitializationFlow() {
+    // Set up the initialization dependency chain using events
+
+    // Data loading happens first and triggers renderer setup
+    if (this.options.setupCanvas) {
+      GameEvents.Initialization.Listeners.dataLoaded(() => {
+        this.setupRenderer();
+      });
+    }
+
+    // Ship setup depends on data being loaded
+    if (this.options.setupShip) {
+      GameEvents.Initialization.Listeners.dataLoaded(() => {
+        this.setupShip();
+      });
+    }
+
+    // Player setup depends on ship being ready
+    if (this.options.setupPlayer) {
+      GameEvents.Initialization.Listeners.shipInitialized(() => {
+        this.setupPlayer();
+      });
+    }
+
+    // Input handling depends on player being ready
+    if (this.options.setupInputHandling) {
+      GameEvents.Initialization.Listeners.playerReady(() => {
+        this.setupInputHandling();
+      });
+    }
+
+    // Move validation depends on both ship and player being ready
+    if (this.options.setupMoveValidation) {
+      GameEvents.Initialization.Listeners.playerReady(() => {
+        if (this.initializationSteps.has('ship')) {
+          this.setupMoveValidation();
+        } else {
+          // Wait for ship if it's not ready yet
+          GameEvents.Initialization.Listeners.shipInitialized(() => {
+            this.setupMoveValidation();
+          });
+        }
+      });
+    }
+
+    // UI depends on player being ready
+    if (this.options.setupUI) {
+      GameEvents.Initialization.Listeners.playerReady(() => {
+        this.setupUI();
+      });
+    }
+
+    // Story system depends on data being loaded
+    if (this.options.setupStory) {
+      GameEvents.Initialization.Listeners.dataLoaded(() => {
+        this.setupStorySystem();
+      });
+    }
+
+    // Game loop depends on all core systems being ready
+    if (this.options.startGameLoop) {
+      GameEvents.Initialization.Listeners.allSystemsReady(() => {
+        this.startGameLoop();
+      });
+    }
+
+    // Monitor when all systems are ready
+    this.setupCompletionMonitoring();
+  }
+
+  setupCompletionMonitoring() {
+    const checkAllSystemsReady = () => {
+      const requiredSystems = [];
+
+      if (this.options.setupCanvas) requiredSystems.push('renderer');
+      if (this.options.setupShip) requiredSystems.push('ship');
+      if (this.options.setupPlayer) requiredSystems.push('player');
+      if (this.options.setupInputHandling) requiredSystems.push('input');
+      if (this.options.setupMoveValidation)
+        requiredSystems.push('moveValidation');
+      if (this.options.setupUI) requiredSystems.push('ui');
+      if (this.options.setupStory) requiredSystems.push('story');
+
+      const allReady = requiredSystems.every(system =>
+        this.initializationSteps.has(system)
+      );
+
+      if (allReady && !this.initialized) {
+        this.initialized = true;
+        console.log('All systems initialized successfully');
+        GameEvents.Initialization.Emit.allSystemsReady();
+        GameEvents.Game.Emit.initialized();
+      }
+    };
+
+    // Listen to all completion events
+    GameEvents.Initialization.Listeners.rendererReady(checkAllSystemsReady);
+    GameEvents.Initialization.Listeners.shipInitialized(checkAllSystemsReady);
+    GameEvents.Initialization.Listeners.playerReady(checkAllSystemsReady);
+    GameEvents.Initialization.Listeners.inputReady(checkAllSystemsReady);
+    GameEvents.Initialization.Listeners.uiReady(checkAllSystemsReady);
+    GameEvents.Initialization.Listeners.storyReady(checkAllSystemsReady);
   }
 
   async init() {
-    console.log('Initializing game...');
+    console.log('Starting event-driven initialization...');
 
     try {
-      console.log('Loading game configurations...');
-      await gameObjectLoader.loadGameObjects();
-      console.log('Game objects loaded');
-      await storySystem.loadStoryFragments();
-      console.log('Story fragments loaded');
-      console.log('Game data loaded successfully');
-
       this.checkForSaveRestore();
-
-      if (this.options.setupCanvas) {
-        await this.setupRenderer();
-      }
-
-      if (this.options.setupShip) {
-        this.setupShip();
-      }
-
-      if (this.options.setupPlayer) {
-        this.setupPlayer();
-      }
-
-      if (this.options.setupInputHandling) {
-        this.setupInputHandling();
-      }
-
-      if (this.options.setupMoveValidation) {
-        this.setupMoveValidation();
-      }
-
-      if (this.options.setupUI) {
-        console.log('Setting up UI');
-        this.setupUI();
-      }
-
-      if (this.options.setupStory) {
-        this.setupStorySystem();
-      }
-
-      this.initialized = true;
-      console.log('Game initialization complete');
-
-      GameEvents.Game.Emit.initialized();
-
-      if (this.options.startGameLoop) {
-        this.startGameLoop();
-      }
+      await this.loadGameData();
     } catch (error) {
       console.error('Failed to initialize game:', error);
       this.showLoadingError(error);
+    }
+  }
+
+  async loadGameData() {
+    console.log('Loading game configurations...');
+
+    try {
+      await gameObjectLoader.loadGameObjects();
+      console.log('Game objects loaded');
+
+      await storySystem.loadStoryFragments();
+      console.log('Story fragments loaded');
+
+      console.log(
+        'Game data loaded successfully - triggering dependent systems'
+      );
+      GameEvents.Initialization.Emit.dataLoaded();
+    } catch (error) {
+      console.error('Failed to load game data:', error);
+      throw error;
     }
   }
 
@@ -121,58 +205,88 @@ export class Game {
   async setupRenderer() {
     console.log('Setting up renderer...');
 
-    this.canvas = document.getElementById('gameCanvas');
-    if (!this.canvas) {
-      throw new Error('Canvas element not found');
+    try {
+      this.canvas = document.getElementById('gameCanvas');
+      if (!this.canvas) {
+        throw new Error('Canvas element not found');
+      }
+
+      this.renderer = new Renderer(this.canvas, this.config, gameObjectLoader);
+
+      console.log('Loading game assets...');
+      const assetsLoaded = await this.renderer.loadGameAssets();
+
+      if (!assetsLoaded) {
+        throw new Error('Failed to load game assets');
+      }
+
+      console.log('Assets loaded successfully');
+      this.renderer.start();
+
+      this.initializationSteps.add('renderer');
+      GameEvents.Initialization.Emit.rendererReady();
+    } catch (error) {
+      console.error('Failed to setup renderer:', error);
+      throw error;
     }
-
-    this.renderer = new Renderer(this.canvas, this.config, gameObjectLoader);
-
-    console.log('Loading game assets...');
-    const assetsLoaded = await this.renderer.loadGameAssets();
-
-    if (!assetsLoaded) {
-      throw new Error('Failed to load game assets');
-    }
-
-    console.log('Assets loaded successfully');
-    this.renderer.start();
   }
 
   setupStorySystem() {
     console.log('Story system initialized with JSON data');
     GameEvents.Game.Emit.message('Systems online... accessing memory banks...');
+
+    this.initializationSteps.add('story');
+    GameEvents.Initialization.Emit.storyReady();
   }
 
   setupUI() {
+    console.log('Setting up UI...');
     this.userInterface = new UserInterface(this.player);
+
+    this.initializationSteps.add('ui');
+    GameEvents.Initialization.Emit.uiReady();
   }
 
   setupInputHandling() {
+    console.log('Setting up input handling...');
     this.inputHandler = new InputHandler();
+
+    this.initializationSteps.add('input');
+    GameEvents.Initialization.Emit.inputReady();
   }
 
-  setupShip() {
+  async setupShip() {
     console.log('Setting up ship...');
 
-    const width = this.saveData?.ship?.width || 250;
-    const height = this.saveData?.ship?.height || 250;
-    const type = this.saveData?.ship?.type || 'colony';
+    try {
+      const width = this.saveData?.ship?.width || 250;
+      const height = this.saveData?.ship?.height || 250;
+      const type = this.saveData?.ship?.type || 'colony';
 
-    this.ship = new Ship(width, height, type);
+      this.ship = new Ship(width, height, type);
 
-    if (this.renderer) {
-      const padding = 500;
+      // Wait for the ship generation to complete
+      await this.ship.map.generateLayout();
 
-      this.renderer.setCameraBounds(
-        -padding,
-        -padding,
-        width * this.config.tileSize + padding,
-        height * this.config.tileSize + padding
-      );
+      if (this.renderer) {
+        const padding = 500;
+
+        this.renderer.setCameraBounds(
+          -padding,
+          -padding,
+          width * this.config.tileSize + padding,
+          height * this.config.tileSize + padding
+        );
+      }
+
+      console.log(`Ship created: ${width}x${height}, type: ${type}`);
+
+      this.initializationSteps.add('ship');
+      GameEvents.Initialization.Emit.shipInitialized();
+    } catch (error) {
+      console.error('Failed to setup ship:', error);
+      throw error;
     }
-
-    console.log(`Ship created: ${width}x${height}, type: ${type}`);
   }
 
   setupPlayer() {
@@ -196,7 +310,12 @@ export class Game {
     }
 
     this.player = new Player(spawnX, spawnY);
+
+    // Register player with PlayerStats BEFORE initializing event handlers
     registerPlayer(this.player);
+
+    // Now it's safe to initialize event handlers (which may emit events)
+    this.player.initializeEventHandlers();
 
     if (this.renderer) {
       // Set up camera to follow player
@@ -226,9 +345,14 @@ export class Game {
     );
 
     console.log('Player setup complete');
+
+    this.initializationSteps.add('player');
+    GameEvents.Initialization.Emit.playerReady();
   }
 
   setupMoveValidation() {
+    console.log('Setting up move validation...');
+
     GameEvents.Player.Listeners.attemptMove(direction => {
       GameEvents.Player.Emit.directionChange(direction);
       const newX = this.player.x + direction.x;
@@ -251,6 +375,8 @@ export class Game {
       // Update visible tiles when player moves
       this.ship.revealAreaAroundPlayer(this.player.x, this.player.y, 2);
     });
+
+    this.initializationSteps.add('moveValidation');
   }
 
   startGameLoop() {
@@ -273,8 +399,6 @@ export class Game {
 
     try {
       this.updateGame(deltaTime);
-
-      // Render call
       this.renderer.render(this.ship, this.player, deltaTime);
     } catch (error) {
       console.error('Error in game loop:', error);

@@ -1,0 +1,302 @@
+{
+  "spawn": {
+    "id": "spawn",
+    "name": "Assembly Chamber",
+    "width": 5,
+    "height": 5,
+    "weight": 0,
+    "isSpawn": true,
+    "doors": [
+      { "x": 4, "y": 1, "side": "right" },
+      { "x": 4, "y": 2, "side": "right" },
+      { "x": 0, "y": 1, "side": "left" },
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 1, "y": 0, "side": "top" },
+      { "x": 2, "y": 0, "side": "top" },
+      { "x": 1, "y": 4, "side": "bottom" },
+      { "x": 2, "y": 4, "side": "bottom" }
+    ],
+    "objects": [
+      { "type": "terminal", "x": 4, "y": 0, "guaranteed": true },
+      { "type": "dronePod", "x": 0, "y": 0 },
+      { "type": "assemblyArm", "x": 0, "y": 4 },
+      { "type": "assemblyArm", "x": 4, "y": 4, "flipped": true }
+    ]
+  },
+
+  "finish": {
+    "id": "finish",
+    "name": "Teleportation Hub",
+    "width": 5,
+    "height": 5,
+    "weight": 0,
+    "isFinish": true,
+    "doors": [
+      { "x": 4, "y": 2, "side": "right" },
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 2, "y": 0, "side": "top" },
+      { "x": 2, "y": 4, "side": "bottom" }
+    ],
+    "objects": [
+      { "type": "teleporter", "x": 2, "y": 2 },
+      { "type": "energyPylon", "x": 1, "y": 2 },
+      { "type": "energyPylon", "x": 3, "y": 2 },
+      { "type": "controlPanel", "x": 2, "y": 1 }
+    ]
+  },
+
+  "cryoChamber": {
+    "id": "cryoChamber",
+    "name": "Cryogenic Storage",
+    "width": 6,
+    "height": 5,
+    "weight": 10,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 5, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "cryogenicTube", "x": 1, "y": 0 },
+      { "type": "cryogenicTube", "x": 2, "y": 0 },
+      { "type": "cryogenicTube", "x": 3, "y": 0 },
+      { "type": "cryogenicTube", "x": 4, "y": 0 },
+      { "type": "cryogenicTube", "x": 1, "y": 4 },
+      { "type": "cryogenicTube", "x": 2, "y": 4 },
+      { "type": "cryogenicTube", "x": 3, "y": 4 },
+      { "type": "cryogenicTube", "x": 4, "y": 4 },
+      { "type": "hygienePod", "x": 0, "y": 3 },
+      { "type": "terminal", "x": 5, "y": 1 }
+    ]
+  },
+
+  "engineeringBay": {
+    "id": "engineeringBay",
+    "name": "Engineering Bay",
+    "width": 6,
+    "height": 5,
+    "weight": 10,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 5, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "assemblyArm", "x": 2, "y": 1 },
+      { "type": "assemblyArm", "x": 3, "y": 1 },
+      { "type": "plasmaConduit", "x": 2, "y": 3 },
+      { "type": "plasmaConduit", "x": 3, "y": 3 },
+      { "type": "powerCell", "x": 1, "y": 2 },
+      { "type": "accessPanel", "x": 4, "y": 2 },
+      { "type": "terminal", "x": 1, "y": 1 }
+    ]
+  },
+
+  "droneHangar": {
+    "id": "droneHangar",
+    "name": "Drone Hangar",
+    "width": 7,
+    "height": 4,
+    "weight": 10,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 6, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "dronePod", "x": 1, "y": 1 },
+      { "type": "dronePod", "x": 5, "y": 1 },
+      { "type": "maintenanceCrawler", "x": 3, "y": 2 },
+      { "type": "powerCell", "x": 3, "y": 0 },
+      { "type": "terminal", "x": 1, "y": 0 }
+    ]
+  },
+
+  "farm": {
+    "id": "farm",
+    "name": "Hydroponic Farm",
+    "width": 7,
+    "height": 5,
+    "weight": 10,
+    "doors": [
+      { "x": 6, "y": 1, "side": "right" },
+      { "x": 6, "y": 2, "side": "right" },
+      { "x": 6, "y": 3, "side": "right" },
+      { "x": 0, "y": 1, "side": "left" },
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 0, "y": 3, "side": "left" },
+      { "x": 2, "y": 4, "side": "bottom" },
+      { "x": 3, "y": 4, "side": "bottom" },
+      { "x": 4, "y": 4, "side": "bottom" }
+    ],
+    "objects": [
+      { "type": "hydroponicBed", "x": 1, "y": 1 },
+      { "type": "hydroponicBed", "x": 2, "y": 1 },
+      { "type": "hydroponicBed", "x": 3, "y": 1 },
+      { "type": "hydroponicBed", "x": 4, "y": 1 },
+      { "type": "hydroponicBed", "x": 5, "y": 1 },
+      { "type": "hydroponicBed", "x": 1, "y": 3 },
+      { "type": "hydroponicBed", "x": 2, "y": 3 },
+      { "type": "hydroponicBed", "x": 3, "y": 3 },
+      { "type": "hydroponicBed", "x": 4, "y": 3 },
+      { "type": "hydroponicBed", "x": 5, "y": 3 },
+      { "type": "dronePod", "x": 0, "y": 0 },
+      { "type": "assemblyArm", "x": 6, "y": 0 },
+      { "type": "terminal", "x": 3, "y": 1 }
+    ]
+  },
+
+  "holographicsLab": {
+    "id": "holographicsLab",
+    "name": "Holographics Laboratory",
+    "width": 5,
+    "height": 5,
+    "weight": 10,
+    "doors": [
+      { "x": 2, "y": 0, "side": "top" },
+      { "x": 2, "y": 4, "side": "bottom" }
+    ],
+    "objects": [
+      { "type": "hologramProjector", "x": 1, "y": 1 },
+      { "type": "hologramProjector", "x": 3, "y": 1 },
+      { "type": "commsRelayStation", "x": 2, "y": 2 },
+      { "type": "terminal", "x": 2, "y": 3 }
+    ]
+  },
+
+  "security": {
+    "id": "security",
+    "name": "Security Center",
+    "width": 5,
+    "height": 6,
+    "weight": 10,
+    "doors": [
+      { "x": 2, "y": 0, "side": "top" },
+      { "x": 2, "y": 5, "side": "bottom" },
+      { "x": 0, "y": 1, "side": "left" },
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 0, "y": 3, "side": "left" },
+      { "x": 4, "y": 1, "side": "right" },
+      { "x": 4, "y": 2, "side": "right" },
+      { "x": 4, "y": 3, "side": "right" }
+    ],
+    "objects": [
+      { "type": "observationDeck", "x": 0, "y": 0 },
+      { "type": "observationDeck", "x": 4, "y": 0 },
+      { "type": "securityTerminal", "x": 2, "y": 2 },
+      { "type": "combatDroidCradle", "x": 1, "y": 4 },
+      { "type": "combatDroidCradle", "x": 3, "y": 4, "flipped": true },
+      { "type": "powerCell", "x": 3, "y": 5 },
+      { "type": "terminal", "x": 1, "y": 1 }
+    ]
+  },
+
+  "xenobotany": {
+    "id": "xenobotany",
+    "name": "Xenobotany Lab",
+    "width": 6,
+    "height": 6,
+    "weight": 10,
+    "doors": [
+      { "x": 3, "y": 0, "side": "top" },
+      { "x": 2, "y": 0, "side": "top" },
+      { "x": 3, "y": 5, "side": "bottom" },
+      { "x": 2, "y": 5, "side": "bottom" },
+      { "x": 0, "y": 3, "side": "left" }
+    ],
+    "objects": [
+      { "type": "xenobotanyChamber", "x": 1, "y": 2 },
+      { "type": "growthVat", "x": 1, "y": 3 },
+      { "type": "growthVat", "x": 4, "y": 2 },
+      { "type": "xenobotanyChamber", "x": 4, "y": 3 },
+      { "type": "xenobotanyChamber", "x": 1, "y": 5 },
+      { "type": "xenobotanyChamber", "x": 4, "y": 5 },
+      { "type": "nutrientDispenser", "x": 1, "y": 0 },
+      { "type": "nutrientDispenser", "x": 4, "y": 0 }
+    ]
+  },
+
+  "medicalBay": {
+    "id": "medicalBay",
+    "name": "Medical Bay",
+    "width": 6,
+    "height": 5,
+    "weight": 8,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 5, "y": 2, "side": "right" },
+      { "x": 3, "y": 0, "side": "top" }
+    ],
+    "objects": [
+      { "type": "autoDocUnit", "x": 1, "y": 1 },
+      { "type": "psychoNeuralChair", "x": 4, "y": 1 },
+      { "type": "quarantineChamber", "x": 1, "y": 3 },
+      { "type": "stasisPod", "x": 4, "y": 3 },
+      { "type": "bioScanner", "x": 2, "y": 2 },
+      { "type": "terminal", "x": 0, "y": 1 }
+    ]
+  },
+
+  "aiCore": {
+    "id": "aiCore",
+    "name": "AI Core Chamber",
+    "width": 4,
+    "height": 4,
+    "weight": 5,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 3, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "shipAICoreNode", "x": 1, "y": 1 },
+      { "type": "shipAICoreNode", "x": 2, "y": 1 },
+      { "type": "shipAICoreNode", "x": 1, "y": 2 },
+      { "type": "shipAICoreNode", "x": 2, "y": 2 },
+      { "type": "aITetherNode", "x": 0, "y": 0 },
+      { "type": "aITetherNode", "x": 3, "y": 0 },
+      { "type": "aITetherNode", "x": 0, "y": 3 },
+      { "type": "aITetherNode", "x": 3, "y": 3 }
+    ]
+  },
+
+  "storage": {
+    "id": "storage",
+    "name": "Storage Bay",
+    "width": 5,
+    "height": 4,
+    "weight": 12,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 4, "y": 2, "side": "right" },
+      { "x": 2, "y": 0, "side": "top" }
+    ],
+    "objects": [
+      { "type": "personalLocker", "x": 0, "y": 0 },
+      { "type": "personalLocker", "x": 1, "y": 0 },
+      { "type": "personalLocker", "x": 3, "y": 0 },
+      { "type": "personalLocker", "x": 4, "y": 0 },
+      { "type": "personalLocker", "x": 0, "y": 3 },
+      { "type": "personalLocker", "x": 1, "y": 3 },
+      { "type": "personalLocker", "x": 3, "y": 3 },
+      { "type": "personalLocker", "x": 4, "y": 3 },
+      { "type": "nanofabricator", "x": 2, "y": 2 }
+    ]
+  },
+
+  "researchLab": {
+    "id": "researchLab",
+    "name": "Research Laboratory",
+    "width": 6,
+    "height": 4,
+    "weight": 8,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 5, "y": 2, "side": "right" },
+      { "x": 3, "y": 0, "side": "top" }
+    ],
+    "objects": [
+      { "type": "alienArtefactContainer", "x": 1, "y": 1 },
+      { "type": "alienArtefactContainer", "x": 4, "y": 1 },
+      { "type": "blackBoxCore", "x": 2, "y": 2 },
+      { "type": "fleshweaverConsole", "x": 0, "y": 1 },
+      { "type": "terminal", "x": 5, "y": 1 }
+    ]
+  }
+}
