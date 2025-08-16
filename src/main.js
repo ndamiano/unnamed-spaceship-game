@@ -1,3 +1,4 @@
+// src/main.js
 import { Game } from './core/game.js';
 import { GameStateManager } from './systems/save/game-state-manager.js';
 import { GameEvents, GameEventListeners } from './core/game-events.js';
@@ -38,7 +39,11 @@ class GameLoader {
           isNewGame ? 'Starting new game...' : 'Loading saved game...'
         );
 
-        this.initializeGame(saveData);
+        // Make this async
+        this.initializeGame(saveData).catch(error => {
+          console.error('Failed to initialize game:', error);
+          this.redirectToStart();
+        });
 
         if (!isNewGame) {
           // Store save data to restore after initialization
@@ -58,9 +63,13 @@ class GameLoader {
     window.location.href = 'start.html';
   }
 
-  initializeGame(saveData) {
+  async initializeGame(saveData) {
     this.game = new Game();
     this.gameState.saveData = saveData;
+
+    // Initialize the game asynchronously
+    await this.game.init();
+
     this.setupAutoSave();
 
     if (saveData && saveData.player) {

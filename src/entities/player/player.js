@@ -24,28 +24,13 @@ class Player {
     this.totalPlaytime = 0;
     this.playtimeStart = Date.now();
 
+    // Rendering
+    this.renderable = null; // Will be set by Game class
+
     this.registerEventHandlers();
   }
 
-  render(ctx, centerX, centerY, _tileSize) {
-    const assetImage = new Image();
-
-    assetImage.src = `assets/player-100x100.png`;
-
-    ctx.save();
-    ctx.translate(centerX, centerY);
-
-    if (this.direction === Directions.UP) {
-      ctx.rotate(Math.PI);
-    } else if (this.direction === Directions.RIGHT) {
-      ctx.rotate(-Math.PI / 2);
-    } else if (this.direction === Directions.LEFT) {
-      ctx.rotate(Math.PI / 2);
-    }
-
-    ctx.drawImage(assetImage, -64, -64);
-    ctx.restore();
-  }
+  // Remove the old render method - now handled by rendering system
 
   registerEventHandlers() {
     GameEventListeners.register({
@@ -53,6 +38,10 @@ class Player {
         this.x = x;
         this.y = y;
         this.direction = direction;
+
+        // Player renderable position and rotation will be updated by Game class
+        // through the 'player-move' event listener in Game.js
+
         this.battery -= this.movementCost;
         this.updatePlaytime();
         GameEvents.Player.updated(getStats());
@@ -60,6 +49,10 @@ class Player {
 
       'player-direction-change': direction => {
         this.direction = direction;
+
+        // Player renderable rotation will be updated by Game class
+        // through the 'player-direction-change' event listener in Game.js
+
         GameEvents.Player.updated(this);
       },
 
@@ -134,6 +127,13 @@ class Player {
     this.y = this.spawnPoint.y;
     this.battery = this.maxBattery;
     this.updatePlaytime();
+
+    // Update renderable position when resetting
+    if (this.renderable) {
+      // The Game class will handle this through the reset event
+      // Just need to emit that we've moved
+      GameEvents.Player.move(this.x, this.y, this.direction);
+    }
   }
 
   // Save/Load functionality
@@ -164,8 +164,19 @@ class Player {
       this.spawnPoint = { ...playerData.spawnPoint };
     }
 
+    // Restore direction
+    if (playerData.direction) {
+      this.direction = playerData.direction;
+    }
+
     // Reset playtime tracking
     this.playtimeStart = Date.now();
+
+    // Update renderable if it exists (during game restoration)
+    if (this.renderable) {
+      // Emit move event to update rendering
+      GameEvents.Player.move(this.x, this.y, this.direction);
+    }
 
     GameEvents.Player.updated(getStats());
     GameEvents.Game.message('Welcome back! Your progress has been restored.');
@@ -183,6 +194,7 @@ class Player {
       upgrades: Array.from(this.upgrades.entries()),
       totalPlaytime: this.totalPlaytime,
       spawnPoint: { ...this.spawnPoint },
+      direction: this.direction, // Save direction too
     };
   }
 }

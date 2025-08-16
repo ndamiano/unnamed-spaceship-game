@@ -1,3 +1,4 @@
+// src/core/game.js
 import { UserInterface } from '../ui/user-interface.js';
 import { GameEvents, GameEventListeners } from './game-events.js';
 import { Player } from '../entities/player/player.js';
@@ -7,6 +8,7 @@ import { registerPlayer } from '../entities/player/player-stats.js';
 import { Ship } from '../world/ship/ship.js';
 import { storySystem } from '../systems/story/story-system.js';
 import { gameObjectLoader } from '../entities/objects/game-object-loader.js';
+import { RenderingSystem } from '../rendering/rendering-system.js';
 
 export class Game {
   constructor(
@@ -21,14 +23,20 @@ export class Game {
       startGameLoop: true,
     }
   ) {
+    // Set config immediately in constructor
     this.config = GameConfig;
+    this.options = options;
     this.initialized = false;
     this.saveData = null;
     this.isRestoringFromSave = false;
-    this.init(options);
+    this.renderingSystem = null;
+    this.lastFrameTime = 0;
+
+    // Don't call init() here - it should be called externally
+    console.log('Game instance created, call init() to start initialization');
   }
 
-  async init(options) {
+  async init() {
     console.log('Initializing game...');
 
     try {
@@ -43,45 +51,47 @@ export class Game {
       // Check if we're restoring from save data
       this.checkForSaveRestore();
 
-      // Continue with normal initialization
-      if (options.setupCanvas) {
-        this.setupCanvas();
+      // Setup rendering system first (needed for other systems)
+      if (this.options.setupCanvas) {
+        await this.setupRenderingSystem();
       }
 
-      if (options.setupShip) {
+      if (this.options.setupShip) {
         this.setupShip();
       }
 
-      if (options.setupPlayer) {
+      if (this.options.setupPlayer) {
         this.setupPlayer();
       }
 
-      if (options.setupInputHandling) {
+      if (this.options.setupInputHandling) {
         this.setupInputHandling();
       }
 
-      if (options.setupMoveValidation) {
+      if (this.options.setupMoveValidation) {
         this.setupMoveValidation();
       }
 
-      if (options.setupUI) {
+      if (this.options.setupUI) {
         console.log('Setting up UI');
         this.setupUI();
       }
 
-      if (options.setupStory) {
+      if (this.options.setupStory) {
         this.setupStorySystem();
       }
 
-      if (options.startGameLoop) {
-        this.gameLoop();
-      }
-
+      // Mark as initialized BEFORE starting game loop
       this.initialized = true;
       console.log('Game initialization complete');
 
       // Emit initialization complete event
       GameEvents.Game.initialized();
+
+      // Start game loop last
+      if (this.options.startGameLoop) {
+        this.startGameLoop();
+      }
     } catch (error) {
       console.error('Failed to initialize game:', error);
       this.showLoadingError(error);
@@ -119,6 +129,38 @@ export class Game {
     `;
   }
 
+  async setupRenderingSystem() {
+    console.log('Setting up rendering system...');
+
+    this.canvas = document.getElementById('gameCanvas');
+    if (!this.canvas) {
+      throw new Error('Canvas element not found');
+    }
+
+    // Create rendering system with gameObjectLoader for dynamic asset loading
+    this.renderingSystem = new RenderingSystem(
+      this.canvas,
+      this.config,
+      gameObjectLoader
+    );
+
+    // Load assets
+    console.log('Loading game assets...');
+    const assetsLoaded = await this.renderingSystem.loadAssets();
+
+    if (!assetsLoaded) {
+      throw new Error('Failed to load game assets');
+    }
+
+    console.log('Assets loaded successfully');
+
+    // Start the rendering system
+    this.renderingSystem.start();
+
+    // Set up camera bounds based on ship size (will be set properly in setupShip)
+    this.renderingSystem.setCameraBounds(-1000, -1000, 1000, 1000);
+  }
+
   setupStorySystem() {
     console.log('Story system initialized with JSON data');
     GameEvents.Game.message('Systems online... accessing memory banks...');
@@ -141,6 +183,19 @@ export class Game {
     const type = this.saveData?.ship?.type || 'colony';
 
     this.ship = new Ship(width, height, type);
+
+    // Set camera bounds based on ship size
+    if (this.renderingSystem) {
+      const padding = 500; // Extra space around ship
+
+      this.renderingSystem.setCameraBounds(
+        -padding,
+        -padding,
+        width * this.config.tileSize + padding,
+        height * this.config.tileSize + padding
+      );
+    }
+
     console.log(`Ship created: ${width}x${height}, type: ${type}`);
   }
 
@@ -168,6 +223,27 @@ export class Game {
     this.player = new Player(spawnX, spawnY);
     registerPlayer(this.player);
 
+    // Create player renderable
+    if (this.renderingSystem) {
+      this.createPlayerRenderable();
+
+      // Set up camera to follow player - fix the scope issue
+      const game = this; // Capture reference to game instance
+
+      this.renderingSystem.followTarget({
+        get x() {
+          return (
+            game.player.x * game.config.tileSize + game.config.tileSize / 2
+          );
+        },
+        get y() {
+          return (
+            game.player.y * game.config.tileSize + game.config.tileSize / 2
+          );
+        },
+      });
+    }
+
     // Set initial exploration radius based on save data
     const explorationRadius = this.isRestoringFromSave ? 5 : 20;
 
@@ -178,6 +254,54 @@ export class Game {
     );
 
     console.log('Player setup complete');
+  }
+
+  createPlayerRenderable() {
+    const worldX = this.player.x * this.config.tileSize;
+    const worldY = this.player.y * this.config.tileSize;
+
+    // Create player sprite
+    const playerRenderable = this.renderingSystem.createSpriteRenderable(
+      worldX,
+      worldY,
+      'assets/player-100x100.png',
+      {
+        layer: 10, // Player renders on top
+        width: this.config.tileSize,
+        height: this.config.tileSize,
+      }
+    );
+
+    this.player.renderable = playerRenderable;
+    this.renderingSystem.addToScene(playerRenderable);
+
+    // Update player renderable rotation based on initial direction
+    this.updatePlayerRenderable();
+
+    console.log('Player renderable created');
+  }
+
+  updatePlayerRenderable() {
+    if (!this.player.renderable) return;
+
+    // Update position
+    const worldX = this.player.x * this.config.tileSize;
+    const worldY = this.player.y * this.config.tileSize;
+
+    this.player.renderable.setPosition(worldX, worldY);
+
+    // Update rotation based on direction
+    let rotation = 0;
+    const { direction } = this.player;
+
+    if (direction.x === 0 && direction.y === -1)
+      rotation = Math.PI; // UP
+    else if (direction.x === 1 && direction.y === 0)
+      rotation = -Math.PI / 2; // RIGHT
+    else if (direction.x === -1 && direction.y === 0) rotation = Math.PI / 2; // LEFT
+    // DOWN is default (0 rotation)
+
+    this.player.renderable.setRotation(rotation);
   }
 
   setupMoveValidation() {
@@ -199,12 +323,56 @@ export class Game {
 
         this.ship.attemptInteract(targetX, targetY);
       },
+
+      'player-move': () => {
+        // Update player renderable when player moves
+        this.updatePlayerRenderable();
+
+        // Update camera target - fix scope issue here too
+        if (this.renderingSystem && this.renderingSystem.camera.followTarget) {
+          const worldX =
+            this.player.x * this.config.tileSize + this.config.tileSize / 2;
+          const worldY =
+            this.player.y * this.config.tileSize + this.config.tileSize / 2;
+
+          // Update the target object's position
+          this.renderingSystem.camera.followTarget.x = worldX;
+          this.renderingSystem.camera.followTarget.y = worldY;
+        }
+      },
+
+      'player-direction-change': () => {
+        // Update player renderable rotation when direction changes
+        this.updatePlayerRenderable();
+      },
     });
   }
 
+  startGameLoop() {
+    console.log('Starting game loop...');
+    this.lastFrameTime = performance.now();
+    this.gameLoop();
+  }
+
   gameLoop() {
+    // Safety check - don't run if not initialized
+    if (!this.initialized || !this.config || !this.renderingSystem) {
+      console.warn('Game loop called before initialization complete');
+
+      return;
+    }
+
+    const currentTime = performance.now();
+    const deltaTime = currentTime - this.lastFrameTime;
+
+    this.lastFrameTime = currentTime;
+
     try {
-      this.renderShip();
+      // Update game logic here if needed
+      this.updateGame(deltaTime);
+
+      // Render everything through the rendering system
+      this.renderingSystem.render(deltaTime);
     } catch (error) {
       console.error('Error in game loop:', error);
     }
@@ -212,61 +380,9 @@ export class Game {
     requestAnimationFrame(() => this.gameLoop());
   }
 
-  renderShip() {
-    // Clear canvas
-    this.ctx.fillStyle = '#000';
-    this.ctx.fillRect(0, 0, this.config.canvasWidth, this.config.canvasHeight);
-
-    // Calculate center of viewport
-    const centerX = this.config.canvasWidth / 2;
-    const centerY = this.config.canvasHeight / 2;
-
-    // Calculate player's center position in world coordinates
-    const playerCenterX = (this.player.x + 0.5) * this.config.tileSize;
-    const playerCenterY = (this.player.y + 0.5) * this.config.tileSize;
-
-    // Save context state
-    this.ctx.save();
-
-    // Move canvas origin to center, then offset by player position
-    this.ctx.translate(centerX, centerY);
-    this.ctx.translate(-playerCenterX, -playerCenterY);
-
-    try {
-      this.ship.render(this.ctx, this.config.tileSize);
-    } catch (error) {
-      console.error('Error rendering ship:', error);
-    }
-
-    // Restore context state
-    this.ctx.restore();
-
-    // Render player (always centered)
-    try {
-      this.player.render(this.ctx, centerX, centerY, this.config.tileSize);
-    } catch (error) {
-      console.error('Error rendering player:', error);
-    }
-  }
-
-  setupCanvas() {
-    this.canvas = document.getElementById('gameCanvas');
-    if (!this.canvas) {
-      console.error('Canvas element not found');
-
-      return;
-    }
-
-    this.ctx = this.canvas.getContext('2d');
-    if (!this.ctx) {
-      console.error('Could not get 2D context');
-
-      return;
-    }
-
-    this.canvas.width = this.config.canvasWidth;
-    this.canvas.height = this.config.canvasHeight;
-    this.canvas.style.backgroundColor = '#000';
+  updateGame(_deltaTime) {
+    // Game logic updates go here
+    // For now, this is mostly empty since most updates are event-driven
   }
 
   // Get current game state for saving
