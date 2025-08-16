@@ -21,8 +21,6 @@ resources, and upgrade their equipment.
 
 - **Arrow Keys**: Move your character
 - **Space/Enter**: Interact with objects
-- **U**: Open upgrade menu
-- **R**: Reset to spawn point (when stuck)
 
 ### Gameplay Mechanics
 
