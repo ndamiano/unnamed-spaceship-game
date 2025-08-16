@@ -1,4 +1,4 @@
-import { GameEventListeners } from '../core/game-events.js';
+import { GameEvents } from '../core/game-events.js';
 import { getStats } from '../entities/player/player-stats.js';
 import { UpgradeSystem } from '../systems/upgrades/upgrade-system.js';
 import { storySystem } from '../systems/story/story-system.js';
@@ -8,7 +8,6 @@ class UserInterface {
     this.statsPanel = document.getElementById('stats-panel');
     this.messagesPanel = document.getElementById('messages-panel');
 
-    // Use new upgrade modal
     this.upgradeModal = document.getElementById('new-upgrade-modal');
     this.upgradeGrid = document.getElementById('upgrade-grid');
     this.closeUpgradeBtn = document.getElementById('close-upgrade-btn');
@@ -16,44 +15,38 @@ class UserInterface {
     this.setupEventListeners();
     this.setupUpgradeModalEvents();
 
-    // Initial render
     this.updateStats();
   }
 
   setupEventListeners() {
-    GameEventListeners.register({
-      'player-updated': () => {
-        this.updateStats();
-      },
+    GameEvents.Player.Listeners.updated(() => {
+      this.updateStats();
+    });
 
-      'game-message': message => {
-        this.addMessage(message);
-      },
+    GameEvents.Game.Listeners.message(message => {
+      this.addMessage(message);
+    });
 
-      'open-upgrade-menu': () => {
-        this.showUpgradeModal();
-      },
+    GameEvents.UI.Listeners.openUpgrades(() => {
+      this.showUpgradeModal();
+    });
 
-      'story-discovery': () => {
-        this.updateStats(); // Refresh to show new story count
-      },
+    GameEvents.Story.Listeners.discovery(() => {
+      this.updateStats();
     });
   }
 
   setupUpgradeModalEvents() {
-    // Setup upgrade modal close button
     this.closeUpgradeBtn.addEventListener('click', () => {
       this.hideUpgradeModal();
     });
 
-    // Close modal when clicking outside
     this.upgradeModal.addEventListener('click', e => {
       if (e.target === this.upgradeModal) {
         this.hideUpgradeModal();
       }
     });
 
-    // Close modal with Escape key
     document.addEventListener('keydown', e => {
       if (
         e.key === 'Escape' &&
@@ -89,7 +82,6 @@ class UserInterface {
 
       upgradeCard.className = 'upgrade-card';
 
-      // Show current level if upgrade is repeatable and has been purchased
       const levelDisplay =
         upgrade.repeatable && currentCount > 0
           ? ` (Level ${currentCount})`
@@ -111,7 +103,6 @@ class UserInterface {
       if (canAfford) {
         buyBtn.addEventListener('click', () => {
           UpgradeSystem.purchaseUpgrade(id);
-          // Refresh the modal to update costs and availability
           this.renderUpgradeItems();
         });
       }
@@ -161,7 +152,6 @@ class UserInterface {
     messageElement.textContent = `> ${message}`;
     messageElement.style.marginBottom = '5px';
 
-    // Add different styling for story-related messages
     if (message.includes('Story fragment')) {
       messageElement.style.color = '#44ff44';
     }
@@ -169,7 +159,6 @@ class UserInterface {
     this.messagesPanel.appendChild(messageElement);
     this.messagesPanel.scrollTop = this.messagesPanel.scrollHeight;
 
-    // Keep message panel from getting too cluttered
     const messages = this.messagesPanel.children;
 
     if (messages.length > 20) {

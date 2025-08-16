@@ -17,9 +17,9 @@ class InputHandler {
       const key = e.key.toLowerCase();
 
       if (this.directions[key]) {
-        GameEvents.Player.attemptMove(this.directions[key]);
+        GameEvents.Player.Emit.attemptMove(this.directions[key]);
       } else if (key === 'e') {
-        GameEvents.Player.attemptInteract();
+        GameEvents.Player.Emit.attemptInteract();
       }
     });
   }

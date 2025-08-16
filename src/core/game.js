@@ -1,5 +1,5 @@
 import { UserInterface } from '../ui/user-interface.js';
-import { GameEvents, GameEventListeners } from './game-events.js';
+import { GameEvents } from './game-events.js';
 import { Player } from '../entities/player/player.js';
 import { InputHandler } from './input-handler.js';
 import { GameConfig } from '../config/game-config.js';
@@ -22,7 +22,6 @@ export class Game {
       startGameLoop: true,
     }
   ) {
-    // Set config immediately in constructor
     this.config = GameConfig;
     this.options = options;
     this.initialized = false;
@@ -31,11 +30,9 @@ export class Game {
     this.renderingSystem = null;
     this.lastFrameTime = 0;
 
-    // Ship rendering tracking
-    this.shipRenderables = new Map(); // Track ship tile renderables
-    this.objectRenderables = new Map(); // Track object renderables
+    this.shipRenderables = new Map();
+    this.objectRenderables = new Map();
 
-    // Don't call init() here - it should be called externally
     console.log('Game instance created, call init() to start initialization');
   }
 
@@ -43,7 +40,6 @@ export class Game {
     console.log('Initializing game...');
 
     try {
-      // Load game data first
       console.log('Loading game configurations...');
       await gameObjectLoader.loadGameObjects();
       console.log('Game objects loaded');
@@ -51,10 +47,8 @@ export class Game {
       console.log('Story fragments loaded');
       console.log('Game data loaded successfully');
 
-      // Check if we're restoring from save data
       this.checkForSaveRestore();
 
-      // Setup rendering system first (needed for other systems)
       if (this.options.setupCanvas) {
         await this.setupRenderingSystem();
       }
@@ -84,14 +78,11 @@ export class Game {
         this.setupStorySystem();
       }
 
-      // Mark as initialized BEFORE starting game loop
       this.initialized = true;
       console.log('Game initialization complete');
 
-      // Emit initialization complete event
-      GameEvents.Game.initialized();
+      GameEvents.Game.Emit.initialized();
 
-      // Start game loop last
       if (this.options.startGameLoop) {
         this.startGameLoop();
       }
@@ -102,7 +93,6 @@ export class Game {
   }
 
   checkForSaveRestore() {
-    // Check session storage for save data from start screen
     const startData = sessionStorage.getItem('gameStartData');
 
     if (startData) {
@@ -121,7 +111,6 @@ export class Game {
   }
 
   showLoadingError(error) {
-    // Show a user-friendly error message
     document.body.innerHTML = `
       <div style="color: #ff0000; text-align: center; margin-top: 50px; font-family: monospace;">
         <h2>Game Loading Error</h2>
@@ -140,14 +129,12 @@ export class Game {
       throw new Error('Canvas element not found');
     }
 
-    // Create rendering system with gameObjectLoader for dynamic asset loading
     this.renderingSystem = new RenderingSystem(
       this.canvas,
       this.config,
       gameObjectLoader
     );
 
-    // Load assets
     console.log('Loading game assets...');
     const assetsLoaded = await this.renderingSystem.loadAssets();
 
@@ -156,17 +143,13 @@ export class Game {
     }
 
     console.log('Assets loaded successfully');
-
-    // Start the rendering system
     this.renderingSystem.start();
-
-    // Set up camera bounds based on ship size (will be set properly in setupShip)
     this.renderingSystem.setCameraBounds(-1000, -1000, 1000, 1000);
   }
 
   setupStorySystem() {
     console.log('Story system initialized with JSON data');
-    GameEvents.Game.message('Systems online... accessing memory banks...');
+    GameEvents.Game.Emit.message('Systems online... accessing memory banks...');
   }
 
   setupUI() {
@@ -180,16 +163,14 @@ export class Game {
   setupShip() {
     console.log('Setting up ship...');
 
-    // Use saved ship dimensions if available
     const width = this.saveData?.ship?.width || 250;
     const height = this.saveData?.ship?.height || 250;
     const type = this.saveData?.ship?.type || 'colony';
 
     this.ship = new Ship(width, height, type);
 
-    // Set camera bounds based on ship size
     if (this.renderingSystem) {
-      const padding = 500; // Extra space around ship
+      const padding = 500;
 
       this.renderingSystem.setCameraBounds(
         -padding,
@@ -205,7 +186,6 @@ export class Game {
   setupPlayer() {
     console.log('Setting up player...');
 
-    // Use saved player position if available, otherwise use spawn point
     let spawnX, spawnY;
 
     if (
@@ -226,15 +206,11 @@ export class Game {
     this.player = new Player(spawnX, spawnY);
     registerPlayer(this.player);
 
-    // Create player renderable and ship renderables
     if (this.renderingSystem) {
       this.createPlayerRenderable();
-
-      // Create ship renderables
       this.createShipRenderables();
 
-      // Set up camera to follow player
-      const game = this; // Capture reference to game instance
+      const game = this;
 
       this.renderingSystem.followTarget({
         get x() {
@@ -250,7 +226,6 @@ export class Game {
       });
     }
 
-    // Set initial exploration radius based on save data
     const explorationRadius = this.isRestoringFromSave ? 5 : 20;
 
     this.ship.revealAreaAroundPlayer(
@@ -266,13 +241,12 @@ export class Game {
     const worldX = this.player.x * this.config.tileSize;
     const worldY = this.player.y * this.config.tileSize;
 
-    // Create player sprite
     const playerRenderable = this.renderingSystem.createSpriteRenderable(
       worldX,
       worldY,
       'assets/player-100x100.png',
       {
-        layer: 10, // Player renders on top
+        layer: 10,
         width: this.config.tileSize,
         height: this.config.tileSize,
       }
@@ -280,8 +254,6 @@ export class Game {
 
     this.player.renderable = playerRenderable;
     this.renderingSystem.addToScene(playerRenderable);
-
-    // Update player renderable rotation based on initial direction
     this.updatePlayerRenderable();
 
     console.log('Player renderable created');
@@ -289,11 +261,8 @@ export class Game {
 
   createShipRenderables() {
     console.log('Creating ship renderables...');
-
-    // Clear existing ship renderables
     this.clearShipRenderables();
 
-    // Create renderables for all visible tiles
     for (let y = 0; y < this.ship.height; y++) {
       for (let x = 0; x < this.ship.width; x++) {
         const tile = this.ship.map.getTile(x, y);
@@ -310,14 +279,13 @@ export class Game {
     const worldY = y * this.config.tileSize;
     const tileKey = `${x},${y}`;
 
-    // Create floor tile renderable
     const floorAsset = `assets/tile${tile.number || 1}-100x100.png`;
     const floorRenderable = this.renderingSystem.createSpriteRenderable(
       worldX,
       worldY,
       floorAsset,
       {
-        layer: 0, // Floor is bottom layer
+        layer: 0,
         width: this.config.tileSize,
         height: this.config.tileSize,
       }
@@ -326,10 +294,8 @@ export class Game {
     this.renderingSystem.addToScene(floorRenderable);
     this.shipRenderables.set(`floor_${tileKey}`, floorRenderable);
 
-    // Create wall/door slot renderables
     this.createSlotRenderables(tile, x, y);
 
-    // Create object renderable if present
     if (tile.object) {
       this.createObjectRenderable(tile.object, x, y);
     }
@@ -340,7 +306,6 @@ export class Game {
     const worldY = y * this.config.tileSize;
     const tileKey = `${x},${y}`;
 
-    // Handle each slot direction
     ['top', 'right', 'bottom', 'left'].forEach(side => {
       const slot = tile.getSlot(side);
 
@@ -348,7 +313,6 @@ export class Game {
         let slotRenderable;
 
         if (slot.constructor.name === 'WallSegment') {
-          // Create wall renderable using colored rectangles
           const wallColor = '#333333';
           let wallX = worldX,
             wallY = worldY,
@@ -383,11 +347,10 @@ export class Game {
             wallHeight,
             wallColor,
             {
-              layer: 2, // Walls above floor
+              layer: 2,
             }
           );
         } else if (slot.constructor.name === 'Door') {
-          // Create door renderable using colored rectangles
           const doorColor = '#888888';
           let doorX = worldX,
             doorY = worldY,
@@ -422,7 +385,7 @@ export class Game {
             doorHeight,
             doorColor,
             {
-              layer: 2, // Doors above floor
+              layer: 2,
             }
           );
         }
@@ -440,7 +403,6 @@ export class Game {
     const worldY = y * this.config.tileSize;
     const objectKey = `${x},${y}`;
 
-    // Create glow effect if object is activatable
     if (object.isActivatable && object.isActivatable()) {
       console.log('In here!');
       const glowColor =
@@ -455,14 +417,13 @@ export class Game {
         1
       );
 
-      glowRenderable.layer = 4; // Put glow between walls (2) and objects (5)
+      glowRenderable.layer = 4;
       glowRenderable.enablePulsing(2, 0.5, 1.5);
 
       this.renderingSystem.addToScene(glowRenderable);
       this.objectRenderables.set(`glow_${objectKey}`, glowRenderable);
     }
 
-    // Create object sprite - handle different asset path formats
     let assetPath;
 
     if (object.assetPath) {
@@ -478,7 +439,7 @@ export class Game {
       worldY,
       assetPath,
       {
-        layer: 5, // Objects above walls
+        layer: 5,
         width: this.config.tileSize,
         height: this.config.tileSize,
         flipX: object.flipped,
@@ -490,7 +451,6 @@ export class Game {
   }
 
   clearShipRenderables() {
-    // Remove all ship renderables from scene
     this.shipRenderables.forEach(renderable => {
       this.renderingSystem.removeFromScene(renderable);
     });
@@ -503,14 +463,12 @@ export class Game {
   }
 
   updateVisibleTiles() {
-    // Check for newly visible tiles and create renderables for them
     for (let y = 0; y < this.ship.height; y++) {
       for (let x = 0; x < this.ship.width; x++) {
         const tile = this.ship.map.getTile(x, y);
         const tileKey = `${x},${y}`;
 
         if (tile && tile.visible) {
-          // Check if we already have a renderable for this floor tile
           if (!this.shipRenderables.has(`floor_${tileKey}`)) {
             this.createTileRenderable(tile, x, y);
           }
@@ -522,58 +480,47 @@ export class Game {
   updatePlayerRenderable() {
     if (!this.player.renderable) return;
 
-    // Update position
     const worldX = this.player.x * this.config.tileSize;
     const worldY = this.player.y * this.config.tileSize;
 
     this.player.renderable.setPosition(worldX, worldY);
 
-    // Update rotation based on direction
     let rotation = 0;
     const { direction } = this.player;
 
-    if (direction.x === 0 && direction.y === -1)
-      rotation = Math.PI; // UP
-    else if (direction.x === 1 && direction.y === 0)
-      rotation = -Math.PI / 2; // RIGHT
-    else if (direction.x === -1 && direction.y === 0) rotation = Math.PI / 2; // LEFT
-    // DOWN is default (0 rotation)
+    if (direction.x === 0 && direction.y === -1) rotation = Math.PI;
+    else if (direction.x === 1 && direction.y === 0) rotation = -Math.PI / 2;
+    else if (direction.x === -1 && direction.y === 0) rotation = Math.PI / 2;
 
     this.player.renderable.setRotation(rotation);
   }
 
   setupMoveValidation() {
-    GameEventListeners.register({
-      'attempt-move': direction => {
-        GameEvents.Player.directionChange(direction);
-        const newX = this.player.x + direction.x;
-        const newY = this.player.y + direction.y;
+    GameEvents.Player.Listeners.attemptMove(direction => {
+      GameEvents.Player.Emit.directionChange(direction);
+      const newX = this.player.x + direction.x;
+      const newY = this.player.y + direction.y;
 
-        if (this.ship.canMoveTo(newX, newY, direction)) {
-          GameEvents.Player.move(newX, newY, direction);
-        }
-      },
+      if (this.ship.canMoveTo(newX, newY, direction)) {
+        GameEvents.Player.Emit.move(newX, newY, direction);
+      }
+    });
 
-      'attempt-interact': () => {
-        const direction = this.player.direction;
-        const targetX = this.player.x + direction.x;
-        const targetY = this.player.y + direction.y;
+    GameEvents.Player.Listeners.attemptInteract(() => {
+      const direction = this.player.direction;
+      const targetX = this.player.x + direction.x;
+      const targetY = this.player.y + direction.y;
 
-        this.ship.attemptInteract(targetX, targetY);
-      },
+      this.ship.attemptInteract(targetX, targetY);
+    });
 
-      'player-move': () => {
-        // Update player renderable when player moves
-        this.updatePlayerRenderable();
+    GameEvents.Player.Listeners.move(() => {
+      this.updatePlayerRenderable();
+      this.updateVisibleTiles();
+    });
 
-        // Update visible tiles (this will reveal new areas)
-        this.updateVisibleTiles();
-      },
-
-      'player-direction-change': () => {
-        // Update player renderable rotation when direction changes
-        this.updatePlayerRenderable();
-      },
+    GameEvents.Player.Listeners.directionChange(() => {
+      this.updatePlayerRenderable();
     });
   }
 
@@ -584,7 +531,6 @@ export class Game {
   }
 
   gameLoop() {
-    // Safety check - don't run if not initialized
     if (!this.initialized || !this.config || !this.renderingSystem) {
       console.warn('Game loop called before initialization complete');
 
@@ -597,10 +543,7 @@ export class Game {
     this.lastFrameTime = currentTime;
 
     try {
-      // Update game logic here if needed
       this.updateGame(deltaTime);
-
-      // Render everything through the rendering system
       this.renderingSystem.render(deltaTime);
     } catch (error) {
       console.error('Error in game loop:', error);
@@ -611,10 +554,8 @@ export class Game {
 
   updateGame(_deltaTime) {
     // Game logic updates go here
-    // For now, this is mostly empty since most updates are event-driven
   }
 
-  // Get current game state for saving
   getSaveState() {
     if (!this.initialized || !this.player || !this.ship) {
       return null;
@@ -636,7 +577,7 @@ export class Game {
           },
       ship: this.ship.getSaveState(),
       story: storySystem.getSaveState(),
-      gameLayer: 1, // Will be expanded for incremental features
+      gameLayer: 1,
       unlockedFeatures: ['exploration'],
     };
   }

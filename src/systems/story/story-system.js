@@ -1,4 +1,4 @@
-import { GameEvents, GameEventListeners } from '../../core/game-events.js';
+import { GameEvents } from '../../core/game-events.js';
 import { getStats } from '../../entities/player/player-stats.js';
 
 // Story groups - collections of related fragments
@@ -102,9 +102,7 @@ class StorySystem {
     );
     this.registeredObjects.add(gameObject);
 
-    // If we're in the middle of restoration, don't remove fragments that the object should have
     if (!this.restorationInProgress) {
-      // During normal gameplay, remove fragments that have already been discovered
       this.removeDiscoveredFragmentsFromObject(gameObject);
     }
   }
@@ -114,13 +112,11 @@ class StorySystem {
   }
 
   removeDiscoveredFragmentsFromObject(gameObject) {
-    // Remove any fragments that have already been discovered from this object
     if (gameObject.availableStoryFragments) {
       for (const fragmentId of this.discoveredFragments) {
         gameObject.availableStoryFragments.delete(fragmentId);
       }
 
-      // Also remove from available story events
       if (gameObject.availableStoryEvents) {
         gameObject.availableStoryEvents =
           gameObject.availableStoryEvents.filter(
@@ -138,7 +134,6 @@ class StorySystem {
       if (obj.removeStoryFragment) {
         obj.removeStoryFragment(fragmentId);
       } else {
-        // Fallback removal
         if (obj.availableStoryFragments) {
           obj.availableStoryFragments.delete(fragmentId);
         }
@@ -154,37 +149,29 @@ class StorySystem {
   }
 
   setupEventListeners() {
-    GameEventListeners.register({
-      // Story discovery events
-      'story-discovery': data => {
-        this.showStoryModal(data.fragmentId);
-      },
-
-      // Story modal requests
-      'show-story': fragmentId => {
-        this.showStoryModal(fragmentId);
-      },
-
-      // Journal requests
-      'open-journal': () => {
-        this.showJournal();
-      },
-
-      // Restore events
-      'restore-story-state': storyData => {
-        this.restoreState(storyData);
-      },
-
-      // Object registration events (from restored objects)
-      'register-story-object': obj => {
-        this.registerStoryObject(obj);
-      },
+    GameEvents.Story.Listeners.discovery(data => {
+      this.showStoryModal(data.fragmentId);
     });
 
-    // Setup keyboard listener for L key
+    GameEvents.Story.Listeners.show(fragmentId => {
+      this.showStoryModal(fragmentId);
+    });
+
+    GameEvents.Story.Listeners.openJournal(() => {
+      this.showJournal();
+    });
+
+    GameEvents.Story.Listeners.restoreState(storyData => {
+      this.restoreState(storyData);
+    });
+
+    GameEvents.Story.Listeners.registerObject(obj => {
+      this.registerStoryObject(obj);
+    });
+
     document.addEventListener('keydown', e => {
       if (e.key.toLowerCase() === 'l' && !this.isModalOpen()) {
-        GameEvents.Story.openJournal();
+        GameEvents.Story.Emit.openJournal();
       }
     });
   }
@@ -209,17 +196,14 @@ class StorySystem {
     this.textEl = document.getElementById('story-text');
     this.closeBtn = document.getElementById('close-story-btn');
 
-    // Setup event listeners for modal buttons
     this.closeBtn?.addEventListener('click', () => this.closeStoryModal());
 
-    // Close modal when clicking outside
     this.modal?.addEventListener('click', e => {
       if (e.target === this.modal) {
         this.closeStoryModal();
       }
     });
 
-    // Close modal with Escape key
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && this.modal?.classList.contains('active')) {
         this.closeStoryModal();
@@ -315,18 +299,19 @@ class StorySystem {
     }
 
     if (this.discoveredFragments.has(fragmentId)) {
-      GameEvents.Game.message("You've already accessed this information");
+      GameEvents.Game.Emit.message("You've already accessed this information");
 
       return;
     }
 
     if (!this.checkRequirements(fragment.requirements)) {
-      GameEvents.Game.message('Insufficient access credentials for this data');
+      GameEvents.Game.Emit.message(
+        'Insufficient access credentials for this data'
+      );
 
       return;
     }
 
-    // Mark as discovered and add to journal
     this.discoveredFragments.add(fragmentId);
     this.journalEntries.set(fragmentId, {
       fragment: fragment,
@@ -335,10 +320,8 @@ class StorySystem {
     });
     this.currentModal = fragmentId;
 
-    // Remove this fragment from all objects that have it
     this.removeFragmentFromAllObjects(fragmentId);
 
-    // Update group progress
     if (fragment.group) {
       if (!this.discoveredGroups.has(fragment.group)) {
         this.discoveredGroups.set(fragment.group, []);
@@ -347,16 +330,13 @@ class StorySystem {
       this.discoveredGroups.get(fragment.group).push(fragmentId);
     }
 
-    // Populate modal content
     this.titleEl.textContent = fragment.title;
     this.timestampEl.textContent = fragment.timestamp;
     this.iconEl.textContent = fragment.icon;
     this.textEl.textContent = '';
 
-    // Show modal
     this.modal.classList.add('active');
 
-    // Emit message to game log with group context
     let message = `Story fragment discovered: ${fragment.title}`;
 
     if (fragment.group) {
@@ -366,15 +346,14 @@ class StorySystem {
       message += ` (${groupProgress.length}/${totalInGroup} in series)`;
     }
 
-    GameEvents.Game.message(message);
+    GameEvents.Game.Emit.message(message);
 
-    // Start typewriter effect
     this.typewriterEffect(fragment.text);
   }
 
   showJournal() {
     if (this.journalEntries.size === 0) {
-      GameEvents.Game.message('No journal entries found');
+      GameEvents.Game.Emit.message('No journal entries found');
 
       return;
     }
@@ -414,7 +393,6 @@ class StorySystem {
 
       document.getElementById('game-container').appendChild(journalModal);
 
-      // Setup event listeners
       document
         .getElementById('close-journal-btn')
         .addEventListener('click', () => {
@@ -443,7 +421,6 @@ class StorySystem {
 
     let content = '';
 
-    // Group entries by story group
     const groupedEntries = {};
 
     entries.forEach(entry => {
@@ -456,7 +433,6 @@ class StorySystem {
       groupedEntries[groupId].push(entry);
     });
 
-    // Display entries by group
     Object.entries(groupedEntries).forEach(([groupId, groupEntries]) => {
       const group = STORY_GROUPS[groupId];
       const groupName = group ? group.name : 'Miscellaneous';
@@ -483,13 +459,12 @@ class StorySystem {
     this.modal.classList.remove('active');
     this.currentModal = null;
 
-    // Resume game (if paused)
-    GameEvents.Game.resumed();
+    GameEvents.Game.Emit.resumed();
   }
 
   typewriterEffect(text) {
     let i = 0;
-    const speed = 30; // milliseconds per character
+    const speed = 30;
 
     const typeInterval = setInterval(() => {
       this.textEl.textContent += text.charAt(i);
@@ -500,7 +475,6 @@ class StorySystem {
     }, speed);
   }
 
-  // Save/Load functionality
   restoreState(storyData) {
     console.log('Restoring story state:', storyData);
 
@@ -513,7 +487,6 @@ class StorySystem {
     this.restorationInProgress = true;
     this.isRestored = true;
 
-    // Restore discovered fragments
     if (
       storyData.discoveredFragments &&
       Array.isArray(storyData.discoveredFragments)
@@ -524,7 +497,6 @@ class StorySystem {
       );
     }
 
-    // Restore discovered groups
     if (storyData.discoveredGroups) {
       this.discoveredGroups = new Map();
       for (const [groupId, fragments] of Object.entries(
@@ -534,13 +506,11 @@ class StorySystem {
       }
     }
 
-    // Restore journal entries
     if (storyData.journalEntries) {
       this.journalEntries = new Map();
       for (const [fragmentId, entryData] of Object.entries(
         storyData.journalEntries
       )) {
-        // Reconstruct the entry with proper Date objects
         this.journalEntries.set(fragmentId, {
           ...entryData,
           discoveredAt: new Date(entryData.discoveredAt),
@@ -548,7 +518,6 @@ class StorySystem {
       }
     }
 
-    // After a short delay, remove discovered fragments from newly registered objects
     setTimeout(() => {
       console.log(
         'Story restoration complete - cleaning up registered objects'
@@ -563,7 +532,7 @@ class StorySystem {
     console.log(
       `Story state restored: ${this.discoveredFragments.size} fragments discovered`
     );
-    GameEvents.Game.message(
+    GameEvents.Game.Emit.message(
       `Story progress restored: ${this.discoveredFragments.size} fragments recovered`
     );
   }
@@ -576,7 +545,6 @@ class StorySystem {
     };
   }
 
-  // Public methods for checking story state
   hasDiscovered(fragmentId) {
     return this.discoveredFragments.has(fragmentId);
   }
@@ -614,15 +582,13 @@ class StorySystem {
     }));
   }
 
-  // Request a specific story from a group (for objects to use)
   requestStoryFromGroup(groupId) {
     const availableFragments = this.getAvailableFragmentsInGroup(groupId);
 
     if (availableFragments.length === 0) {
-      return null; // No available fragments in group
+      return null;
     }
 
-    // Return first available fragment that meets requirements
     return availableFragments[0];
   }
 
@@ -631,7 +597,6 @@ class StorySystem {
   }
 }
 
-// Create singleton instance
 const storySystem = new StorySystem();
 
 export { storySystem };

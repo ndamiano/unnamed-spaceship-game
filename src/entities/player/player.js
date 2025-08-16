@@ -1,5 +1,5 @@
 import { Directions } from '../../utils/directions.js';
-import { GameEvents, GameEventListeners } from '../../core/game-events.js';
+import { GameEvents } from '../../core/game-events.js';
 import {
   BASE_RESOURCES,
   modifyResources,
@@ -31,65 +31,56 @@ class Player {
   }
 
   registerEventHandlers() {
-    GameEventListeners.register({
-      'player-move': ({ x, y, direction }) => {
-        this.x = x;
-        this.y = y;
-        this.direction = direction;
+    GameEvents.Player.Listeners.move(({ x, y, direction }) => {
+      this.x = x;
+      this.y = y;
+      this.direction = direction;
 
-        // Player renderable position and rotation will be updated by Game class
-        // through the 'player-move' event listener in Game.js
-
-        this.battery -= this.movementCost;
-        this.updatePlaytime();
-        GameEvents.Player.updated(getStats());
-      },
-
-      'player-direction-change': direction => {
-        this.direction = direction;
-
-        // Player renderable rotation will be updated by Game class
-        // through the 'player-direction-change' event listener in Game.js
-
-        GameEvents.Player.updated(this);
-      },
-
-      'player-updated': player => {
-        if (player.battery <= 0) {
-          GameEvents.Game.message(
-            'As you feel your battery getting close to empty, you return to your charging pod.'
-          );
-          GameEvents.Game.resetState();
-          this.reset();
-        }
-      },
-
-      'purchase-upgrade': upgrade_def => {
-        if (UpgradeSystem.canAffordUpgrade(upgrade_def.id, this.resources)) {
-          this.resources = subtractResources(this.resources, upgrade_def.cost);
-          const currentCount = this.upgrades.get(upgrade_def.id) ?? 0;
-
-          this.upgrades.set(upgrade_def.id, currentCount + 1);
-          GameEvents.Player.updated();
-          GameEvents.Game.message('Upgrade purchased: ' + upgrade_def.name);
-        }
-      },
-
-      'add-resource': ({ type, amount }) => {
-        const toAdd = amount * this.harvestMultiplier;
-
-        this.resources = modifyResources(this.resources, {
-          [type]: toAdd,
-        });
-        GameEvents.Player.updated(getStats());
-      },
-
-      'restore-player-state': playerData => {
-        this.restoreState(playerData);
-      },
+      this.battery -= this.movementCost;
+      this.updatePlaytime();
+      GameEvents.Player.Emit.updated(getStats());
     });
 
-    GameEvents.Player.updated(this);
+    GameEvents.Player.Listeners.directionChange(direction => {
+      this.direction = direction;
+      GameEvents.Player.Emit.updated(this);
+    });
+
+    GameEvents.Player.Listeners.updated(player => {
+      if (player.battery <= 0) {
+        GameEvents.Game.Emit.message(
+          'As you feel your battery getting close to empty, you return to your charging pod.'
+        );
+        GameEvents.Game.Emit.resetState();
+        this.reset();
+      }
+    });
+
+    GameEvents.Upgrades.Listeners.purchase(upgrade_def => {
+      if (UpgradeSystem.canAffordUpgrade(upgrade_def.id, this.resources)) {
+        this.resources = subtractResources(this.resources, upgrade_def.cost);
+        const currentCount = this.upgrades.get(upgrade_def.id) ?? 0;
+
+        this.upgrades.set(upgrade_def.id, currentCount + 1);
+        GameEvents.Player.Emit.updated();
+        GameEvents.Game.Emit.message('Upgrade purchased: ' + upgrade_def.name);
+      }
+    });
+
+    GameEvents.Resources.Listeners.add(({ type, amount }) => {
+      const toAdd = amount * this.harvestMultiplier;
+
+      this.resources = modifyResources(this.resources, {
+        [type]: toAdd,
+      });
+      GameEvents.Player.Emit.updated(getStats());
+    });
+
+    GameEvents.Save.Listeners.restorePlayer(playerData => {
+      this.restoreState(playerData);
+    });
+
+    GameEvents.Player.Emit.updated(this);
   }
 
   interact(object) {
@@ -126,15 +117,11 @@ class Player {
     this.battery = this.maxBattery;
     this.updatePlaytime();
 
-    // Update renderable position when resetting
     if (this.renderable) {
-      // The Game class will handle this through the reset event
-      // Just need to emit that we've moved
-      GameEvents.Player.move(this.x, this.y, this.direction);
+      GameEvents.Player.Emit.move(this.x, this.y, this.direction);
     }
   }
 
-  // Save/Load functionality
   restoreState(playerData) {
     console.log('Restoring player state:', playerData);
 
@@ -144,43 +131,36 @@ class Player {
     if (playerData.resources) this.resources = { ...playerData.resources };
     if (playerData.totalPlaytime) this.totalPlaytime = playerData.totalPlaytime;
 
-    // Restore upgrades (convert from array back to Map if needed)
     if (playerData.upgrades) {
       if (Array.isArray(playerData.upgrades)) {
-        // Convert from array format (used in saves)
         this.upgrades = new Map(playerData.upgrades);
       } else if (playerData.upgrades instanceof Map) {
         this.upgrades = new Map(playerData.upgrades);
       } else {
-        // Handle object format
         this.upgrades = new Map(Object.entries(playerData.upgrades));
       }
     }
 
-    // Update spawn point if provided
     if (playerData.spawnPoint) {
       this.spawnPoint = { ...playerData.spawnPoint };
     }
 
-    // Restore direction
     if (playerData.direction) {
       this.direction = playerData.direction;
     }
 
-    // Reset playtime tracking
     this.playtimeStart = Date.now();
 
-    // Update renderable if it exists (during game restoration)
     if (this.renderable) {
-      // Emit move event to update rendering
-      GameEvents.Player.move(this.x, this.y, this.direction);
+      GameEvents.Player.Emit.move(this.x, this.y, this.direction);
     }
 
-    GameEvents.Player.updated(getStats());
-    GameEvents.Game.message('Welcome back! Your progress has been restored.');
+    GameEvents.Player.Emit.updated(getStats());
+    GameEvents.Game.Emit.message(
+      'Welcome back! Your progress has been restored.'
+    );
   }
 
-  // Get current state for saving
   getSaveState() {
     this.updatePlaytime();
 
@@ -192,7 +172,7 @@ class Player {
       upgrades: Array.from(this.upgrades.entries()),
       totalPlaytime: this.totalPlaytime,
       spawnPoint: { ...this.spawnPoint },
-      direction: this.direction, // Save direction too
+      direction: this.direction,
     };
   }
 }

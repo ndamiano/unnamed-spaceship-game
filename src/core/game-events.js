@@ -1,81 +1,104 @@
 import { eventBus } from './event-bus.js';
 
 /**
- * Centralized game events with type safety and documentation
- * This replaces direct eventBus.emit() calls throughout the codebase
+ * Centralized game events with type safety and organized emit/listen structure
  */
 export const GameEvents = {
-  // Player events
   Player: {
-    move: (x, y, direction) =>
-      eventBus.emit('player-move', { x, y, direction }),
-    updated: stats => eventBus.emit('player-updated', stats),
-    directionChange: direction =>
-      eventBus.emit('player-direction-change', direction),
-    attemptMove: direction => eventBus.emit('attempt-move', direction),
-    attemptInteract: () => eventBus.emit('attempt-interact'),
+    Emit: {
+      move: (x, y, direction) =>
+        eventBus.emit('player-move', { x, y, direction }),
+      updated: stats => eventBus.emit('player-updated', stats),
+      directionChange: direction =>
+        eventBus.emit('player-direction-change', direction),
+      attemptMove: direction => eventBus.emit('attempt-move', direction),
+      attemptInteract: () => eventBus.emit('attempt-interact'),
+    },
+    Listeners: {
+      move: callback => eventBus.on('player-move', callback),
+      updated: callback => eventBus.on('player-updated', callback),
+      directionChange: callback =>
+        eventBus.on('player-direction-change', callback),
+      attemptMove: callback => eventBus.on('attempt-move', callback),
+      attemptInteract: callback => eventBus.on('attempt-interact', callback),
+    },
   },
 
-  // Game state events
   Game: {
-    message: text => eventBus.emit('game-message', text),
-    initialized: () => eventBus.emit('game-initialized'),
-    resetState: () => eventBus.emit('reset-state'),
-    resumed: () => eventBus.emit('game-resumed'),
+    Emit: {
+      message: text => eventBus.emit('game-message', text),
+      initialized: () => eventBus.emit('game-initialized'),
+      resetState: () => eventBus.emit('reset-state'),
+      resumed: () => eventBus.emit('game-resumed'),
+    },
+    Listeners: {
+      message: callback => eventBus.on('game-message', callback),
+      initialized: callback => eventBus.on('game-initialized', callback),
+      resetState: callback => eventBus.on('reset-state', callback),
+      resumed: callback => eventBus.on('game-resumed', callback),
+    },
   },
 
-  // Story events
   Story: {
-    discovery: fragmentId => eventBus.emit('story-discovery', { fragmentId }),
-    show: fragmentId => eventBus.emit('show-story', fragmentId),
-    openJournal: () => eventBus.emit('open-journal'),
-    restoreState: storyData => eventBus.emit('restore-story-state', storyData),
-    registerObject: obj => eventBus.emit('register-story-object', obj),
+    Emit: {
+      discovery: fragmentId => eventBus.emit('story-discovery', { fragmentId }),
+      show: fragmentId => eventBus.emit('show-story', fragmentId),
+      openJournal: () => eventBus.emit('open-journal'),
+      restoreState: storyData =>
+        eventBus.emit('restore-story-state', storyData),
+      registerObject: obj => eventBus.emit('register-story-object', obj),
+    },
+    Listeners: {
+      discovery: callback => eventBus.on('story-discovery', callback),
+      show: callback => eventBus.on('show-story', callback),
+      openJournal: callback => eventBus.on('open-journal', callback),
+      restoreState: callback => eventBus.on('restore-story-state', callback),
+      registerObject: callback =>
+        eventBus.on('register-story-object', callback),
+    },
   },
 
-  // UI events
   UI: {
-    openUpgrades: () => eventBus.emit('open-upgrade-menu'),
-    openSaveManager: () => eventBus.emit('open-save-manager'),
+    Emit: {
+      openUpgrades: () => eventBus.emit('open-upgrade-menu'),
+      openSaveManager: () => eventBus.emit('open-save-manager'),
+    },
+    Listeners: {
+      openUpgrades: callback => eventBus.on('open-upgrade-menu', callback),
+      openSaveManager: callback => eventBus.on('open-save-manager', callback),
+    },
   },
 
-  // Resource events
   Resources: {
-    add: (type, amount) => eventBus.emit('add-resource', { type, amount }),
+    Emit: {
+      add: (type, amount) => eventBus.emit('add-resource', { type, amount }),
+    },
+    Listeners: {
+      add: callback => eventBus.on('add-resource', callback),
+    },
   },
 
-  // Upgrade events
   Upgrades: {
-    purchase: upgradeDef => eventBus.emit('purchase-upgrade', upgradeDef),
+    Emit: {
+      purchase: upgradeDef => eventBus.emit('purchase-upgrade', upgradeDef),
+    },
+    Listeners: {
+      purchase: callback => eventBus.on('purchase-upgrade', callback),
+    },
   },
 
-  // Save/Load events
   Save: {
-    restorePlayer: playerData =>
-      eventBus.emit('restore-player-state', playerData),
-    restoreShip: shipData => eventBus.emit('restore-ship-state', shipData),
-    restoreStory: storyData => eventBus.emit('restore-story-state', storyData),
+    Emit: {
+      restorePlayer: playerData =>
+        eventBus.emit('restore-player-state', playerData),
+      restoreShip: shipData => eventBus.emit('restore-ship-state', shipData),
+      restoreStory: storyData =>
+        eventBus.emit('restore-story-state', storyData),
+    },
+    Listeners: {
+      restorePlayer: callback => eventBus.on('restore-player-state', callback),
+      restoreShip: callback => eventBus.on('restore-ship-state', callback),
+      restoreStory: callback => eventBus.on('restore-story-state', callback),
+    },
   },
-};
-
-// Event listener helpers
-export const GameEventListeners = {
-  // Helper to register multiple listeners at once
-  register: listeners => {
-    Object.entries(listeners).forEach(([event, callback]) => {
-      eventBus.on(event, callback);
-    });
-  },
-
-  // Helper to unregister listeners
-  unregister: listeners => {
-    Object.entries(listeners).forEach(([event, callback]) => {
-      eventBus.off(event, callback);
-    });
-  },
-
-  // Direct access to eventBus for complex cases
-  on: (event, callback) => eventBus.on(event, callback),
-  off: (event, callback) => eventBus.off(event, callback),
-  emit: (event, data) => eventBus.emit(event, data),
 };

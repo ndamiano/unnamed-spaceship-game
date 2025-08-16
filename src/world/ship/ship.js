@@ -2,7 +2,8 @@ import { ShipMap } from './ship-map.js';
 import { SpawnRoom } from '../rooms/index.js';
 import { getStats } from '../../entities/player/player-stats.js';
 import { Directions } from '../../utils/index.js';
-import { GameEvents, GameEventListeners } from '../../core/game-events.js';
+import { eventBus } from '../../core/event-bus.js';
+import { GameEvents } from '../../core/game-events.js';
 import { Floor } from '../tiles/floor.js';
 import { WallSegment } from '../tiles/wall-segment.js';
 import { Door } from '../tiles/door.js';
@@ -17,7 +18,7 @@ export class Ship {
     this.isRestored = false;
 
     // Listen for save/restore events
-    GameEventListeners.on('restore-ship-state', shipData => {
+    GameEvents.Save.Listeners.restoreShip(shipData => {
       this.restoreState(shipData);
     });
   }
@@ -48,6 +49,7 @@ export class Ship {
 
     if (!currentTile) return false;
 
+    // Check walls/doors in the direction of movement
     switch (direction) {
       case Directions.RIGHT:
         if (currentTile.getSlot('right')?.passable === false) return false;
@@ -74,6 +76,7 @@ export class Ship {
     const tile = this.map.getTile(targetX, targetY);
 
     if (!tile) return;
+
     if (typeof tile.onInteract === 'function') {
       tile.onInteract();
     }
@@ -83,68 +86,51 @@ export class Ship {
     }
   }
 
-  // Check if tile is worth saving (has meaningful data)
-  isTileSignificant(tile, _x, _y) {
-    // Save if tile has been visited
-    if (tile.visible) return true;
-
-    // Save if tile has objects
-    if (tile.object) return true;
-
-    // Save if tile has slots (walls/doors)
-    if (this.hasSlots(tile)) return true;
-
-    // Save if tile is not passable (means it's been modified from default)
-    if (!tile.passable) return true;
-
-    // Save if tile blocks line of sight (modified from default)
-    if (tile.blocksLineOfSight) return true;
-
-    // Skip default empty floor tiles
-    return false;
-  }
-
-  // Get current state for saving - highly optimized
+  // Simplified save state - just save what we need
   getSaveState() {
     const tiles = [];
+
+    // Find the actual bounds of the ship (ignore empty areas)
     const bounds = this.findShipBounds();
 
-    console.log(
-      `Saving ship tiles within bounds: ${bounds.minX}-${bounds.maxX}, ${bounds.minY}-${bounds.maxY}`
-    );
-
-    // Only check tiles within the ship bounds
+    // Only save tiles within the ship bounds that have been modified
     for (let y = bounds.minY; y <= bounds.maxY; y++) {
       for (let x = bounds.minX; x <= bounds.maxX; x++) {
         const tile = this.map.getTile(x, y);
 
         if (!tile) continue;
 
-        if (this.isTileSignificant(tile, x, y)) {
-          const tileData = this.serializeTileCompact(tile, x, y);
-
-          if (tileData) {
-            tiles.push(tileData);
-          }
+        // Only save tiles that have been explored or have content
+        if (
+          tile.visible ||
+          tile.object ||
+          this.hasWalls(tile) ||
+          !tile.passable
+        ) {
+          tiles.push({
+            x,
+            y,
+            visible: tile.visible,
+            passable: tile.passable,
+            number: tile.number,
+            object: tile.object ? this.serializeObject(tile.object) : null,
+            walls: this.serializeWalls(tile),
+          });
         }
       }
     }
 
-    console.log(
-      `Saved ${tiles.length} significant tiles out of ${(bounds.maxX - bounds.minX + 1) * (bounds.maxY - bounds.minY + 1)} total tiles in bounds`
-    );
+    console.log(`Saving ${tiles.length} significant tiles`);
 
     return {
       width: this.width,
       height: this.height,
       type: this.type,
-      bounds: bounds, // Save the ship bounds for efficient restoration
-      tiles: tiles,
-      version: 2, // Version for migration
+      bounds,
+      tiles,
     };
   }
 
-  // Find the actual bounds of the generated ship (ignore empty space)
   findShipBounds() {
     let minX = this.width,
       maxX = 0,
@@ -156,7 +142,7 @@ export class Ship {
       for (let x = 0; x < this.width; x++) {
         const tile = this.map.getTile(x, y);
 
-        if (tile && this.isTileSignificant(tile, x, y)) {
+        if (tile && (tile.visible || tile.object || this.hasWalls(tile))) {
           minX = Math.min(minX, x);
           maxX = Math.max(maxX, x);
           minY = Math.min(minY, y);
@@ -167,11 +153,10 @@ export class Ship {
     }
 
     if (!foundTiles) {
-      // Fallback if no significant tiles found
       return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
     }
 
-    // Add small padding to bounds
+    // Add small padding
     const padding = 5;
 
     return {
@@ -182,395 +167,193 @@ export class Ship {
     };
   }
 
-  // Serialize tile in compact format
-  serializeTileCompact(tile, x, y) {
-    const data = [x, y]; // Always include position
+  serializeObject(obj) {
+    if (!obj) return null;
 
-    let flags = 0;
-    const extras = {};
-
-    // Use bit flags for common boolean properties
-    if (tile.visible) flags |= 1;
-    if (!tile.passable) flags |= 2; // Default is passable, so flag when NOT passable
-    if (tile.blocksLineOfSight) flags |= 4; // Default is false, so flag when true
-
-    data.push(flags);
-
-    // Add tile number if not default (Floor tiles have random numbers 1-3)
-    if (tile.number !== undefined && tile.number !== 1) {
-      extras.n = tile.number;
-    }
-
-    // Add slots in compact format
-    const slots = this.serializeSlotsCompact(tile);
-
-    if (slots) {
-      extras.s = slots;
-    }
-
-    // Add object in compact format
-    if (tile.object) {
-      extras.o = this.serializeObjectCompact(tile.object);
-    }
-
-    // Add extras if any exist
-    if (Object.keys(extras).length > 0) {
-      data.push(extras);
-    }
-
-    return data;
+    return {
+      type: obj.objectType,
+      flipped: obj.flipped || false,
+      storyData: obj.getSaveState
+        ? obj.getSaveState()
+        : {
+            determined: obj.storyEventDetermined || false,
+            fragments: Array.from(obj.availableStoryFragments || []),
+            events: obj.availableStoryEvents || [],
+            groupId: obj.storyGroupId,
+            used: obj.storyUsed || false,
+          },
+      activationResults: obj.activationResults || [],
+    };
   }
 
-  // Compact slot serialization
-  serializeSlotsCompact(tile) {
+  serializeWalls(tile) {
     if (!tile.slots) return null;
 
-    const slots = {};
-    let hasSlots = false;
+    const walls = {};
 
-    ['top', 'right', 'bottom', 'left'].forEach((side, index) => {
+    ['top', 'right', 'bottom', 'left'].forEach(side => {
       const slot = tile.slots[side];
 
       if (slot) {
-        // Use single character keys and compact values
-        const sideKey = 'trbl'[index]; // t=top, r=right, b=bottom, l=left
-
-        let slotData = slot.constructor.name === 'WallSegment' ? 'w' : 'd'; // w=wall, d=door
-
-        // Add flags for non-default properties
-        if (!slot.passable && slot.constructor.name === 'Door') slotData += '!'; // Door that's not passable
-        if (!slot.blocksLineOfSight && slot.constructor.name === 'WallSegment')
-          slotData += '?'; // Wall that doesn't block LOS
-
-        slots[sideKey] = slotData;
-        hasSlots = true;
+        walls[side] = {
+          type: slot.constructor.name,
+          passable: slot.passable,
+          blocksLineOfSight: slot.blocksLineOfSight,
+        };
       }
     });
 
-    return hasSlots ? slots : null;
+    return Object.keys(walls).length > 0 ? walls : null;
   }
 
-  // Compact object serialization
-  serializeObjectCompact(obj) {
-    const data = {
-      t: obj.objectType, // t = type
-    };
-
-    // Only save non-default values
-    if (obj.flipped) data.f = 1; // f = flipped
-    if (obj.storyEventDetermined) data.d = 1; // d = determined
-    if (obj.availableStoryFragments && obj.availableStoryFragments.size > 0) {
-      data.sf = Array.from(obj.availableStoryFragments); // sf = story fragments
-    }
-
-    if (obj.availableStoryEvents && obj.availableStoryEvents.length > 0) {
-      data.se = Array.from(obj.availableStoryEvents); // se = story events
-    }
-
-    // Save activation results state (only if modified)
-    if (obj.activationResults && obj.activationResults.length > 0) {
-      const modifiedResults = obj.activationResults.filter(
-        result =>
-          result.used || Object.prototype.hasOwnProperty.call(result, 'used')
-      );
-
-      if (modifiedResults.length > 0) {
-        data.ar = modifiedResults.map(result => ({
-          i: obj.activationResults.indexOf(result), // i = index
-          u: result.used ? 1 : 0, // u = used
-        }));
-      }
-    }
-
-    return data;
-  }
-
-  // Check if tile has any slots
-  hasSlots(tile) {
+  hasWalls(tile) {
     return tile.slots && Object.values(tile.slots).some(slot => slot !== null);
   }
 
-  // Restore ship state from save data
+  // Simplified restore state
   restoreState(shipData) {
-    console.log('Restoring ship state from optimized tile data...');
+    console.log('Restoring ship state...');
 
-    if (!shipData || !shipData.tiles) {
-      console.log('No valid ship tile data to restore');
+    if (!shipData?.tiles) {
+      console.log('No ship data to restore');
 
       return;
     }
 
     this.isRestored = true;
 
-    // Replace the entire map with saved data instead of mixing old and new
-    this.createMapFromSaveData(shipData);
+    // Create fresh map without room generation
+    this.map = this.createEmptyMap();
 
-    console.log(`Ship state restored: ${shipData.tiles.length} tiles loaded`);
-    GameEvents.Game.message(
+    // Restore each saved tile
+    shipData.tiles.forEach(tileData => {
+      this.restoreTile(tileData);
+    });
+
+    console.log(`Ship restored: ${shipData.tiles.length} tiles loaded`);
+    GameEvents.Game.Emit.message(
       `Ship layout restored: ${shipData.tiles.length} areas loaded`
     );
   }
 
-  // Create a completely new map from save data (no mixing with generated content)
-  async createMapFromSaveData(shipData) {
-    console.log('Creating clean map from save data...');
-
-    // Create a fresh ShipMap but without running generation
-    this.map = this.createEmptyShipMap();
-
-    // Restore all saved tiles (now with async support)
-    const restorePromises = shipData.tiles.map(tileData =>
-      this.restoreSingleTile(tileData)
-    );
-
-    await Promise.all(restorePromises);
-
-    console.log('Clean map created from save data');
-  }
-
-  // Create an empty ShipMap without running room generation
-  createEmptyShipMap() {
-    // Import ShipMap but create it in "restore mode"
+  createEmptyMap() {
+    // Create map structure without room generation
     const map = Object.create(ShipMap.prototype);
 
     map.width = this.width;
     map.height = this.height;
     map.type = this.type;
-    map.rooms = []; // Empty rooms array
+    map.rooms = [];
 
     // Create empty tile grid
     map.tiles = Array.from({ length: this.height }, (_, y) =>
       Array.from({ length: this.width }, (_, x) => new Floor(x, y))
     );
 
-    // Bind the essential methods from a real ShipMap
-    const tempMap = new ShipMap(1, 1, this.type); // Tiny temporary map for method binding
-
+    // Bind essential methods
     map.getTile = ShipMap.prototype.getTile.bind(map);
-    map.hasLineOfSight = tempMap.hasLineOfSight.bind(map);
-    map.revealAreaAroundPlayer = tempMap.revealAreaAroundPlayer.bind(map);
+    map.hasLineOfSight = ShipMap.prototype.hasLineOfSight.bind(map);
+    map.revealAreaAroundPlayer =
+      ShipMap.prototype.revealAreaAroundPlayer.bind(map);
 
-    // Set up event listeners for player movement reveals
-    GameEventListeners.on('player-updated', player => {
+    // Set up event listener for player movement reveals
+    eventBus.on('player-updated', player => {
       map.revealAreaAroundPlayer(player.x, player.y, 2);
     });
 
     return map;
   }
 
-  // Restore a single tile from save data
-  async restoreSingleTile(tileData) {
-    const [x, y, flags, extras] = tileData;
-
-    // Get the tile from the map
-    const tile = this.map.getTile(x, y);
+  restoreTile(tileData) {
+    const tile = this.map.getTile(tileData.x, tileData.y);
 
     if (!tile) {
-      console.warn(`No tile at ${x}, ${y} - skipping restore`);
+      console.warn(`No tile at ${tileData.x}, ${tileData.y}`);
 
       return;
     }
 
-    // Restore flags
-    tile.visible = !!(flags & 1);
-    tile.passable = !(flags & 2); // Inverted because default is passable
-    tile.blocksLineOfSight = !!(flags & 4);
+    // Restore basic tile properties
+    tile.visible = tileData.visible;
+    tile.passable = tileData.passable;
+    if (tileData.number) tile.number = tileData.number;
 
-    // Restore extras if present
-    if (extras) {
-      // Restore tile number
-      if (extras.n !== undefined) {
-        tile.number = extras.n;
-      }
+    // Restore walls
+    if (tileData.walls) {
+      this.restoreWalls(tile, tileData.walls);
+    }
 
-      // Restore slots
-      if (extras.s) {
-        this.restoreSlotsToTile(tile, extras.s);
-      }
-
-      // Restore object (now async)
-      if (extras.o) {
-        await this.restoreObjectToTile(tile, extras.o);
+    // Restore object
+    if (tileData.object) {
+      tile.object = this.restoreObject(tileData.object, tileData.x, tileData.y);
+      if (tile.object) {
+        tile.passable = tile.object.passable;
       }
     }
   }
 
-  // Restore slots to an existing tile
-  restoreSlotsToTile(tile, slotsData) {
-    const sideMap = { t: 'top', r: 'right', b: 'bottom', l: 'left' };
+  restoreWalls(tile, wallsData) {
+    Object.entries(wallsData).forEach(([side, wallData]) => {
+      let wall;
 
-    Object.entries(slotsData).forEach(([sideKey, slotData]) => {
-      const side = sideMap[sideKey];
-
-      if (!side) return;
-
-      const isWall = slotData.startsWith('w');
-      const direction = side;
-
-      let slot;
-
-      if (isWall) {
-        slot = new WallSegment(tile.x, tile.y, direction);
-        slot.passable = false;
-        slot.blocksLineOfSight = !slotData.includes('?'); // Default true, ? means false
+      if (wallData.type === 'WallSegment') {
+        wall = new WallSegment(tile.x, tile.y, side);
+      } else if (wallData.type === 'Door') {
+        wall = new Door(tile.x, tile.y, side);
       } else {
-        slot = new Door(tile.x, tile.y, direction);
-        slot.passable = !slotData.includes('!'); // Default true, ! means false
-        slot.blocksLineOfSight = true;
+        return;
       }
 
-      tile.setSlot(side, slot);
+      wall.passable = wallData.passable;
+      wall.blocksLineOfSight = wallData.blocksLineOfSight;
+      tile.setSlot(side, wall);
     });
   }
 
-  // Restore object to an existing tile
-  async restoreObjectToTile(tile, objectData) {
-    console.log('Restoring object from data:', objectData);
-
+  restoreObject(objData, x, y) {
     try {
-      // Create the object
-      const obj = new GameObject(tile.x, tile.y, objectData.t);
+      const obj = new GameObject(x, y, objData.type);
 
-      // Restore basic object state
-      obj.flipped = !!objectData.f;
-      obj.storyEventDetermined = !!objectData.d;
+      obj.flipped = objData.flipped;
 
-      // Restore story fragments
-      if (objectData.sf && Array.isArray(objectData.sf)) {
-        obj.availableStoryFragments = new Set(objectData.sf);
-        console.log('Restored story fragments:', objectData.sf);
-      } else {
-        obj.availableStoryFragments = new Set();
-      }
-
-      // Restore story events
-      if (objectData.se && Array.isArray(objectData.se)) {
-        obj.availableStoryEvents = objectData.se.map(event => ({
-          type: event.type,
-          fragmentId: event.fragmentId,
-          content: event.content,
-        }));
-        console.log('Restored story events:', objectData.se);
-      } else {
-        obj.availableStoryEvents = [];
-      }
-
-      // Restore story configuration if saved
-      if (objectData.sg) {
-        obj.storyGroupId = objectData.sg;
-        console.log('Restored story group:', objectData.sg);
-      }
-
-      if (objectData.sc !== undefined) {
-        obj.storyChance = objectData.sc;
-      }
-
-      if (objectData.gs) {
-        obj.guaranteedStory = true;
+      // Restore story data
+      if (objData.storyData) {
+        obj.storyEventDetermined = objData.storyData.determined;
+        obj.availableStoryFragments = new Set(
+          objData.storyData.fragments || []
+        );
+        obj.availableStoryEvents = objData.storyData.events || [];
+        obj.storyGroupId = objData.storyData.groupId;
+        obj.storyUsed = objData.storyData.used;
       }
 
       // Restore activation results
-      if (objectData.ar && obj.activationResults) {
-        objectData.ar.forEach(({ i, u }) => {
-          if (obj.activationResults[i]) {
-            obj.activationResults[i].used = !!u;
-          }
-        });
+      if (objData.activationResults) {
+        obj.activationResults = objData.activationResults;
       }
 
-      // Set the object on the tile
-      tile.object = obj;
-      tile.passable = obj.passable;
-
-      console.log('Object restored:', {
-        type: obj.objectType,
-        position: [obj.x, obj.y],
-        storyGroupId: obj.storyGroupId,
-        fragmentsCount: obj.availableStoryFragments.size,
-        eventsCount: obj.availableStoryEvents.length,
-        determined: obj.storyEventDetermined,
-        hasActivatableStory: obj.hasAvailableStory(),
-      });
-
-      // Re-register with story system using event bus
+      // Re-register with story system if needed
       if (obj.storyGroupId) {
         setTimeout(() => {
-          console.log(
-            'Re-registering object with story system:',
-            obj.objectType,
-            'at',
-            obj.x,
-            obj.y
-          );
-          GameEvents.Story.registerObject(obj);
+          eventBus.emit('register-story-object', obj);
         }, 100);
       }
+
+      return obj;
     } catch (error) {
       console.error('Failed to restore object:', error);
 
-      // Fallback: create a minimal object structure
-      const obj = {
-        x: tile.x,
-        y: tile.y,
-        objectType: objectData.t,
-        flipped: !!objectData.f,
-        storyEventDetermined: !!objectData.d,
-        availableStoryFragments: new Set(objectData.sf || []),
-        availableStoryEvents: (objectData.se || []).map(event => ({
-          type: event.type,
-          fragmentId: event.fragmentId,
-          content: event.content,
-        })),
-        storyGroupId: objectData.sg || null,
-        storyChance: objectData.sc || 0,
-        guaranteedStory: !!objectData.gs,
-        activationResults: [],
+      // Create fallback object
+      return {
+        x,
+        y,
+        objectType: objData.type,
+        flipped: objData.flipped || false,
         passable: false,
-
-        // Essential methods
-        hasAvailableStory() {
-          return this.availableStoryEvents.length > 0;
-        },
-
-        isActivatable() {
-          return (
-            this.hasAvailableStory() ||
-            (this.activationResults && this.activationResults.length > 0)
-          );
-        },
-
-        render(ctx, x, y, size) {
-          // Basic rendering fallback
-          if (this.isActivatable()) {
-            ctx.save();
-            ctx.fillStyle = this.hasAvailableStory()
-              ? '#ffffff40'
-              : '#03517040';
-            ctx.fillRect(
-              x - size * 0.1,
-              y - size * 0.1,
-              size * 1.2,
-              size * 1.2
-            );
-            ctx.restore();
-          }
-
-          // Draw basic object representation
-          ctx.fillStyle = '#f00';
-          ctx.fillRect(x, y, size, size);
-        },
+        isActivatable: () => false,
+        onInteract: () =>
+          eventBus.emit('game-message', 'This object appears to be damaged.'),
       };
-
-      tile.object = obj;
-      tile.passable = obj.passable;
-
-      console.log(
-        'Fallback object created:',
-        obj.objectType,
-        'at',
-        obj.x,
-        obj.y
-      );
     }
   }
 }

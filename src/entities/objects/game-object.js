@@ -1,6 +1,5 @@
-// src/entities/objects/game-object.js
 import { Tile } from '../../world/tiles/tile.js';
-import { GameEvents, GameEventListeners } from '../../core/game-events.js';
+import { GameEvents } from '../../core/game-events.js';
 import { storySystem } from '../../systems/story/story-system.js';
 import { gameObjectLoader } from './game-object-loader.js';
 
@@ -21,7 +20,6 @@ export default class GameObject extends Tile {
     this._setupStoryManagement();
     this._setupEventHandlers();
 
-    // Register this object with the story system if it has story content
     if (this.storyGroupId) {
       storySystem.registerStoryObject(this);
     }
@@ -41,19 +39,16 @@ export default class GameObject extends Tile {
   }
 
   _setupFromConfig(config, objectType) {
-    // Story configuration
     this.storyGroupId = config.storyGroupId || null;
     this.storyChance = config.storyChance || 0.0;
     this.guaranteedStory = config.guaranteedStory || false;
     this.exhaustedMessage = config.exhaustedMessage || null;
     this.activationResults = config.activationResults || [];
 
-    // Pick flavor text once and stick with it
     this.flavorTexts = config.flavorTexts || ['An unremarkable object.'];
     this.selectedFlavorText =
       this.flavorTexts[Math.floor(Math.random() * this.flavorTexts.length)];
 
-    // Visual properties - pre-compute asset path
     this.flipped = false;
     this.name = config.name;
     this.objectType = objectType;
@@ -70,20 +65,17 @@ export default class GameObject extends Tile {
   }
 
   _setupEventHandlers() {
-    GameEventListeners.on('reset-state', () => this.onReset());
+    GameEvents.Game.Listeners.resetState(() => this.onReset());
   }
 
-  // Method to remove a specific story fragment from this object
   removeStoryFragment(fragmentId) {
     this.availableStoryFragments.delete(fragmentId);
 
-    // Remove from available story events if it's there
     this.availableStoryEvents = this.availableStoryEvents.filter(
       event => event.type !== 'fragment' || event.fragmentId !== fragmentId
     );
   }
 
-  // Restore story state (called during save loading)
   restoreStoryState(storyData) {
     console.log(
       'Restoring story state for object:',
@@ -91,7 +83,6 @@ export default class GameObject extends Tile {
       storyData
     );
 
-    // Restore story configuration
     if (storyData.storyGroupId) {
       this.storyGroupId = storyData.storyGroupId;
     }
@@ -104,15 +95,12 @@ export default class GameObject extends Tile {
       this.guaranteedStory = storyData.guaranteedStory;
     }
 
-    // Restore determined state
     this.storyEventDetermined = storyData.storyEventDetermined || false;
 
-    // Restore available fragments
     if (storyData.availableStoryFragments) {
       this.availableStoryFragments = new Set(storyData.availableStoryFragments);
     }
 
-    // Restore available story events
     if (storyData.availableStoryEvents) {
       this.availableStoryEvents = storyData.availableStoryEvents.map(event => ({
         type: event.type,
@@ -159,7 +147,6 @@ export default class GameObject extends Tile {
           this.objectType
         );
 
-        // Add the fragment to our available set
         this.availableStoryFragments.add(availableFragment);
 
         this.availableStoryEvents.push({
@@ -202,14 +189,13 @@ export default class GameObject extends Tile {
       case 'fragment':
         console.log('Consuming story fragment:', storyEvent.fragmentId);
 
-        // Remove from our available fragments set
         this.availableStoryFragments.delete(storyEvent.fragmentId);
 
-        GameEvents.Story.discovery(storyEvent.fragmentId);
+        GameEvents.Story.Emit.discovery(storyEvent.fragmentId);
 
         return true;
       case 'message':
-        GameEvents.Game.message(storyEvent.content);
+        GameEvents.Game.Emit.message(storyEvent.content);
 
         return true;
       default:
@@ -232,7 +218,6 @@ export default class GameObject extends Tile {
       this.y
     );
 
-    // Try to consume a story event first
     if (this.hasAvailableStory()) {
       console.log('Object has available story, consuming...');
       this.consumeNextStoryEvent();
@@ -240,14 +225,12 @@ export default class GameObject extends Tile {
       return;
     }
 
-    // Process activation results
     for (const result of this.activationResults) {
       if (this.processActivationResult(result)) {
-        return; // Only process first matching activation result
+        return;
       }
     }
 
-    // Fallback to flavor text or exhausted message
     this._handleDefaultInteraction();
   }
 
@@ -258,27 +241,27 @@ export default class GameObject extends Tile {
         this.exhaustedMessage ||
         `Data archive complete (${groupProgress.discovered}/${groupProgress.total} files)`;
 
-      GameEvents.Game.message(message);
+      GameEvents.Game.Emit.message(message);
     } else {
-      GameEvents.Game.message(this.selectedFlavorText);
+      GameEvents.Game.Emit.message(this.selectedFlavorText);
     }
   }
 
   processActivationResult(result) {
     const handlers = {
       message: () => {
-        GameEvents.Game.message(result.value);
+        GameEvents.Game.Emit.message(result.value);
 
         return true;
       },
       resource: () => this._handleResourceResult(result),
       upgrade_menu: () => {
-        GameEvents.UI.openUpgrades();
+        GameEvents.UI.Emit.openUpgrades();
 
         return true;
       },
       win_condition: () => {
-        GameEvents.Game.message(result.message || 'You win!');
+        GameEvents.Game.Emit.message(result.message || 'You win!');
 
         return true;
       },
@@ -298,15 +281,15 @@ export default class GameObject extends Tile {
 
   _handleResourceResult(result) {
     if (!result.used) {
-      GameEvents.Resources.add(result.resourceType, result.amount);
-      GameEvents.Game.message(
+      GameEvents.Resources.Emit.add(result.resourceType, result.amount);
+      GameEvents.Game.Emit.message(
         `Collected ${result.amount} ${result.resourceType}`
       );
       result.used = true;
 
       return true;
     } else {
-      GameEvents.Game.message(
+      GameEvents.Game.Emit.message(
         result.exhaustedMessage || 'This resource has been depleted'
       );
 
@@ -315,12 +298,10 @@ export default class GameObject extends Tile {
   }
 
   checkConditions(_conditions) {
-    // Implement condition checking logic here
     return true;
   }
 
   onReset() {
-    // Reset activation results that can be used again
     for (const result of this.activationResults) {
       if (result.type === 'resource' && result.resetOnBatteryDrain) {
         result.used = false;
@@ -328,9 +309,7 @@ export default class GameObject extends Tile {
     }
   }
 
-  // Get current state for saving
   getSaveState() {
-    // Make sure story events are determined before saving
     if (!this.storyEventDetermined && this.storyGroupId) {
       console.log(
         'Determining story events before save for:',
@@ -369,7 +348,6 @@ export default class GameObject extends Tile {
     return saveState;
   }
 
-  // Cleanup method when object is destroyed
   destroy() {
     if (this.storyGroupId) {
       storySystem.unregisterStoryObject(this);

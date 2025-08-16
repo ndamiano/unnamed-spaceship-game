@@ -5,7 +5,6 @@ import {
 import { GameEvents } from '../../core/game-events.js';
 import { getStats } from '../../entities/player/player-stats.js';
 
-// Available upgrades with their costs
 export const UPGRADE_DEFS = {
   BATTERY_CAPACITY: {
     id: 'BATTERY_CAPACITY',
@@ -51,7 +50,7 @@ class UpgradeSystem {
     const def = UPGRADE_DEFS[upgradeId];
 
     if (!def) return false;
-    GameEvents.Upgrades.purchase(def);
+    GameEvents.Upgrades.Emit.purchase(def);
 
     return this.canAffordUpgrade(upgradeId, getStats().resources);
   }
