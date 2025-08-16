@@ -2,7 +2,7 @@ import { Renderable } from './renderable.js';
 
 export class GlowRenderable extends Renderable {
   constructor(x, y, size, color, intensity = 1) {
-    super(x, y, -1); // Glow effects render behind other objects
+    super(x, y, 4); // Default to layer 4 (between walls and objects)
 
     this.size = size;
     this.color = color;
@@ -14,7 +14,7 @@ export class GlowRenderable extends Renderable {
     this.pulseTime = 0;
   }
 
-  setBounds() {
+  getBounds() {
     return {
       x: this.x - this.size * 0.6,
       y: this.y - this.size * 0.6,
@@ -37,7 +37,7 @@ export class GlowRenderable extends Renderable {
 
   update(deltaTime) {
     if (this.pulsing) {
-      this.pulseTime += deltaTime * this.pulseSpeed;
+      this.pulseTime += (deltaTime / 1000) * this.pulseSpeed; // Convert deltaTime to seconds
       const pulse = Math.sin(this.pulseTime) * 0.5 + 0.5; // 0 to 1
 
       this.intensity = this.pulseMin + (this.pulseMax - this.pulseMin) * pulse;

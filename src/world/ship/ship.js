@@ -83,21 +83,6 @@ export class Ship {
     }
   }
 
-  render(ctx, tileSize) {
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        const tile = this.map.getTile(x, y);
-
-        if (tile && tile.visible) {
-          tile.render(ctx, x * tileSize, y * tileSize, tileSize);
-          if (tile.object != undefined) {
-            tile.object.render(ctx, x * tileSize, y * tileSize, tileSize);
-          }
-        }
-      }
-    }
-  }
-
   // Check if tile is worth saving (has meaningful data)
   isTileSignificant(tile, _x, _y) {
     // Save if tile has been visited

@@ -1,4 +1,3 @@
-// src/core/game.js
 import { UserInterface } from '../ui/user-interface.js';
 import { GameEvents, GameEventListeners } from './game-events.js';
 import { Player } from '../entities/player/player.js';
@@ -31,6 +30,10 @@ export class Game {
     this.isRestoringFromSave = false;
     this.renderingSystem = null;
     this.lastFrameTime = 0;
+
+    // Ship rendering tracking
+    this.shipRenderables = new Map(); // Track ship tile renderables
+    this.objectRenderables = new Map(); // Track object renderables
 
     // Don't call init() here - it should be called externally
     console.log('Game instance created, call init() to start initialization');
@@ -223,11 +226,14 @@ export class Game {
     this.player = new Player(spawnX, spawnY);
     registerPlayer(this.player);
 
-    // Create player renderable
+    // Create player renderable and ship renderables
     if (this.renderingSystem) {
       this.createPlayerRenderable();
 
-      // Set up camera to follow player - fix the scope issue
+      // Create ship renderables
+      this.createShipRenderables();
+
+      // Set up camera to follow player
       const game = this; // Capture reference to game instance
 
       this.renderingSystem.followTarget({
@@ -281,6 +287,238 @@ export class Game {
     console.log('Player renderable created');
   }
 
+  createShipRenderables() {
+    console.log('Creating ship renderables...');
+
+    // Clear existing ship renderables
+    this.clearShipRenderables();
+
+    // Create renderables for all visible tiles
+    for (let y = 0; y < this.ship.height; y++) {
+      for (let x = 0; x < this.ship.width; x++) {
+        const tile = this.ship.map.getTile(x, y);
+
+        if (tile && tile.visible) {
+          this.createTileRenderable(tile, x, y);
+        }
+      }
+    }
+  }
+
+  createTileRenderable(tile, x, y) {
+    const worldX = x * this.config.tileSize;
+    const worldY = y * this.config.tileSize;
+    const tileKey = `${x},${y}`;
+
+    // Create floor tile renderable
+    const floorAsset = `assets/tile${tile.number || 1}-100x100.png`;
+    const floorRenderable = this.renderingSystem.createSpriteRenderable(
+      worldX,
+      worldY,
+      floorAsset,
+      {
+        layer: 0, // Floor is bottom layer
+        width: this.config.tileSize,
+        height: this.config.tileSize,
+      }
+    );
+
+    this.renderingSystem.addToScene(floorRenderable);
+    this.shipRenderables.set(`floor_${tileKey}`, floorRenderable);
+
+    // Create wall/door slot renderables
+    this.createSlotRenderables(tile, x, y);
+
+    // Create object renderable if present
+    if (tile.object) {
+      this.createObjectRenderable(tile.object, x, y);
+    }
+  }
+
+  createSlotRenderables(tile, x, y) {
+    const worldX = x * this.config.tileSize;
+    const worldY = y * this.config.tileSize;
+    const tileKey = `${x},${y}`;
+
+    // Handle each slot direction
+    ['top', 'right', 'bottom', 'left'].forEach(side => {
+      const slot = tile.getSlot(side);
+
+      if (slot) {
+        let slotRenderable;
+
+        if (slot.constructor.name === 'WallSegment') {
+          // Create wall renderable using colored rectangles
+          const wallColor = '#333333';
+          let wallX = worldX,
+            wallY = worldY,
+            wallWidth,
+            wallHeight;
+
+          switch (side) {
+            case 'top':
+              wallWidth = this.config.tileSize;
+              wallHeight = this.config.tileSize * 0.1;
+              break;
+            case 'bottom':
+              wallY = worldY + this.config.tileSize * 0.9;
+              wallWidth = this.config.tileSize;
+              wallHeight = this.config.tileSize * 0.1;
+              break;
+            case 'left':
+              wallWidth = this.config.tileSize * 0.1;
+              wallHeight = this.config.tileSize;
+              break;
+            case 'right':
+              wallX = worldX + this.config.tileSize * 0.9;
+              wallWidth = this.config.tileSize * 0.1;
+              wallHeight = this.config.tileSize;
+              break;
+          }
+
+          slotRenderable = this.renderingSystem.createRectRenderable(
+            wallX,
+            wallY,
+            wallWidth,
+            wallHeight,
+            wallColor,
+            {
+              layer: 2, // Walls above floor
+            }
+          );
+        } else if (slot.constructor.name === 'Door') {
+          // Create door renderable using colored rectangles
+          const doorColor = '#888888';
+          let doorX = worldX,
+            doorY = worldY,
+            doorWidth,
+            doorHeight;
+
+          switch (side) {
+            case 'top':
+              doorWidth = this.config.tileSize;
+              doorHeight = this.config.tileSize * 0.1;
+              break;
+            case 'bottom':
+              doorY = worldY + this.config.tileSize * 0.9;
+              doorWidth = this.config.tileSize;
+              doorHeight = this.config.tileSize * 0.1;
+              break;
+            case 'left':
+              doorWidth = this.config.tileSize * 0.1;
+              doorHeight = this.config.tileSize;
+              break;
+            case 'right':
+              doorX = worldX + this.config.tileSize * 0.9;
+              doorWidth = this.config.tileSize * 0.1;
+              doorHeight = this.config.tileSize;
+              break;
+          }
+
+          slotRenderable = this.renderingSystem.createRectRenderable(
+            doorX,
+            doorY,
+            doorWidth,
+            doorHeight,
+            doorColor,
+            {
+              layer: 2, // Doors above floor
+            }
+          );
+        }
+
+        if (slotRenderable) {
+          this.renderingSystem.addToScene(slotRenderable);
+          this.shipRenderables.set(`${side}_${tileKey}`, slotRenderable);
+        }
+      }
+    });
+  }
+
+  createObjectRenderable(object, x, y) {
+    const worldX = x * this.config.tileSize;
+    const worldY = y * this.config.tileSize;
+    const objectKey = `${x},${y}`;
+
+    // Create glow effect if object is activatable
+    if (object.isActivatable && object.isActivatable()) {
+      console.log('In here!');
+      const glowColor =
+        object.hasAvailableStory && object.hasAvailableStory()
+          ? '#ffffff'
+          : '#035170';
+      const glowRenderable = this.renderingSystem.createGlowRenderable(
+        worldX + this.config.tileSize / 2,
+        worldY + this.config.tileSize / 2,
+        this.config.tileSize,
+        glowColor,
+        1
+      );
+
+      glowRenderable.layer = 4; // Put glow between walls (2) and objects (5)
+      glowRenderable.enablePulsing(2, 0.5, 1.5);
+
+      this.renderingSystem.addToScene(glowRenderable);
+      this.objectRenderables.set(`glow_${objectKey}`, glowRenderable);
+    }
+
+    // Create object sprite - handle different asset path formats
+    let assetPath;
+
+    if (object.assetPath) {
+      assetPath = object.assetPath;
+    } else if (object.name) {
+      assetPath = `assets/${object.name}-100x100.png`;
+    } else {
+      assetPath = `assets/${object.objectType}-100x100.png`;
+    }
+
+    const objectRenderable = this.renderingSystem.createSpriteRenderable(
+      worldX,
+      worldY,
+      assetPath,
+      {
+        layer: 5, // Objects above walls
+        width: this.config.tileSize,
+        height: this.config.tileSize,
+        flipX: object.flipped,
+      }
+    );
+
+    this.renderingSystem.addToScene(objectRenderable);
+    this.objectRenderables.set(`object_${objectKey}`, objectRenderable);
+  }
+
+  clearShipRenderables() {
+    // Remove all ship renderables from scene
+    this.shipRenderables.forEach(renderable => {
+      this.renderingSystem.removeFromScene(renderable);
+    });
+    this.shipRenderables.clear();
+
+    this.objectRenderables.forEach(renderable => {
+      this.renderingSystem.removeFromScene(renderable);
+    });
+    this.objectRenderables.clear();
+  }
+
+  updateVisibleTiles() {
+    // Check for newly visible tiles and create renderables for them
+    for (let y = 0; y < this.ship.height; y++) {
+      for (let x = 0; x < this.ship.width; x++) {
+        const tile = this.ship.map.getTile(x, y);
+        const tileKey = `${x},${y}`;
+
+        if (tile && tile.visible) {
+          // Check if we already have a renderable for this floor tile
+          if (!this.shipRenderables.has(`floor_${tileKey}`)) {
+            this.createTileRenderable(tile, x, y);
+          }
+        }
+      }
+    }
+  }
+
   updatePlayerRenderable() {
     if (!this.player.renderable) return;
 
@@ -328,17 +566,8 @@ export class Game {
         // Update player renderable when player moves
         this.updatePlayerRenderable();
 
-        // Update camera target - fix scope issue here too
-        if (this.renderingSystem && this.renderingSystem.camera.followTarget) {
-          const worldX =
-            this.player.x * this.config.tileSize + this.config.tileSize / 2;
-          const worldY =
-            this.player.y * this.config.tileSize + this.config.tileSize / 2;
-
-          // Update the target object's position
-          this.renderingSystem.camera.followTarget.x = worldX;
-          this.renderingSystem.camera.followTarget.y = worldY;
-        }
+        // Update visible tiles (this will reveal new areas)
+        this.updateVisibleTiles();
       },
 
       'player-direction-change': () => {

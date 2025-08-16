@@ -145,6 +145,19 @@ export class Renderer {
 
   // Effects
   drawGlow(x, y, size, color, intensity = 1) {
+    if (this.batching) {
+      this.batchedOperations.push({
+        type: 'glow',
+        x,
+        y,
+        size,
+        color,
+        intensity,
+      });
+
+      return;
+    }
+
     this.ctx.save();
 
     const gradient = this.ctx.createRadialGradient(
@@ -223,6 +236,9 @@ export class Renderer {
           break;
         case 'rect':
           this.drawRect(op.x, op.y, op.width, op.height, op.color);
+          break;
+        case 'glow':
+          this.drawGlow(op.x, op.y, op.size, op.color, op.intensity);
           break;
         case 'circle':
           this.drawCircle(op.x, op.y, op.radius, op.color, op.filled);
