@@ -53,11 +53,6 @@ class StorySystem {
 
     this.setupEventListeners();
     this.setupModalElements();
-
-    // Make globally accessible for save system
-    if (typeof window !== 'undefined') {
-      window.storySystem = this;
-    }
   }
 
   async loadStoryFragments() {

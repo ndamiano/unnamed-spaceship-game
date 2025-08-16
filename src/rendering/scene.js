@@ -111,9 +111,6 @@ export class Scene {
     // Cull invisible objects
     const visibleRenderables = this.cullInvisible(camera);
 
-    // Start batch rendering for performance
-    renderer.beginBatch();
-
     // Render all visible objects
     for (const renderable of visibleRenderables) {
       try {
@@ -122,9 +119,6 @@ export class Scene {
         console.error('Error rendering object:', error, renderable);
       }
     }
-
-    // End batch rendering
-    renderer.endBatch();
   }
 
   // Utilities

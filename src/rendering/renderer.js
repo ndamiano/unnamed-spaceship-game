@@ -8,10 +8,6 @@ export class Renderer {
     this.drawCalls = 0;
     this.lastFrameTime = 0;
 
-    // Batch rendering
-    this.batching = false;
-    this.batchedOperations = [];
-
     this.setupCanvas();
   }
 
@@ -63,12 +59,6 @@ export class Renderer {
 
   // Drawing primitives
   drawSprite(sprite, x, y, options = {}) {
-    if (this.batching) {
-      this.batchedOperations.push({ type: 'sprite', sprite, x, y, options });
-
-      return;
-    }
-
     const {
       width = sprite.width,
       height = sprite.height,
@@ -104,31 +94,12 @@ export class Renderer {
   }
 
   drawRect(x, y, width, height, color) {
-    if (this.batching) {
-      this.batchedOperations.push({ type: 'rect', x, y, width, height, color });
-
-      return;
-    }
-
     this.ctx.fillStyle = color;
     this.ctx.fillRect(x, y, width, height);
     this.drawCalls++;
   }
 
   drawCircle(x, y, radius, color, filled = true) {
-    if (this.batching) {
-      this.batchedOperations.push({
-        type: 'circle',
-        x,
-        y,
-        radius,
-        color,
-        filled,
-      });
-
-      return;
-    }
-
     this.ctx.beginPath();
     this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
 
@@ -145,19 +116,6 @@ export class Renderer {
 
   // Effects
   drawGlow(x, y, size, color, intensity = 1) {
-    if (this.batching) {
-      this.batchedOperations.push({
-        type: 'glow',
-        x,
-        y,
-        size,
-        color,
-        intensity,
-      });
-
-      return;
-    }
-
     this.ctx.save();
 
     const gradient = this.ctx.createRadialGradient(
@@ -217,36 +175,6 @@ export class Renderer {
 
     this.ctx.restore();
     this.drawCalls++;
-  }
-
-  // Batch rendering for performance
-  beginBatch() {
-    this.batching = true;
-    this.batchedOperations = [];
-  }
-
-  endBatch() {
-    this.batching = false;
-
-    // Execute all batched operations
-    for (const op of this.batchedOperations) {
-      switch (op.type) {
-        case 'sprite':
-          this.drawSprite(op.sprite, op.x, op.y, op.options);
-          break;
-        case 'rect':
-          this.drawRect(op.x, op.y, op.width, op.height, op.color);
-          break;
-        case 'glow':
-          this.drawGlow(op.x, op.y, op.size, op.color, op.intensity);
-          break;
-        case 'circle':
-          this.drawCircle(op.x, op.y, op.radius, op.color, op.filled);
-          break;
-      }
-    }
-
-    this.batchedOperations = [];
   }
 
   // Utilities

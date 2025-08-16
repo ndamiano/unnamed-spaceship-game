@@ -30,8 +30,6 @@ class Player {
     this.registerEventHandlers();
   }
 
-  // Remove the old render method - now handled by rendering system
-
   registerEventHandlers() {
     GameEventListeners.register({
       'player-move': ({ x, y, direction }) => {
