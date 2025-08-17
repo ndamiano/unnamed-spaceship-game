@@ -95,13 +95,13 @@ class UserInterface {
 
       upgradeCard.className = 'upgrade-card';
 
-      // Build level display
+      // Build level display - move to separate line
       let levelDisplay = '';
 
-      if (upgrade.repeatable && currentLevel > 0) {
+      if (upgrade.repeatable) {
         const maxLevel = upgrade.maxLevel ? `/${upgrade.maxLevel}` : '';
 
-        levelDisplay = ` (Level ${currentLevel}${maxLevel})`;
+        levelDisplay = `<div class="upgrade-level">Level ${currentLevel}${maxLevel}</div>`;
       }
 
       // Build cost display
@@ -167,7 +167,8 @@ class UserInterface {
       }
 
       upgradeCard.innerHTML = `
-        <h3>${upgrade.name}${levelDisplay}${typeIndicator}</h3>
+        <h3>${upgrade.name}${typeIndicator}</h3>
+        ${levelDisplay}
         <p>${upgrade.description}</p>
         ${specialProps}
         ${requirementsDisplay}
@@ -176,6 +177,18 @@ class UserInterface {
           ${canAfford ? 'Purchase' : 'Insufficient Resources'}
         </button>
       `;
+
+      // Add styling for level display
+      const levelDiv = upgradeCard.querySelector('.upgrade-level');
+
+      if (levelDiv) {
+        levelDiv.style.cssText = `
+          color: #888;
+          font-size: 0.9em;
+          margin: 5px 0 10px 0;
+          font-style: italic;
+        `;
+      }
 
       const cooldownDiv = upgradeCard.querySelector('.upgrade-cooldown');
 
