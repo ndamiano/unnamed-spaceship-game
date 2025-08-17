@@ -1,8 +1,13 @@
 import { GameEvents } from '../../core/game-events.js';
 import { getStats } from '../../entities/player/player-stats.js';
 
-// Story groups - collections of related fragments
 export const STORY_GROUPS = {
+  TUTORIAL: {
+    id: 'TUTORIAL',
+    name: 'System Initialization',
+    icon: '🤖',
+    fragments: ['AWAKENING_PROTOCOL'],
+  },
   ENGINEERING_LOGS: {
     id: 'ENGINEERING_LOGS',
     name: 'Engineering Department Logs',
@@ -298,13 +303,16 @@ class StorySystem {
       return;
     }
 
-    if (this.discoveredFragments.has(fragmentId)) {
+    // For tutorial fragments, always show them even if already discovered
+    const isTutorial = fragment.group === 'TUTORIAL';
+
+    if (!isTutorial && this.discoveredFragments.has(fragmentId)) {
       GameEvents.Game.Emit.message("You've already accessed this information");
 
       return;
     }
 
-    if (!this.checkRequirements(fragment.requirements)) {
+    if (!isTutorial && !this.checkRequirements(fragment.requirements)) {
       GameEvents.Game.Emit.message(
         'Insufficient access credentials for this data'
       );
@@ -312,22 +320,25 @@ class StorySystem {
       return;
     }
 
-    this.discoveredFragments.add(fragmentId);
-    this.journalEntries.set(fragmentId, {
-      fragment: fragment,
-      discoveredAt: new Date(),
-      order: this.journalEntries.size,
-    });
-    this.currentModal = fragmentId;
+    // Only add to discovered if not already there and not tutorial
+    if (!this.discoveredFragments.has(fragmentId) && !isTutorial) {
+      this.discoveredFragments.add(fragmentId);
+      this.journalEntries.set(fragmentId, {
+        fragment: fragment,
+        discoveredAt: new Date(),
+        order: this.journalEntries.size,
+      });
+      this.currentModal = fragmentId;
 
-    this.removeFragmentFromAllObjects(fragmentId);
+      this.removeFragmentFromAllObjects(fragmentId);
 
-    if (fragment.group) {
-      if (!this.discoveredGroups.has(fragment.group)) {
-        this.discoveredGroups.set(fragment.group, []);
+      if (fragment.group && fragment.group !== 'TUTORIAL') {
+        if (!this.discoveredGroups.has(fragment.group)) {
+          this.discoveredGroups.set(fragment.group, []);
+        }
+
+        this.discoveredGroups.get(fragment.group).push(fragmentId);
       }
-
-      this.discoveredGroups.get(fragment.group).push(fragmentId);
     }
 
     this.titleEl.textContent = fragment.title;
@@ -337,16 +348,21 @@ class StorySystem {
 
     this.modal.classList.add('active');
 
-    let message = `Story fragment discovered: ${fragment.title}`;
+    // Different message for tutorial vs regular story
+    if (isTutorial) {
+      GameEvents.Game.Emit.message(`System message: ${fragment.title}`);
+    } else {
+      let message = `Story fragment discovered: ${fragment.title}`;
 
-    if (fragment.group) {
-      const groupProgress = this.discoveredGroups.get(fragment.group);
-      const totalInGroup = STORY_GROUPS[fragment.group].fragments.length;
+      if (fragment.group) {
+        const groupProgress = this.discoveredGroups.get(fragment.group);
+        const totalInGroup = STORY_GROUPS[fragment.group].fragments.length;
 
-      message += ` (${groupProgress.length}/${totalInGroup} in series)`;
+        message += ` (${groupProgress.length}/${totalInGroup} in series)`;
+      }
+
+      GameEvents.Game.Emit.message(message);
     }
-
-    GameEvents.Game.Emit.message(message);
 
     this.typewriterEffect(fragment.text);
   }

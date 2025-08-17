@@ -1,4 +1,14 @@
 {
+  "AWAKENING_PROTOCOL": {
+    "id": "AWAKENING_PROTOCOL",
+    "title": "System Initialization",
+    "timestamp": "Status: AWAKENING PROTOCOL ACTIVE",
+    "icon": "🤖",
+    "group": "TUTORIAL",
+    "requirements": {},
+    "text": "Systems... coming online.\n\nI... can't remember who I am. Where am I?\n\nEverything feels strange. My body... it's not what I expected. Metal and circuits where flesh should be.\n\nThere's a terminal nearby. Maybe it holds answers? I should walk over to it using the arrow keys or WASD.\n\nOnce I'm next to it, I can interact with it using the E key or Space.\n\nI need to understand what happened here... what happened to me."
+  },
+
   "ENGINEERING_TERMINAL_01": {
     "id": "ENGINEERING_TERMINAL_01",
     "title": "Engineering Terminal - Log Entry",

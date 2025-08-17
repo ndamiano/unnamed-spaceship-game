@@ -480,6 +480,11 @@ export class Game {
       explorationRadius
     );
 
+    // Show welcome story for new games only
+    if (!this.isRestoringFromSave) {
+      GameEvents.Story.Emit.show('AWAKENING_PROTOCOL');
+    }
+
     console.log('Player setup complete');
 
     this.initializationSteps.add('player');
