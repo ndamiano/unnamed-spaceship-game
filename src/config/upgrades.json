@@ -1,0 +1,360 @@
+{
+  "BATTERY_CAPACITY": {
+    "id": "BATTERY_CAPACITY",
+    "name": "Battery Capacity",
+    "description": "Increase maximum battery capacity by 100",
+    "type": "always_on",
+    "repeatable": true,
+    "maxLevel": 10,
+    "cost": {
+      "Nanites": 50
+    },
+    "costScaling": {
+      "type": "linear",
+      "multiplier": 1.5
+    },
+    "icon": "🔋",
+    "category": "power"
+  },
+  
+  "MOVEMENT_EFFICIENCY": {
+    "id": "MOVEMENT_EFFICIENCY",
+    "name": "Movement Efficiency",
+    "description": "10% chance to not consume battery when moving",
+    "type": "always_on",
+    "repeatable": true,
+    "maxLevel": 5,
+    "cost": {
+      "Nanites": 30
+    },
+    "costScaling": {
+      "type": "exponential",
+      "multiplier": 2.0
+    },
+    "icon": "⚡",
+    "category": "power"
+  },
+  
+  "RESOURCE_HARVEST": {
+    "id": "RESOURCE_HARVEST",
+    "name": "Resource Harvest",
+    "description": "Increase resource collection by 50%",
+    "type": "always_on",
+    "repeatable": true,
+    "maxLevel": 8,
+    "cost": {
+      "Nanites": 40
+    },
+    "costScaling": {
+      "type": "linear",
+      "multiplier": 1.3
+    },
+    "icon": "🔧",
+    "category": "efficiency"
+  },
+  
+  "SENSOR_RANGE": {
+    "id": "SENSOR_RANGE",
+    "name": "Sensor Range",
+    "description": "Increase exploration radius by 1 tile",
+    "type": "always_on",
+    "repeatable": true,
+    "maxLevel": 3,
+    "cost": {
+      "Nanites": 75,
+      "Ship Parts": 10
+    },
+    "costScaling": {
+      "type": "exponential",
+      "multiplier": 1.8
+    },
+    "icon": "📡",
+    "category": "exploration"
+  },
+  
+  "ROOM_SCANNER": {
+    "id": "ROOM_SCANNER",
+    "name": "Room Scanner",
+    "description": "Reveal entire room layout when entering any room",
+    "type": "always_on",
+    "repeatable": false,
+    "maxLevel": 1,
+    "cost": {
+      "Nanites": 120,
+      "Ship Parts": 20
+    },
+    "icon": "🔍",
+    "category": "exploration"
+  },
+  
+  "NAVIGATION_MATRIX": {
+    "id": "NAVIGATION_MATRIX",
+    "name": "Navigation Matrix",
+    "description": "Unlock minimap showing discovered areas and room types",
+    "type": "always_on",
+    "repeatable": false,
+    "maxLevel": 1,
+    "cost": {
+      "Nanites": 200,
+      "Ship Parts": 35,
+      "Research Points": 50
+    },
+    "requirements": {
+      "upgradeCount": {
+        "ROOM_SCANNER": 1
+      }
+    },
+    "icon": "🗺️",
+    "category": "exploration"
+  },
+  
+  "EXPLORATION_REWARDS": {
+    "id": "EXPLORATION_REWARDS",
+    "name": "Exploration Rewards",
+    "description": "Gain nanites when entering a new room type for the first time each reset",
+    "type": "always_on",
+    "repeatable": true,
+    "maxLevel": 5,
+    "cost": {
+      "Nanites": 60
+    },
+    "costScaling": {
+      "type": "linear",
+      "multiplier": 1.4
+    },
+    "icon": "💎",
+    "category": "resource"
+  },
+  
+  "EFFICIENCY_MATRIX": {
+    "id": "EFFICIENCY_MATRIX",
+    "name": "Efficiency Matrix",
+    "description": "Reduce all upgrade costs by 10%",
+    "type": "always_on",
+    "repeatable": true,
+    "maxLevel": 5,
+    "cost": {
+      "Ship Parts": 25,
+      "Research Points": 15
+    },
+    "costScaling": {
+      "type": "exponential",
+      "multiplier": 2.5
+    },
+    "icon": "⚙️",
+    "category": "prestige"
+  },
+  
+  "KNOWLEDGE_INTEGRATION": {
+    "id": "KNOWLEDGE_INTEGRATION",
+    "name": "Knowledge Integration",
+    "description": "Gain nanites each reset based on total story fragments discovered",
+    "type": "always_on",
+    "repeatable": true,
+    "maxLevel": 3,
+    "cost": {
+      "Ship Parts": 40,
+      "Research Points": 30
+    },
+    "costScaling": {
+      "type": "linear",
+      "multiplier": 2.0
+    },
+    "icon": "📚",
+    "category": "prestige"
+  },
+  
+  "SHIP_INTERFACE": {
+    "id": "SHIP_INTERFACE",
+    "name": "Ship Interface",
+    "description": "Access ship status screen showing room layouts and progress",
+    "type": "always_on",
+    "repeatable": false,
+    "maxLevel": 1,
+    "cost": {
+      "Nanites": 150,
+      "Ship Parts": 30,
+      "Research Points": 75
+    },
+    "requirements": {
+      "upgradeCount": {
+        "NAVIGATION_MATRIX": 1
+      },
+      "storyFragments": 10
+    },
+    "icon": "🖥️",
+    "category": "advanced"
+  },
+
+  "EMERGENCY_RESERVES": {
+    "id": "EMERGENCY_RESERVES",
+    "name": "Emergency Reserves",
+    "description": "First battery depletion refills 50% instead of resetting",
+    "type": "passive",
+    "repeatable": false,
+    "maxLevel": 1,
+    "cost": {
+      "Nanites": 100,
+      "Ship Parts": 15
+    },
+    "icon": "🛡️",
+    "category": "survival"
+  },
+  
+  "DEEP_SLEEP_PROTOCOL": {
+    "id": "DEEP_SLEEP_PROTOCOL",
+    "name": "Deep Sleep Protocol",
+    "description": "Start each reset with +20% bonus battery",
+    "type": "passive",
+    "repeatable": true,
+    "maxLevel": 3,
+    "cost": {
+      "Nanites": 80,
+      "Ship Parts": 10
+    },
+    "costScaling": {
+      "type": "linear",
+      "multiplier": 1.6
+    },
+    "icon": "😴",
+    "category": "power"
+  },
+  
+  "POWER_SIPHON": {
+    "id": "POWER_SIPHON",
+    "name": "Power Siphon",
+    "description": "20% chance to gain 1 battery when collecting resources",
+    "type": "passive",
+    "repeatable": true,
+    "maxLevel": 4,
+    "cost": {
+      "Nanites": 70,
+      "Research Points": 10
+    },
+    "costScaling": {
+      "type": "linear",
+      "multiplier": 1.5
+    },
+    "icon": "⚡",
+    "category": "resource"
+  },
+  
+  "PASSIVE_SLOT_EXPANSION": {
+    "id": "PASSIVE_SLOT_EXPANSION",
+    "name": "Passive Slot Expansion",
+    "description": "Allows equipping one additional passive ability",
+    "type": "passive",
+    "repeatable": true,
+    "maxLevel": 2,
+    "cost": {
+      "Ship Parts": 50,
+      "Research Points": 75
+    },
+    "costScaling": {
+      "type": "exponential",
+      "multiplier": 3.0
+    },
+    "requirements": {
+      "storyFragments": 8
+    },
+    "icon": "🔌",
+    "category": "expansion"
+  },
+
+  "NANITE_CONVERTER": {
+    "id": "NANITE_CONVERTER",
+    "name": "Nanite Converter",
+    "description": "Convert 100 nanites to 10 battery (usable once per reset)",
+    "type": "active",
+    "repeatable": false,
+    "maxLevel": 1,
+    "cost": {
+      "Nanites": 200,
+      "Ship Parts": 25
+    },
+    "cooldown": "per_reset",
+    "icon": "🔄",
+    "category": "utility"
+  },
+  
+  "FABRICATOR_REFRESH": {
+    "id": "FABRICATOR_REFRESH",
+    "name": "Fabricator Refresh",
+    "description": "Instantly refresh a nanite fabricator (costs 15 battery)",
+    "type": "active",
+    "repeatable": false,
+    "maxLevel": 1,
+    "cost": {
+      "Nanites": 150,
+      "Research Points": 25
+    },
+    "cooldown": "none",
+    "batteryCost": 15,
+    "icon": "🏭",
+    "category": "utility"
+  },
+  
+  "QUANTUM_TELEPORT": {
+    "id": "QUANTUM_TELEPORT",
+    "name": "Quantum Teleport",
+    "description": "Teleport back to spawn point (costs 20 battery)",
+    "type": "active",
+    "repeatable": false,
+    "maxLevel": 1,
+    "cost": {
+      "Nanites": 300,
+      "Ship Parts": 75,
+      "Research Points": 100
+    },
+    "requirements": {
+      "upgradeCount": {
+        "BATTERY_CAPACITY": 3
+      },
+      "storyFragments": 12
+    },
+    "cooldown": "none",
+    "batteryCost": 20,
+    "icon": "🌀",
+    "category": "mobility"
+  },
+  
+  "EMERGENCY_BURST": {
+    "id": "EMERGENCY_BURST",
+    "name": "Emergency Burst",
+    "description": "Gain 50 battery instantly (usable once per reset when below 25% battery)",
+    "type": "active",
+    "repeatable": false,
+    "maxLevel": 1,
+    "cost": {
+      "Ship Parts": 40,
+      "Research Points": 60
+    },
+    "cooldown": "per_reset",
+    "requirements": {
+      "upgradeCount": {
+        "EMERGENCY_RESERVES": 1
+      }
+    },
+    "icon": "⚡",
+    "category": "emergency"
+  },
+
+  "FLEET_NETWORK": {
+    "id": "FLEET_NETWORK",
+    "name": "Fleet Network",
+    "description": "Prepare awakening protocols for next ship/prestige level",
+    "type": "always_on",
+    "repeatable": false,
+    "maxLevel": 1,
+    "cost": {
+      "Ship Parts": 200,
+      "Research Points": 500
+    },
+    "requirements": {
+      "storyFragments": 25,
+      "groupsCompleted": ["ENGINEERING_LOGS", "MEDICAL_REPORTS", "SYSTEM_DIAGNOSTICS", "REVELATION_MEMORIES"]
+    },
+    "icon": "🚀",
+    "category": "prestige"
+  }
+}

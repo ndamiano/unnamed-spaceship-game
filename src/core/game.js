@@ -8,6 +8,7 @@ import { Ship } from '../world/ship/ship.js';
 import { storySystem } from '../systems/story/story-system.js';
 import { gameObjectLoader } from '../entities/objects/game-object-loader.js';
 import { Renderer } from '../rendering/renderer.js';
+import { UpgradeSystem } from '../systems/upgrades/upgrade-system.js';
 
 export class Game {
   constructor(
@@ -163,6 +164,7 @@ export class Game {
       await storySystem.loadStoryFragments();
       console.log('Story fragments loaded');
 
+      await UpgradeSystem.initialize();
       console.log(
         'Game data loaded successfully - triggering dependent systems'
       );

@@ -256,7 +256,9 @@ export default class GameObject extends Tile {
       },
       resource: () => this._handleResourceResult(result),
       upgrade_menu: () => {
-        GameEvents.UI.Emit.openUpgrades();
+        GameEvents.UI.Emit.openUpgrades({
+          shopType: result.shopType || 'always_on',
+        });
 
         return true;
       },

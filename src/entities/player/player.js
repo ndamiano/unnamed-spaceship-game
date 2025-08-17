@@ -5,12 +5,9 @@ import {
   BASE_RESOURCES,
   modifyResources,
   subtractResources,
+  hasMoreResources,
 } from '../../systems/resources/resource-manager.js';
 import { getStats } from './player-stats.js';
-import {
-  UPGRADE_DEFS,
-  UpgradeSystem,
-} from '../../systems/upgrades/upgrade-system.js';
 
 class Player {
   constructor(x, y) {
@@ -20,10 +17,13 @@ class Player {
     this.movementCost = 1;
     this.spawnPoint = { x, y };
     this.upgrades = new Map();
+    this.equippedPassives = new Set(); // Currently equipped passive abilities
+    this.maxPassiveSlots = 1; // Base number of passive slots
     this.direction = Directions.DOWN;
     this.resources = { ...BASE_RESOURCES };
     this.totalPlaytime = 0;
     this.playtimeStart = Date.now();
+    this.emergencyReservesUsed = false; // Track if emergency reserves were used this reset
 
     // Rendering
     this.renderable = null; // Will be set by Game class
@@ -51,7 +51,18 @@ class Player {
       this.y = y;
       this.direction = direction;
 
-      this.battery -= this.movementCost;
+      // Check for movement efficiency upgrade
+      const movementEfficiency = this.upgrades.get('MOVEMENT_EFFICIENCY') || 0;
+      const efficiencyChance = movementEfficiency * 0.1; // 10% per level
+
+      if (Math.random() > efficiencyChance) {
+        this.battery -= this.movementCost;
+      } else {
+        GameEvents.Game.Emit.message(
+          'Movement efficiency activated - no battery consumed'
+        );
+      }
+
       this.updatePlaytime();
       GameEvents.Player.Emit.updated(getStats());
     });
@@ -72,13 +83,22 @@ class Player {
     });
 
     GameEvents.Upgrades.Listeners.purchase(upgrade_def => {
-      if (UpgradeSystem.canAffordUpgrade(upgrade_def.id, this.resources)) {
-        this.resources = subtractResources(this.resources, upgrade_def.cost);
+      const cost = upgrade_def.cost;
+
+      if (cost && hasMoreResources(this.resources, cost)) {
+        this.resources = subtractResources(this.resources, cost);
         const currentCount = this.upgrades.get(upgrade_def.id) ?? 0;
 
         this.upgrades.set(upgrade_def.id, currentCount + 1);
         GameEvents.Player.Emit.updated();
-        GameEvents.Game.Emit.message('Upgrade purchased: ' + upgrade_def.name);
+
+        const levelText = upgrade_def.currentLevel
+          ? ` (Level ${upgrade_def.currentLevel})`
+          : '';
+
+        GameEvents.Game.Emit.message(
+          `Upgrade purchased: ${upgrade_def.name}${levelText}`
+        );
       }
     });
 
@@ -103,17 +123,55 @@ class Player {
   }
 
   get maxBattery() {
-    const capacityUpgrade =
-      this.upgrades.get(UPGRADE_DEFS.BATTERY_CAPACITY.id) || 0;
+    const capacityUpgrade = this.upgrades.get('BATTERY_CAPACITY') || 0;
 
     return 100 + 100 * capacityUpgrade;
   }
 
   get harvestMultiplier() {
-    const harvestMultiplier =
-      this.upgrades.get(UPGRADE_DEFS.RESOURCE_HARVEST.id) || 0;
+    const harvestMultiplier = this.upgrades.get('RESOURCE_HARVEST') || 0;
 
     return 1 + 0.5 * harvestMultiplier;
+  }
+
+  get explorationRadius() {
+    const sensorUpgrade = this.upgrades.get('SENSOR_RANGE') || 0;
+
+    return 2 + sensorUpgrade;
+  }
+
+  get storyBonus() {
+    const storyScanner = this.upgrades.get('STORY_SCANNER') || 0;
+
+    return storyScanner * 0.2; // 20% bonus per level
+  }
+
+  hasUpgrade(upgradeId) {
+    return this.upgrades.has(upgradeId) && this.upgrades.get(upgradeId) > 0;
+  }
+
+  getUpgradeLevel(upgradeId) {
+    return this.upgrades.get(upgradeId) || 0;
+  }
+
+  // Special upgrade abilities
+  canQuantumTeleport() {
+    return this.hasUpgrade('QUANTUM_ENTANGLEMENT') && this.battery >= 20;
+  }
+
+  quantumTeleport() {
+    if (!this.canQuantumTeleport()) return false;
+
+    this.x = this.spawnPoint.x;
+    this.y = this.spawnPoint.y;
+    this.battery -= 20;
+
+    GameEvents.Game.Emit.message(
+      'Quantum entanglement activated - teleported to spawn'
+    );
+    GameEvents.Player.Emit.move(this.x, this.y, this.direction);
+
+    return true;
   }
 
   updatePlaytime() {

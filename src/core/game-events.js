@@ -87,7 +87,7 @@ export const GameEvents = {
 
   UI: {
     Emit: {
-      openUpgrades: () => eventBus.emit('open-upgrade-menu'),
+      openUpgrades: data => eventBus.emit('open-upgrade-menu', data),
       openSaveManager: () => eventBus.emit('open-save-manager'),
     },
     Listeners: {

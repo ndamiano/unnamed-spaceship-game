@@ -46,9 +46,7 @@
       "The assembly arm's sensors track your movement."
     ],
     "activationResults": []
-  },
-  
-  "dronePod": {
+  },"dronePod": {
     "name": "drone-pod",
     "passable": false,
     "blocksLineOfSight": false,
@@ -62,7 +60,48 @@
     ],
     "activationResults": [
       {
-        "type": "upgrade_menu"
+        "type": "upgrade_menu",
+        "shopType": "always_on"
+      }
+    ]
+  },
+
+  "psychoNeuralChair": {
+    "name": "psycho-neural-chair",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "MEDICAL_REPORTS",
+    "storyChance": 0.8,
+    "flavorTexts": [
+      "The neural interface chair awaits its next subject.",
+      "Synaptic monitors rest against the headrest.",
+      "The chair's restraints suggest unwilling participants."
+    ],
+    "activationResults": [
+      {
+        "type": "upgrade_menu",
+        "shopType": "passive"
+      }
+    ]
+  },
+
+  "securityTerminal": {
+    "name": "security-console",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "PERSONAL_LOGS",
+    "storyChance": 0.9,
+    "exhaustedMessage": "Security logs reviewed - no additional access granted",
+    "storyGlowColor": "#44ff44",
+    "flavorTexts": [
+      "The security console monitors empty corridors.",
+      "Access denied messages flash on multiple screens.",
+      "Camera feeds show static or darkness."
+    ],
+    "activationResults": [
+      {
+        "type": "upgrade_menu",
+        "shopType": "active"
       }
     ]
   },
@@ -161,22 +200,6 @@
       "A standard power cell. Still holds some charge.",
       "The cell's indicator shows 12% capacity remaining.",
       "Backup power for emergency systems."
-    ],
-    "activationResults": []
-  },
-  
-  "securityTerminal": {
-    "name": "security-console",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "storyGroupId": "PERSONAL_LOGS",
-    "storyChance": 0.9,
-    "exhaustedMessage": "Security logs reviewed - no additional access granted",
-    "storyGlowColor": "#44ff44",
-    "flavorTexts": [
-      "The security console monitors empty corridors.",
-      "Access denied messages flash on multiple screens.",
-      "Camera feeds show static or darkness."
     ],
     "activationResults": []
   },
@@ -416,20 +439,6 @@
       "Plasma flows through the conduit with contained fury.",
       "The magnetic containment field holds superheated gas.",
       "Energy courses through the ship's arterial network."
-    ],
-    "activationResults": []
-  },
-  
-  "psychoNeuralChair": {
-    "name": "psycho-neural-chair",
-    "passable": false,
-    "blocksLineOfSight": false,
-    "storyGroupId": "MEDICAL_REPORTS",
-    "storyChance": 0.8,
-    "flavorTexts": [
-      "The neural interface chair awaits its next subject.",
-      "Synaptic monitors rest against the headrest.",
-      "The chair's restraints suggest unwilling participants."
     ],
     "activationResults": []
   },
