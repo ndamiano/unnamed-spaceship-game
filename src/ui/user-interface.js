@@ -8,14 +8,7 @@ class UserInterface {
     this.statsPanel = document.getElementById('stats-panel');
     this.messagesPanel = document.getElementById('messages-panel');
 
-    this.upgradeModal = document.getElementById('new-upgrade-modal');
-    this.upgradeGrid = document.getElementById('upgrade-grid');
-    this.closeUpgradeBtn = document.getElementById('close-upgrade-btn');
-    this.currentShopType = null;
-
     this.setupEventListeners();
-    this.setupUpgradeModalEvents();
-
     this.updateStats();
   }
 
@@ -35,240 +28,6 @@ class UserInterface {
     GameEvents.Story.Listeners.discovery(() => {
       this.updateStats();
     });
-  }
-
-  setupUpgradeModalEvents() {
-    this.closeUpgradeBtn.addEventListener('click', () => {
-      this.hideUpgradeModal();
-    });
-
-    this.upgradeModal.addEventListener('click', e => {
-      if (e.target === this.upgradeModal) {
-        this.hideUpgradeModal();
-      }
-    });
-
-    document.addEventListener('keydown', e => {
-      if (
-        e.key === 'Escape' &&
-        this.upgradeModal.classList.contains('active')
-      ) {
-        this.hideUpgradeModal();
-      }
-    });
-  }
-
-  showUpgradeModal(shopType = 'always_on') {
-    this.currentShopType = shopType;
-
-    // Update modal title based on shop type
-    const titleElement = this.upgradeModal.querySelector('.upgrade-title');
-
-    if (titleElement) {
-      titleElement.textContent = UpgradeSystem.getShopTitle(shopType);
-    }
-
-    this.renderUpgradeItems();
-    this.upgradeModal.classList.add('active');
-  }
-
-  hideUpgradeModal() {
-    this.upgradeModal.classList.remove('active');
-    this.currentShopType = null;
-  }
-
-  renderUpgradeItems() {
-    this.upgradeGrid.innerHTML = '';
-    const upgrades = UpgradeSystem.getAvailableUpgrades(this.currentShopType);
-    const playerStats = getStats();
-
-    // Render upgrades directly without categories
-    for (const [_id, upgrade] of Object.entries(upgrades)) {
-      const currentLevel = playerStats.getUpgradeCount(upgrade.id);
-      const cost = UpgradeSystem.getUpgradeCost(upgrade.id, currentLevel);
-      const canAfford = UpgradeSystem.canAffordUpgrade(
-        upgrade.id,
-        playerStats.resources
-      );
-
-      const upgradeCard = document.createElement('div');
-
-      upgradeCard.className = 'upgrade-card';
-
-      // Build level display - move to separate line
-      let levelDisplay = '';
-
-      if (upgrade.repeatable) {
-        const maxLevel = upgrade.maxLevel ? `/${upgrade.maxLevel}` : '';
-
-        levelDisplay = `<div class="upgrade-level">Level ${currentLevel}${maxLevel}</div>`;
-      }
-
-      // Build cost display
-      const costDisplay = Object.entries(cost)
-        .map(([type, amount]) => `${amount} ${type}`)
-        .join(', ');
-
-      // Build type indicator - add to end of name
-      let typeIndicator = '';
-      const typeIcons = {
-        always_on: '', // No indicator for always_on since it's the default
-        passive: '🧠',
-        active: '⚡',
-      };
-
-      if (typeIcons[upgrade.type]) {
-        typeIndicator = ` ${typeIcons[upgrade.type]}`;
-      }
-
-      // Build special properties
-      let specialProps = '';
-
-      if (upgrade.cooldown) {
-        specialProps += `<div class="upgrade-cooldown">Cooldown: ${upgrade.cooldown.replace('_', ' ')}</div>`;
-      }
-
-      if (upgrade.batteryCost) {
-        specialProps += `<div class="upgrade-battery-cost">Battery Cost: ${upgrade.batteryCost}</div>`;
-      }
-
-      // Build requirements display
-      let requirementsDisplay = '';
-
-      if (
-        upgrade.requirements &&
-        !UpgradeSystem.canAffordUpgrade(upgrade.id, playerStats.resources)
-      ) {
-        const reqs = [];
-
-        if (upgrade.requirements.upgradeCount) {
-          for (const [reqUpgrade, reqLevel] of Object.entries(
-            upgrade.requirements.upgradeCount
-          )) {
-            const currentReqLevel = playerStats.getUpgradeCount(reqUpgrade);
-
-            if (currentReqLevel < reqLevel) {
-              reqs.push(`${reqUpgrade} Level ${reqLevel}`);
-            }
-          }
-        }
-
-        if (upgrade.requirements.storyFragments) {
-          const discovered = storySystem.getDiscoveredCount();
-
-          if (discovered < upgrade.requirements.storyFragments) {
-            reqs.push(`${upgrade.requirements.storyFragments} story fragments`);
-          }
-        }
-
-        if (reqs.length > 0) {
-          requirementsDisplay = `<div class="upgrade-requirements">Requires: ${reqs.join(', ')}</div>`;
-        }
-      }
-
-      upgradeCard.innerHTML = `
-        <h3>${upgrade.name}${typeIndicator}</h3>
-        ${levelDisplay}
-        <p>${upgrade.description}</p>
-        ${specialProps}
-        ${requirementsDisplay}
-        <div class="upgrade-cost">Cost: ${costDisplay}</div>
-        <button class="upgrade-buy-btn" data-upgrade-id="${upgrade.id}" ${!canAfford ? 'disabled' : ''}>
-          ${canAfford ? 'Purchase' : 'Insufficient Resources'}
-        </button>
-      `;
-
-      // Add styling for level display
-      const levelDiv = upgradeCard.querySelector('.upgrade-level');
-
-      if (levelDiv) {
-        levelDiv.style.cssText = `
-          color: #888;
-          font-size: 0.9em;
-          margin: 5px 0 10px 0;
-          font-style: italic;
-        `;
-      }
-
-      const cooldownDiv = upgradeCard.querySelector('.upgrade-cooldown');
-
-      if (cooldownDiv) {
-        cooldownDiv.style.cssText = `
-          color: #ffaa00;
-          font-size: 0.8em;
-          margin: 5px 0;
-          font-style: italic;
-        `;
-      }
-
-      const batteryCostDiv = upgradeCard.querySelector('.upgrade-battery-cost');
-
-      if (batteryCostDiv) {
-        batteryCostDiv.style.cssText = `
-          color: #ff6600;
-          font-size: 0.8em;
-          margin: 5px 0;
-          font-weight: bold;
-        `;
-      }
-
-      // Add requirements styling
-      const requirements = upgradeCard.querySelector('.upgrade-requirements');
-
-      if (requirements) {
-        requirements.style.cssText = `
-          color: #ff8800;
-          font-size: 0.8em;
-          margin: 10px 0;
-          font-style: italic;
-        `;
-      }
-
-      const buyBtn = upgradeCard.querySelector('.upgrade-buy-btn');
-
-      if (canAfford) {
-        buyBtn.addEventListener('click', () => {
-          UpgradeSystem.purchaseUpgrade(upgrade.id);
-          this.renderUpgradeItems(); // Refresh the display
-        });
-      }
-
-      this.upgradeGrid.appendChild(upgradeCard);
-    }
-
-    // If no upgrades available
-    if (Object.keys(upgrades).length === 0) {
-      const noUpgrades = document.createElement('div');
-
-      noUpgrades.style.cssText = `
-        grid-column: 1 / -1;
-        text-align: center;
-        color: #888;
-        font-style: italic;
-        padding: 40px;
-      `;
-      noUpgrades.textContent = `No ${this.currentShopType.replace('_', ' ')} upgrades available at this time.`;
-      this.upgradeGrid.appendChild(noUpgrades);
-    }
-  }
-
-  getCategoryIcon(category) {
-    const icons = {
-      power: '🔋',
-      efficiency: '⚡',
-      exploration: '🔍',
-      resource: '💎',
-      prestige: '👑',
-      advanced: '🔬',
-      survival: '🛡️',
-      expansion: '📈',
-      utility: '🔧',
-      mobility: '🚀',
-      emergency: '🚨',
-      general: '⚙️',
-    };
-
-    return icons[category] || '⚙️';
   }
 
   updateStats() {
@@ -324,6 +83,266 @@ class UserInterface {
     if (messages.length > 20) {
       this.messagesPanel.removeChild(messages[0]);
     }
+  }
+
+  // Delegate upgrade modal handling to a separate class
+  showUpgradeModal(shopType) {
+    if (!this.upgradeModal) {
+      this.upgradeModal = new UpgradeModal();
+    }
+
+    this.upgradeModal.show(shopType);
+  }
+}
+
+// Separate upgrade modal into its own class
+class UpgradeModal {
+  constructor() {
+    this.modal = document.getElementById('new-upgrade-modal');
+    this.grid = document.getElementById('upgrade-grid');
+    this.closeBtn = document.getElementById('close-upgrade-btn');
+    this.currentShopType = null;
+
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    this.closeBtn.addEventListener('click', () => {
+      this.hide();
+    });
+
+    this.modal.addEventListener('click', e => {
+      if (e.target === this.modal) {
+        this.hide();
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && this.modal.classList.contains('active')) {
+        this.hide();
+      }
+    });
+  }
+
+  show(shopType = 'always_on') {
+    this.currentShopType = shopType;
+
+    // Update modal title
+    const titleElement = this.modal.querySelector('.upgrade-title');
+
+    if (titleElement) {
+      titleElement.textContent = UpgradeSystem.getShopTitle(shopType);
+    }
+
+    this.renderUpgradeItems();
+    this.modal.classList.add('active');
+  }
+
+  hide() {
+    this.modal.classList.remove('active');
+    this.currentShopType = null;
+  }
+
+  renderUpgradeItems() {
+    this.grid.innerHTML = '';
+    const upgrades = UpgradeSystem.getAvailableUpgrades(this.currentShopType);
+    const playerStats = getStats();
+
+    for (const [_id, upgrade] of Object.entries(upgrades)) {
+      const currentLevel = playerStats.getUpgradeCount(upgrade.id);
+      const cost = UpgradeSystem.getUpgradeCost(upgrade.id, currentLevel);
+      const canAfford = UpgradeSystem.canAffordUpgrade(
+        upgrade.id,
+        playerStats.resources
+      );
+
+      const upgradeCard = this.createUpgradeCard(
+        upgrade,
+        currentLevel,
+        cost,
+        canAfford
+      );
+
+      this.grid.appendChild(upgradeCard);
+    }
+
+    // Show message if no upgrades available
+    if (Object.keys(upgrades).length === 0) {
+      this.showNoUpgradesMessage();
+    }
+  }
+
+  createUpgradeCard(upgrade, currentLevel, cost, canAfford) {
+    const upgradeCard = document.createElement('div');
+
+    upgradeCard.className = 'upgrade-card';
+
+    const levelDisplay = this.buildLevelDisplay(upgrade, currentLevel);
+    const costDisplay = this.buildCostDisplay(cost);
+    const typeIndicator = this.buildTypeIndicator(upgrade.type);
+    const specialProps = this.buildSpecialProperties(upgrade);
+    const requirementsDisplay = this.buildRequirementsDisplay(
+      upgrade,
+      canAfford
+    );
+
+    upgradeCard.innerHTML = `
+      <h3>${upgrade.name}${typeIndicator}</h3>
+      ${levelDisplay}
+      <p>${upgrade.description}</p>
+      ${specialProps}
+      ${requirementsDisplay}
+      <div class="upgrade-cost">Cost: ${costDisplay}</div>
+      <button class="upgrade-buy-btn" data-upgrade-id="${upgrade.id}" ${!canAfford ? 'disabled' : ''}>
+        ${canAfford ? 'Purchase' : 'Insufficient Resources'}
+      </button>
+    `;
+
+    this.applyCardStyling(upgradeCard);
+    this.attachPurchaseHandler(upgradeCard, upgrade, canAfford);
+
+    return upgradeCard;
+  }
+
+  buildLevelDisplay(upgrade, currentLevel) {
+    if (!upgrade.repeatable) return '';
+
+    const maxLevel = upgrade.maxLevel ? `/${upgrade.maxLevel}` : '';
+
+    return `<div class="upgrade-level">Level ${currentLevel}${maxLevel}</div>`;
+  }
+
+  buildCostDisplay(cost) {
+    return Object.entries(cost)
+      .map(([type, amount]) => `${amount} ${type}`)
+      .join(', ');
+  }
+
+  buildTypeIndicator(type) {
+    const typeIcons = {
+      always_on: '',
+      passive: '🧠',
+      active: '⚡',
+    };
+
+    return typeIcons[type] ? ` ${typeIcons[type]}` : '';
+  }
+
+  buildSpecialProperties(upgrade) {
+    let specialProps = '';
+
+    if (upgrade.cooldown) {
+      specialProps += `<div class="upgrade-cooldown">Cooldown: ${upgrade.cooldown.replace('_', ' ')}</div>`;
+    }
+
+    if (upgrade.batteryCost) {
+      specialProps += `<div class="upgrade-battery-cost">Battery Cost: ${upgrade.batteryCost}</div>`;
+    }
+
+    return specialProps;
+  }
+
+  buildRequirementsDisplay(upgrade, canAfford) {
+    if (!upgrade.requirements || canAfford) return '';
+
+    const playerStats = getStats();
+    const reqs = [];
+
+    if (upgrade.requirements.upgradeCount) {
+      for (const [reqUpgrade, reqLevel] of Object.entries(
+        upgrade.requirements.upgradeCount
+      )) {
+        const currentReqLevel = playerStats.getUpgradeCount(reqUpgrade);
+
+        if (currentReqLevel < reqLevel) {
+          reqs.push(`${reqUpgrade} Level ${reqLevel}`);
+        }
+      }
+    }
+
+    if (upgrade.requirements.storyFragments) {
+      const discovered = storySystem.getDiscoveredCount();
+
+      if (discovered < upgrade.requirements.storyFragments) {
+        reqs.push(`${upgrade.requirements.storyFragments} story fragments`);
+      }
+    }
+
+    return reqs.length > 0
+      ? `<div class="upgrade-requirements">Requires: ${reqs.join(', ')}</div>`
+      : '';
+  }
+
+  applyCardStyling(upgradeCard) {
+    // Apply inline styles for special elements
+    const levelDiv = upgradeCard.querySelector('.upgrade-level');
+
+    if (levelDiv) {
+      levelDiv.style.cssText = `
+        color: #888;
+        font-size: 0.9em;
+        margin: 5px 0 10px 0;
+        font-style: italic;
+      `;
+    }
+
+    const cooldownDiv = upgradeCard.querySelector('.upgrade-cooldown');
+
+    if (cooldownDiv) {
+      cooldownDiv.style.cssText = `
+        color: #ffaa00;
+        font-size: 0.8em;
+        margin: 5px 0;
+        font-style: italic;
+      `;
+    }
+
+    const batteryCostDiv = upgradeCard.querySelector('.upgrade-battery-cost');
+
+    if (batteryCostDiv) {
+      batteryCostDiv.style.cssText = `
+        color: #ff6600;
+        font-size: 0.8em;
+        margin: 5px 0;
+        font-weight: bold;
+      `;
+    }
+
+    const requirements = upgradeCard.querySelector('.upgrade-requirements');
+
+    if (requirements) {
+      requirements.style.cssText = `
+        color: #ff8800;
+        font-size: 0.8em;
+        margin: 10px 0;
+        font-style: italic;
+      `;
+    }
+  }
+
+  attachPurchaseHandler(upgradeCard, upgrade, canAfford) {
+    const buyBtn = upgradeCard.querySelector('.upgrade-buy-btn');
+
+    if (canAfford) {
+      buyBtn.addEventListener('click', () => {
+        UpgradeSystem.purchaseUpgrade(upgrade.id);
+        this.renderUpgradeItems(); // Refresh the display
+      });
+    }
+  }
+
+  showNoUpgradesMessage() {
+    const noUpgrades = document.createElement('div');
+
+    noUpgrades.style.cssText = `
+      grid-column: 1 / -1;
+      text-align: center;
+      color: #888;
+      font-style: italic;
+      padding: 40px;
+    `;
+    noUpgrades.textContent = `No ${this.currentShopType.replace('_', ' ')} upgrades available at this time.`;
+    this.grid.appendChild(noUpgrades);
   }
 }
 
