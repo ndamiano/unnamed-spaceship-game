@@ -17,31 +17,36 @@ class Player {
     this.movementCost = 1;
     this.spawnPoint = { x, y };
     this.upgrades = new Map();
-    this.equippedPassives = new Set(); // Currently equipped passive abilities
-    this.maxPassiveSlots = 1; // Base number of passive slots
     this.direction = Directions.DOWN;
     this.resources = { ...BASE_RESOURCES };
     this.totalPlaytime = 0;
     this.playtimeStart = Date.now();
-    this.emergencyReservesUsed = false; // Track if emergency reserves were used this reset
+
+    // Enhanced features
+    this.equippedPassives = new Set();
+    this.maxPassiveSlots = 1;
+    this.visitedRoomTypes = new Set();
+    this.currentRoom = null;
+    this.abilityHotbarAssignments = {};
+    this.emergencyReservesUsed = false;
+    this.fabricatorRefreshUsed = false;
+    this.emergencyBurstUsed = false;
+    this.naniteConverterUsed = false;
 
     // Rendering
-    this.renderable = null; // Will be set by Game class
-
-    // Don't register event handlers in constructor
+    this.renderable = null;
     this.eventHandlersRegistered = false;
   }
 
-  // Call this after the player is registered with PlayerStats
   initializeEventHandlers() {
     if (this.eventHandlersRegistered) {
-      return; // Prevent double registration
+      return;
     }
 
     this.registerEventHandlers();
+    this.registerEnhancedEventHandlers();
     this.eventHandlersRegistered = true;
 
-    // Now it's safe to emit the initial update
     GameEvents.Player.Emit.updated(getStats());
   }
 
@@ -53,7 +58,7 @@ class Player {
 
       // Check for movement efficiency upgrade
       const movementEfficiency = this.upgrades.get('MOVEMENT_EFFICIENCY') || 0;
-      const efficiencyChance = movementEfficiency * 0.1; // 10% per level
+      const efficiencyChance = movementEfficiency * 0.1;
 
       if (Math.random() > efficiencyChance) {
         this.battery -= this.movementCost;
@@ -64,6 +69,7 @@ class Player {
       }
 
       this.updatePlaytime();
+      this.checkRoomEntry();
       GameEvents.Player.Emit.updated(getStats());
     });
 
@@ -74,11 +80,7 @@ class Player {
 
     GameEvents.Player.Listeners.updated(player => {
       if (player.battery <= 0) {
-        GameEvents.Game.Emit.message(
-          'As you feel your battery getting close to empty, you return to your charging pod.'
-        );
-        GameEvents.Game.Emit.resetState();
-        this.reset();
+        this.handleBatteryDepletion();
       }
     });
 
@@ -99,6 +101,9 @@ class Player {
         GameEvents.Game.Emit.message(
           `Upgrade purchased: ${upgrade_def.name}${levelText}`
         );
+
+        // Apply immediate upgrade effects
+        this.applyUpgradeEffect(upgrade_def);
       }
     });
 
@@ -108,12 +113,271 @@ class Player {
       this.resources = modifyResources(this.resources, {
         [type]: toAdd,
       });
+
+      // Check for power siphon
+      this.handleResourceCollection(type, toAdd);
+
       GameEvents.Player.Emit.updated(getStats());
     });
 
     GameEvents.Save.Listeners.restorePlayer(playerData => {
       this.restoreState(playerData);
     });
+
+    GameEvents.Game.Listeners.resetState(() => {
+      this.onReset();
+    });
+  }
+
+  registerEnhancedEventHandlers() {
+    // Battery management
+    GameEvents.Player.Listeners.gainBattery(amount => {
+      this.battery = Math.min(this.maxBattery, this.battery + amount);
+      GameEvents.Player.Emit.updated(getStats());
+    });
+
+    GameEvents.Player.Listeners.loseBattery(amount => {
+      this.battery = Math.max(0, this.battery - amount);
+      GameEvents.Player.Emit.updated(getStats());
+    });
+
+    // Passive equipment
+    GameEvents.Player.Listeners.equipPassive(({ abilityId, slotIndex }) => {
+      this.equipPassiveAbility(abilityId, slotIndex);
+    });
+
+    GameEvents.Player.Listeners.unequipPassive(abilityId => {
+      this.unequipPassiveAbility(abilityId);
+    });
+
+    // Teleportation
+    GameEvents.Player.Listeners.teleportToSpawn(() => {
+      this.teleportToSpawn();
+    });
+
+    // Room tracking
+    GameEvents.Player.Listeners.enterRoom(roomType => {
+      this.handleRoomEntry(roomType);
+    });
+  }
+
+  // Enhanced battery depletion with emergency reserves
+  handleBatteryDepletion() {
+    const hasEmergencyReserves = this.hasUpgrade('EMERGENCY_RESERVES');
+
+    if (hasEmergencyReserves && !this.emergencyReservesUsed) {
+      this.battery = Math.floor(this.maxBattery * 0.5);
+      this.emergencyReservesUsed = true;
+
+      GameEvents.Game.Emit.message(
+        'Emergency Reserves activated! Battery restored to 50%. Next depletion will cause reset.'
+      );
+
+      GameEvents.Player.Emit.updated(getStats());
+
+      return;
+    }
+
+    GameEvents.Game.Emit.message(
+      'As you feel your battery getting close to empty, you return to your charging pod.'
+    );
+    GameEvents.Game.Emit.resetState();
+    this.reset();
+  }
+
+  // Passive equipment methods
+  equipPassiveAbility(abilityId, _slotIndex) {
+    const maxSlots = this.getMaxPassiveSlots();
+
+    if (this.equippedPassives.size >= maxSlots) {
+      GameEvents.Game.Emit.message('No available passive slots');
+
+      return false;
+    }
+
+    if (this.equippedPassives.has(abilityId)) {
+      GameEvents.Game.Emit.message('Passive already equipped');
+
+      return false;
+    }
+
+    this.equippedPassives.add(abilityId);
+    GameEvents.Player.Emit.passiveEquipped(abilityId);
+
+    return true;
+  }
+
+  unequipPassiveAbility(abilityId) {
+    if (this.equippedPassives.has(abilityId)) {
+      this.equippedPassives.delete(abilityId);
+      GameEvents.Player.Emit.passiveUnequipped(abilityId);
+
+      return true;
+    }
+
+    return false;
+  }
+
+  getMaxPassiveSlots() {
+    const expansionUpgrades = this.upgrades.get('PASSIVE_SLOT_EXPANSION') || 0;
+
+    return this.maxPassiveSlots + expansionUpgrades;
+  }
+
+  // Teleportation
+  teleportToSpawn() {
+    this.x = this.spawnPoint.x;
+    this.y = this.spawnPoint.y;
+    GameEvents.Player.Emit.move(this.x, this.y, this.direction);
+  }
+
+  // Room tracking and exploration rewards
+  checkRoomEntry() {
+    // This would need ship integration to detect actual room changes
+    // For now, this is a placeholder that gets called on movement
+    const currentRoomData = this.getCurrentRoomData();
+
+    if (currentRoomData && currentRoomData.type !== this.currentRoom) {
+      this.currentRoom = currentRoomData.type;
+      GameEvents.Player.Emit.enterRoom(currentRoomData);
+
+      // Handle room scanner
+      if (this.hasUpgrade('ROOM_SCANNER')) {
+        GameEvents.Game.Emit.revealCurrentRoom();
+      }
+    }
+  }
+
+  handleRoomEntry(roomData) {
+    const roomType = roomData.type || roomData;
+
+    // Exploration rewards
+    if (!this.visitedRoomTypes.has(roomType)) {
+      this.visitedRoomTypes.add(roomType);
+      this.handleExplorationReward(roomType);
+    }
+  }
+
+  handleExplorationReward(roomType) {
+    const explorationLevel = this.upgrades.get('EXPLORATION_REWARDS') || 0;
+
+    if (explorationLevel > 0) {
+      const reward = explorationLevel * 5;
+
+      GameEvents.Resources.Emit.add('Nanites', reward);
+      GameEvents.Game.Emit.message(
+        `Exploration bonus: +${reward} nanites for discovering ${roomType}`
+      );
+    }
+  }
+
+  getCurrentRoomData() {
+    // Placeholder - would need ship integration
+    return null;
+  }
+
+  // Resource collection with power siphon
+  handleResourceCollection(_resourceType, _amount) {
+    const powerSiphonLevel = this.upgrades.get('POWER_SIPHON') || 0;
+
+    if (powerSiphonLevel > 0) {
+      const chance = powerSiphonLevel * 0.2;
+
+      if (Math.random() < chance) {
+        GameEvents.Player.Emit.gainBattery(1);
+        GameEvents.Game.Emit.message('Power Siphon: +1 battery');
+      }
+    }
+  }
+
+  // Apply immediate upgrade effects
+  applyUpgradeEffect(upgrade) {
+    switch (upgrade.id) {
+      case 'ROOM_SCANNER':
+        GameEvents.Game.Emit.message(
+          'Room Scanner installed - rooms will be fully revealed when entered'
+        );
+        break;
+      case 'NAVIGATION_MATRIX':
+        GameEvents.Game.Emit.message(
+          'Navigation Matrix online - minimap available'
+        );
+        GameEvents.UI.Emit.enableMinimap();
+        break;
+      case 'PASSIVE_SLOT_EXPANSION':
+        GameEvents.Game.Emit.message(
+          'Neural interface expanded - additional passive slot available'
+        );
+        break;
+    }
+  }
+
+  // Active ability usage
+  canUseActiveAbility(abilityId) {
+    if (!this.hasUpgrade(abilityId)) return false;
+
+    switch (abilityId) {
+      case 'NANITE_CONVERTER':
+        return !this.naniteConverterUsed && this.resources.Nanites >= 100;
+      case 'FABRICATOR_REFRESH':
+        return this.battery >= 15;
+      case 'QUANTUM_TELEPORT':
+        return this.battery >= 20;
+      case 'EMERGENCY_BURST':
+        return (
+          !this.emergencyBurstUsed && this.battery / this.maxBattery <= 0.25
+        );
+      default:
+        return true;
+    }
+  }
+
+  useActiveAbility(abilityId) {
+    if (!this.canUseActiveAbility(abilityId)) {
+      return { success: false, message: 'Cannot use ability' };
+    }
+
+    switch (abilityId) {
+      case 'NANITE_CONVERTER':
+        return this.useNaniteConverter();
+      case 'FABRICATOR_REFRESH':
+        return this.useFabricatorRefresh();
+      case 'QUANTUM_TELEPORT':
+        return this.useQuantumTeleport();
+      case 'EMERGENCY_BURST':
+        return this.useEmergencyBurst();
+      default:
+        return { success: false, message: 'Unknown ability' };
+    }
+  }
+
+  useNaniteConverter() {
+    GameEvents.Resources.Emit.add('Nanites', -100);
+    GameEvents.Player.Emit.gainBattery(10);
+    this.naniteConverterUsed = true;
+
+    return { success: true, message: 'Converted 100 nanites to 10 battery' };
+  }
+
+  useFabricatorRefresh() {
+    GameEvents.Player.Emit.loseBattery(15);
+    GameEvents.Game.Emit.refreshNearestFabricator();
+
+    return { success: true, message: 'Nanofabricator refreshed' };
+  }
+
+  useQuantumTeleport() {
+    GameEvents.Player.Emit.loseBattery(20);
+    this.teleportToSpawn();
+
+    return { success: true, message: 'Teleported to spawn point' };
+  }
+
+  useEmergencyBurst() {
+    GameEvents.Player.Emit.gainBattery(50);
+    this.emergencyBurstUsed = true;
+
+    return { success: true, message: 'Emergency burst: +50 battery' };
   }
 
   interact(object) {
@@ -143,7 +407,7 @@ class Player {
   get storyBonus() {
     const storyScanner = this.upgrades.get('STORY_SCANNER') || 0;
 
-    return storyScanner * 0.2; // 20% bonus per level
+    return storyScanner * 0.2;
   }
 
   hasUpgrade(upgradeId) {
@@ -154,7 +418,6 @@ class Player {
     return this.upgrades.get(upgradeId) || 0;
   }
 
-  // Special upgrade abilities
   canQuantumTeleport() {
     return this.hasUpgrade('QUANTUM_ENTANGLEMENT') && this.battery >= 20;
   }
@@ -188,9 +451,58 @@ class Player {
     this.battery = this.maxBattery;
     this.updatePlaytime();
 
+    // Apply deep sleep protocol
+    this.applyResetBonuses();
+
+    // Reset per-reset abilities
+    this.onReset();
+
     if (this.renderable) {
       GameEvents.Player.Emit.move(this.x, this.y, this.direction);
     }
+  }
+
+  onReset() {
+    this.emergencyReservesUsed = false;
+    this.naniteConverterUsed = false;
+    this.emergencyBurstUsed = false;
+    // fabricatorRefreshUsed doesn't reset as it has no cooldown
+  }
+
+  applyResetBonuses() {
+    // Deep sleep protocol
+    const deepSleepLevel = this.upgrades.get('DEEP_SLEEP_PROTOCOL') || 0;
+
+    if (deepSleepLevel > 0) {
+      const bonusBattery = Math.floor(this.maxBattery * 0.2 * deepSleepLevel);
+
+      this.battery = Math.min(this.maxBattery, this.battery + bonusBattery);
+      GameEvents.Game.Emit.message(
+        `Deep Sleep Protocol: +${bonusBattery} battery`
+      );
+    }
+
+    // Knowledge integration
+    const knowledgeLevel = this.upgrades.get('KNOWLEDGE_INTEGRATION') || 0;
+
+    if (knowledgeLevel > 0) {
+      const storyBonus = this.calculateKnowledgeBonus(knowledgeLevel);
+
+      if (storyBonus > 0) {
+        GameEvents.Resources.Emit.add('Nanites', storyBonus);
+        GameEvents.Game.Emit.message(
+          `Knowledge Integration: +${storyBonus} nanites`
+        );
+      }
+    }
+  }
+
+  calculateKnowledgeBonus(level) {
+    // This would need story system integration
+    // For now, placeholder calculation
+    const discoveredFragments = this.visitedRoomTypes.size;
+
+    return discoveredFragments * level * 5;
   }
 
   restoreState(playerData) {
@@ -215,6 +527,29 @@ class Player {
     if (playerData.direction) {
       this.direction = playerData.direction;
     }
+
+    // Enhanced state restoration
+    if (playerData.equippedPassives) {
+      this.equippedPassives = new Set(playerData.equippedPassives);
+    }
+
+    if (playerData.visitedRoomTypes) {
+      this.visitedRoomTypes = new Set(playerData.visitedRoomTypes);
+    }
+
+    if (playerData.maxPassiveSlots) {
+      this.maxPassiveSlots = playerData.maxPassiveSlots;
+    }
+
+    if (playerData.abilityHotbarAssignments) {
+      this.abilityHotbarAssignments = playerData.abilityHotbarAssignments;
+    }
+
+    // Restore ability usage states
+    this.emergencyReservesUsed = playerData.emergencyReservesUsed || false;
+    this.fabricatorRefreshUsed = playerData.fabricatorRefreshUsed || false;
+    this.emergencyBurstUsed = playerData.emergencyBurstUsed || false;
+    this.naniteConverterUsed = playerData.naniteConverterUsed || false;
 
     this.playtimeStart = Date.now();
 
@@ -243,6 +578,14 @@ class Player {
       totalPlaytime: this.totalPlaytime,
       spawnPoint: { ...this.spawnPoint },
       direction: this.direction,
+      equippedPassives: Array.from(this.equippedPassives),
+      visitedRoomTypes: Array.from(this.visitedRoomTypes),
+      maxPassiveSlots: this.maxPassiveSlots,
+      abilityHotbarAssignments: this.abilityHotbarAssignments,
+      emergencyReservesUsed: this.emergencyReservesUsed,
+      fabricatorRefreshUsed: this.fabricatorRefreshUsed,
+      emergencyBurstUsed: this.emergencyBurstUsed,
+      naniteConverterUsed: this.naniteConverterUsed,
     };
   }
 }

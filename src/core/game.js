@@ -9,6 +9,10 @@ import { storySystem } from '../systems/story/story-system.js';
 import { gameObjectLoader } from '../entities/objects/game-object-loader.js';
 import { Renderer } from '../rendering/renderer.js';
 import { UpgradeSystem } from '../systems/upgrades/upgrade-system.js';
+import { minimap } from '../ui/minimap.js';
+import { initializeActiveAbilitiesHotbar } from '../ui/active-abilities-hotbar.js';
+import { initializePassiveEquipmentModal } from '../ui/passive-equipment-modal.js';
+import { getStats } from '../entities/player/player-stats.js';
 
 export class Game {
   constructor(
@@ -31,6 +35,9 @@ export class Game {
     this.renderer = null;
     this.lastFrameTime = 0;
     this.initializationSteps = new Set();
+
+    // References for global access
+    window.game = this;
 
     console.log(
       'Game instance created, setting up event-driven initialization'
@@ -128,6 +135,10 @@ export class Game {
       if (allReady && !this.initialized) {
         this.initialized = true;
         console.log('All systems initialized successfully');
+
+        // Initialize upgrade features after all systems are ready
+        this.initializeUpgradeFeatures();
+
         GameEvents.Initialization.Emit.allSystemsReady();
         GameEvents.Game.Emit.initialized();
       }
@@ -267,8 +278,33 @@ export class Game {
 
       this.ship = new Ship(width, height, type);
 
+      // Add upgrade features to ship (you'll need to integrate ShipEnhancements)
+      this.ship.setupUpgradeFeatures = () => {
+        // Setup room scanner
+        GameEvents.Game.Listeners.revealCurrentRoom(() => {
+          const playerStats = getStats();
+
+          if (playerStats.getUpgradeCount('ROOM_SCANNER') > 0) {
+            this.ship.revealCurrentRoom(playerStats.x, playerStats.y);
+          }
+        });
+
+        // Setup fabricator refresh
+        GameEvents.Game.Listeners.refreshNearestFabricator(() => {
+          const playerStats = getStats();
+
+          this.ship.refreshNearestFabricator(playerStats.x, playerStats.y);
+        });
+      };
+
+      // Add the enhancement methods to ship
+      this.addShipEnhancements();
+
       // Wait for the ship generation to complete
       await this.ship.map.generateLayout();
+
+      // Setup upgrade features
+      this.ship.setupUpgradeFeatures();
 
       if (this.renderer) {
         const padding = 500;
@@ -289,6 +325,104 @@ export class Game {
       console.error('Failed to setup ship:', error);
       throw error;
     }
+  }
+
+  addShipEnhancements() {
+    // Add room scanner functionality
+    this.ship.revealCurrentRoom = (playerX, playerY) => {
+      const currentRoom = this.ship.map.rooms.find(
+        room =>
+          playerX >= room.x &&
+          playerX < room.x + room.width &&
+          playerY >= room.y &&
+          playerY < room.y + room.height
+      );
+
+      if (currentRoom) {
+        let tilesRevealed = 0;
+
+        for (
+          let y = currentRoom.y;
+          y < currentRoom.y + currentRoom.height;
+          y++
+        ) {
+          for (
+            let x = currentRoom.x;
+            x < currentRoom.x + currentRoom.width;
+            x++
+          ) {
+            const tile = this.ship.map.getTile(x, y);
+
+            if (tile && !tile.visible) {
+              tile.visible = true;
+              tilesRevealed++;
+            }
+          }
+        }
+
+        if (tilesRevealed > 0) {
+          GameEvents.Game.Emit.message(
+            `Room Scanner: ${currentRoom.name || currentRoom.id} fully mapped (${tilesRevealed} new areas)`
+          );
+        }
+      }
+    };
+
+    // Add fabricator refresh functionality
+    this.ship.refreshNearestFabricator = (playerX, playerY) => {
+      let nearestFabricator = null;
+      let nearestDistance = Infinity;
+      let fabricatorPos = null;
+
+      for (let y = 0; y < this.ship.height; y++) {
+        for (let x = 0; x < this.ship.width; x++) {
+          const tile = this.ship.map.getTile(x, y);
+
+          if (
+            tile &&
+            tile.object &&
+            tile.object.objectType === 'nanofabricator'
+          ) {
+            const distance = Math.abs(x - playerX) + Math.abs(y - playerY);
+
+            if (distance < nearestDistance) {
+              nearestDistance = distance;
+              nearestFabricator = tile.object;
+              fabricatorPos = { x, y };
+            }
+          }
+        }
+      }
+
+      if (nearestFabricator && nearestDistance <= 5) {
+        let refreshed = false;
+
+        nearestFabricator.activationResults.forEach(result => {
+          if (result.type === 'resource' && result.used) {
+            result.used = false;
+            refreshed = true;
+          }
+        });
+
+        if (refreshed) {
+          GameEvents.Game.Emit.message(
+            `Nanofabricator at (${fabricatorPos.x}, ${fabricatorPos.y}) refreshed and ready for use`
+          );
+        } else {
+          GameEvents.Game.Emit.message(
+            'Nanofabricator was already ready for use'
+          );
+        }
+
+        return true;
+      } else {
+        GameEvents.Game.Emit.message(
+          `No nanofabricator within range (5 tiles). Nearest: ${nearestDistance} tiles away.`
+        );
+
+        return false;
+      }
+    };
   }
 
   setupPlayer() {
@@ -381,6 +515,46 @@ export class Game {
     this.initializationSteps.add('moveValidation');
   }
 
+  initializeUpgradeFeatures() {
+    console.log('Initializing upgrade features...');
+
+    // Set up minimap references
+    minimap.setReferences(this.ship, this.player);
+
+    // Check if minimap should be enabled from save
+    if (this.player.hasUpgrade('NAVIGATION_MATRIX')) {
+      GameEvents.UI.Emit.enableMinimap();
+    }
+
+    // Initialize active abilities hotbar now that player is ready
+    const activeAbilitiesHotbar = initializeActiveAbilitiesHotbar();
+
+    window.activeAbilitiesHotbar = activeAbilitiesHotbar;
+
+    // Initialize passive equipment modal
+    const passiveEquipmentModal = initializePassiveEquipmentModal();
+
+    window.passiveEquipmentModal = passiveEquipmentModal;
+
+    // Listen for ability hotkey events
+    document.addEventListener('abilityHotkey', e => {
+      const abilityId = activeAbilitiesHotbar.abilities.get(e.detail.keyNumber);
+
+      if (abilityId) {
+        const result = this.player.useActiveAbility(abilityId);
+
+        if (result.success) {
+          GameEvents.Game.Emit.message(result.message);
+          activeAbilitiesHotbar.refresh();
+        } else if (result.message) {
+          GameEvents.Game.Emit.message(`Cannot use ability: ${result.message}`);
+        }
+      }
+    });
+
+    console.log('Upgrade features initialized');
+  }
+
   startGameLoop() {
     console.log('Starting game loop...');
     this.lastFrameTime = performance.now();
@@ -402,6 +576,11 @@ export class Game {
     try {
       this.updateGame(deltaTime);
       this.renderer.render(this.ship, this.player, deltaTime);
+
+      // Update upgrade features
+      if (minimap.enabled && minimap.visible) {
+        minimap.update();
+      }
     } catch (error) {
       console.error('Error in game loop:', error);
     }
@@ -419,19 +598,7 @@ export class Game {
     }
 
     return {
-      player: this.player.getSaveState
-        ? this.player.getSaveState()
-        : {
-            x: this.player.x,
-            y: this.player.y,
-            battery: this.player.battery,
-            maxBattery: this.player.maxBattery,
-            resources: this.player.resources,
-            upgrades: Array.from(this.player.upgrades.entries()),
-            totalPlaytime: this.player.totalPlaytime || 0,
-            spawnPoint: this.player.spawnPoint,
-            direction: this.player.direction,
-          },
+      player: this.player.getSaveState(),
       ship: this.ship.getSaveState(),
       story: storySystem.getSaveState(),
       gameLayer: 1,

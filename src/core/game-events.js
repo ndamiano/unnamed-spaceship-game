@@ -1,3 +1,4 @@
+// src/core/game-events.js
 import { eventBus } from './event-bus.js';
 
 /**
@@ -13,6 +14,18 @@ export const GameEvents = {
         eventBus.emit('player-direction-change', direction),
       attemptMove: direction => eventBus.emit('attempt-move', direction),
       attemptInteract: () => eventBus.emit('attempt-interact'),
+      gainBattery: amount => eventBus.emit('player-gain-battery', amount),
+      loseBattery: amount => eventBus.emit('player-lose-battery', amount),
+      equipPassive: (abilityId, slotIndex) =>
+        eventBus.emit('player-equip-passive', { abilityId, slotIndex }),
+      unequipPassive: abilityId =>
+        eventBus.emit('player-unequip-passive', abilityId),
+      teleportToSpawn: () => eventBus.emit('player-teleport-spawn'),
+      enterRoom: roomData => eventBus.emit('player-enter-room', roomData),
+      passiveEquipped: abilityId =>
+        eventBus.emit('passive-equipped', abilityId),
+      passiveUnequipped: abilityId =>
+        eventBus.emit('passive-unequipped', abilityId),
     },
     Listeners: {
       move: callback => eventBus.on('player-move', callback),
@@ -21,6 +34,17 @@ export const GameEvents = {
         eventBus.on('player-direction-change', callback),
       attemptMove: callback => eventBus.on('attempt-move', callback),
       attemptInteract: callback => eventBus.on('attempt-interact', callback),
+      gainBattery: callback => eventBus.on('player-gain-battery', callback),
+      loseBattery: callback => eventBus.on('player-lose-battery', callback),
+      equipPassive: callback => eventBus.on('player-equip-passive', callback),
+      unequipPassive: callback =>
+        eventBus.on('player-unequip-passive', callback),
+      teleportToSpawn: callback =>
+        eventBus.on('player-teleport-spawn', callback),
+      enterRoom: callback => eventBus.on('player-enter-room', callback),
+      passiveEquipped: callback => eventBus.on('passive-equipped', callback),
+      passiveUnequipped: callback =>
+        eventBus.on('passive-unequipped', callback),
     },
   },
 
@@ -30,12 +54,19 @@ export const GameEvents = {
       initialized: () => eventBus.emit('game-initialized'),
       resetState: () => eventBus.emit('reset-state'),
       resumed: () => eventBus.emit('game-resumed'),
+      refreshNearestFabricator: () =>
+        eventBus.emit('refresh-nearest-fabricator'),
+      revealCurrentRoom: () => eventBus.emit('reveal-current-room'),
     },
     Listeners: {
       message: callback => eventBus.on('game-message', callback),
       initialized: callback => eventBus.on('game-initialized', callback),
       resetState: callback => eventBus.on('reset-state', callback),
       resumed: callback => eventBus.on('game-resumed', callback),
+      refreshNearestFabricator: callback =>
+        eventBus.on('refresh-nearest-fabricator', callback),
+      revealCurrentRoom: callback =>
+        eventBus.on('reveal-current-room', callback),
     },
   },
 
@@ -89,10 +120,17 @@ export const GameEvents = {
     Emit: {
       openUpgrades: data => eventBus.emit('open-upgrade-menu', data),
       openSaveManager: () => eventBus.emit('open-save-manager'),
+      openPassiveEquipment: () => eventBus.emit('open-passive-equipment'),
+      enableMinimap: () => eventBus.emit('enable-minimap'),
+      toggleMinimap: () => eventBus.emit('toggle-minimap'),
     },
     Listeners: {
       openUpgrades: callback => eventBus.on('open-upgrade-menu', callback),
       openSaveManager: callback => eventBus.on('open-save-manager', callback),
+      openPassiveEquipment: callback =>
+        eventBus.on('open-passive-equipment', callback),
+      enableMinimap: callback => eventBus.on('enable-minimap', callback),
+      toggleMinimap: callback => eventBus.on('toggle-minimap', callback),
     },
   },
 

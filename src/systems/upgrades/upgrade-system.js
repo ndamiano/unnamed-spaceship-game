@@ -1,3 +1,4 @@
+// src/systems/upgrades/upgrade-system.js
 import { hasMoreResources } from '../resources/resource-manager.js';
 import { GameEvents } from '../../core/game-events.js';
 import { getStats } from '../../entities/player/player-stats.js';
@@ -63,7 +64,7 @@ class UpgradeSystem {
     try {
       const playerStats = getStats();
       const currentLevel = playerStats.getUpgradeCount(upgradeId);
-      const cost = upgradeLoader.calculateUpgradeCost(upgradeId, currentLevel);
+      const cost = this.getUpgradeCost(upgradeId, currentLevel);
 
       return cost && hasMoreResources(playerResources, cost);
     } catch (error) {
@@ -81,7 +82,7 @@ class UpgradeSystem {
 
       const playerStats = getStats();
       const currentLevel = playerStats.getUpgradeCount(upgradeId);
-      const cost = upgradeLoader.calculateUpgradeCost(upgradeId, currentLevel);
+      const cost = this.getUpgradeCost(upgradeId, currentLevel);
 
       if (this.canAffordUpgrade(upgradeId, playerStats.resources)) {
         // Create upgrade def with current cost for the purchase event
@@ -160,11 +161,40 @@ class UpgradeSystem {
         currentLevel = playerStats.getUpgradeCount(upgradeId);
       }
 
-      return upgradeLoader.calculateUpgradeCost(upgradeId, currentLevel);
+      const baseCost = upgradeLoader.calculateUpgradeCost(
+        upgradeId,
+        currentLevel
+      );
+
+      // Apply efficiency matrix discount
+      return this.applyEfficiencyMatrix(baseCost);
     } catch (error) {
       console.error('Error getting upgrade cost:', error);
 
       return null;
+    }
+  }
+
+  static applyEfficiencyMatrix(baseCost) {
+    try {
+      const playerStats = getStats();
+      const efficiencyLevel =
+        playerStats.getUpgradeCount('EFFICIENCY_MATRIX') || 0;
+
+      if (efficiencyLevel === 0) return baseCost;
+
+      const discount = efficiencyLevel * 0.1; // 10% per level
+      const modifiedCost = {};
+
+      for (const [resource, amount] of Object.entries(baseCost)) {
+        modifiedCost[resource] = Math.ceil(amount * (1 - discount));
+      }
+
+      return modifiedCost;
+    } catch (error) {
+      console.error('Error applying efficiency matrix:', error);
+
+      return baseCost;
     }
   }
 
