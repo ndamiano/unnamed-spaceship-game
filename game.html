@@ -1,56 +1,39 @@
 <!doctype html>
 <html>
-  <head>
-    <title>Procedural Spaceship Generator</title>
-    <link rel="stylesheet" href="styles/game.css" />
-  </head>
-  <body>
-    <div id="left-panel">
-      <div id="stats-panel"></div>
-      <div id="messages-panel"></div>
-    </div>
-    <div id="game-container">
-      <canvas id="gameCanvas"></canvas>
 
-      <!-- New upgrade modal using story modal styling -->
-      <div id="new-upgrade-modal" class="upgrade-modal">
-        <div class="upgrade-content">
-          <div class="upgrade-header">
-            <div class="upgrade-icon">⚡</div>
-            <div class="upgrade-meta">
-              <h3 class="upgrade-title">Ship Upgrades</h3>
-            </div>
-          </div>
+<head>
+  <title>Procedural Spaceship Generator</title>
+  <link rel="stylesheet" href="styles/game.css" />
+</head>
 
-          <div class="upgrade-grid-container">
-            <div class="upgrade-grid" id="upgrade-grid"></div>
-          </div>
+<body>
+  <div id="left-panel">
+    <div id="stats-panel"></div>
+    <div id="messages-panel"></div>
+  </div>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
 
-          <div class="upgrade-actions">
-            <button class="btn" id="close-upgrade-btn">Close</button>
+    <!-- Story modal - keeping static structure for existing story system -->
+    <div id="story-modal" class="story-modal">
+      <div class="story-content">
+        <div class="story-header">
+          <div class="story-icon" id="story-icon">📡</div>
+          <div class="story-meta">
+            <h3 class="story-title" id="story-title">Loading...</h3>
+            <p class="story-timestamp" id="story-timestamp"></p>
           </div>
         </div>
-      </div>
 
-      <!-- Story modal -->
-      <div id="story-modal" class="story-modal">
-        <div class="story-content">
-          <div class="story-header">
-            <div class="story-icon" id="story-icon">📡</div>
-            <div class="story-meta">
-              <h3 class="story-title" id="story-title">Loading...</h3>
-              <p class="story-timestamp" id="story-timestamp"></p>
-            </div>
-          </div>
+        <div class="story-text" id="story-text"></div>
 
-          <div class="story-text" id="story-text"></div>
-
-          <div class="story-actions">
-            <button class="btn" id="close-story-btn">Continue</button>
-          </div>
+        <div class="story-actions">
+          <button class="btn" id="close-story-btn">Continue</button>
         </div>
       </div>
     </div>
-    <script type="module" src="src/main.js"></script>
-  </body>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+
 </html>

@@ -2,6 +2,7 @@ import { GameEvents } from '../core/game-events.js';
 import { getStats } from '../entities/player/player-stats.js';
 import { UpgradeSystem } from '../systems/upgrades/upgrade-system.js';
 import { storySystem } from '../systems/story/story-system.js';
+import { ModalFactory } from './modal-factory.js';
 
 class UserInterface {
   constructor() {
@@ -95,32 +96,37 @@ class UserInterface {
   }
 }
 
-// Separate upgrade modal into its own class
+// Separate upgrade modal into its own class - now using ModalFactory
 class UpgradeModal {
   constructor() {
-    this.modal = document.getElementById('new-upgrade-modal');
-    this.grid = document.getElementById('upgrade-grid');
-    this.closeBtn = document.getElementById('close-upgrade-btn');
+    this.modal = null;
+    this.grid = null;
     this.currentShopType = null;
+    this.cleanup = null;
 
-    this.setupEventListeners();
+    this.createModal();
   }
 
-  setupEventListeners() {
-    this.closeBtn.addEventListener('click', () => {
+  createModal() {
+    const { modal, closeButtonId } = ModalFactory.createModal({
+      id: 'new-upgrade-modal',
+      icon: '⚡',
+      title: 'Ship Upgrades',
+      className: 'upgrade-modal',
+      contentHTML: `
+        <div class="upgrade-grid-container">
+          <div class="upgrade-grid" id="upgrade-grid"></div>
+        </div>
+      `,
+      closeButtonId: 'close-upgrade-btn',
+    });
+
+    this.modal = modal;
+    this.grid = document.getElementById('upgrade-grid');
+
+    // Setup events using the factory
+    this.cleanup = ModalFactory.setupModalEvents(modal, closeButtonId, () => {
       this.hide();
-    });
-
-    this.modal.addEventListener('click', e => {
-      if (e.target === this.modal) {
-        this.hide();
-      }
-    });
-
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && this.modal.classList.contains('active')) {
-        this.hide();
-      }
     });
   }
 
@@ -343,6 +349,12 @@ class UpgradeModal {
     `;
     noUpgrades.textContent = `No ${this.currentShopType.replace('_', ' ')} upgrades available at this time.`;
     this.grid.appendChild(noUpgrades);
+  }
+
+  destroy() {
+    if (this.cleanup) {
+      this.cleanup();
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import { GameEvents } from '../../core/game-events.js';
 import { getStats } from '../../entities/player/player-stats.js';
+import { ModalFactory } from '../../ui/modal-factory.js';
 
 export const STORY_GROUPS = {
   TUTORIAL: {
@@ -55,6 +56,7 @@ class StorySystem {
     this.registeredObjects = new Set();
     this.isRestored = false;
     this.restorationInProgress = false;
+    this.journalCleanup = null;
 
     this.setupEventListeners();
     this.setupModalElements();
@@ -386,46 +388,20 @@ class StorySystem {
     let journalModal = document.getElementById('journal-modal');
 
     if (!journalModal) {
-      journalModal = document.createElement('div');
-      journalModal.id = 'journal-modal';
-      journalModal.className = 'story-modal';
-      journalModal.innerHTML = `
-        <div class="story-content">
-          <div class="story-header">
-            <div class="story-icon">📖</div>
-            <div class="story-meta">
-              <h3 class="story-title">Personal Journal</h3>
-              <p class="story-timestamp">Discovered Data Fragments</p>
-            </div>
-          </div>
-          
-          <div class="story-text" id="journal-content"></div>
-          
-          <div class="story-actions">
-            <button class="btn" id="close-journal-btn">Close</button>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('game-container').appendChild(journalModal);
-
-      document
-        .getElementById('close-journal-btn')
-        .addEventListener('click', () => {
-          journalModal.classList.remove('active');
-        });
-
-      journalModal.addEventListener('click', e => {
-        if (e.target === journalModal) {
-          journalModal.classList.remove('active');
-        }
+      // Use ModalFactory to create the journal modal
+      const { modal, closeButtonId } = ModalFactory.createModal({
+        id: 'journal-modal',
+        icon: '📖',
+        title: 'Personal Journal',
+        subtitle: 'Discovered Data Fragments',
+        contentHTML: '<div class="story-text" id="journal-content"></div>',
+        closeButtonId: 'close-journal-btn',
       });
 
-      document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && journalModal.classList.contains('active')) {
-          journalModal.classList.remove('active');
-        }
-      });
+      journalModal = modal;
+
+      // Setup events using the factory
+      this.journalCleanup = ModalFactory.setupModalEvents(modal, closeButtonId);
     }
   }
 
@@ -610,6 +586,12 @@ class StorySystem {
 
   getJournalEntryCount() {
     return this.journalEntries.size;
+  }
+
+  destroy() {
+    if (this.journalCleanup) {
+      this.journalCleanup();
+    }
   }
 }
 

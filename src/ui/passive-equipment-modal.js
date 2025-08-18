@@ -2,28 +2,23 @@
 import { GameEvents } from '../core/game-events.js';
 import { getStats } from '../entities/player/player-stats.js';
 import { UpgradeSystem } from '../systems/upgrades/upgrade-system.js';
+import { ModalFactory } from './modal-factory.js';
 
 export class PassiveEquipmentModal {
   constructor() {
     this.modal = null;
+    this.cleanup = null;
     this.createModal();
     this.setupEventListeners();
   }
 
   createModal() {
-    this.modal = document.createElement('div');
-    this.modal.id = 'passive-equipment-modal';
-    this.modal.className = 'story-modal';
-    this.modal.innerHTML = `
-      <div class="story-content">
-        <div class="story-header">
-          <div class="story-icon">🧠</div>
-          <div class="story-meta">
-            <h3 class="story-title">Neural Interface Management</h3>
-            <p class="story-timestamp">Configure Active Passive Abilities</p>
-          </div>
-        </div>
-        
+    const { modal, closeButtonId } = ModalFactory.createModal({
+      id: 'passive-equipment-modal',
+      icon: '🧠',
+      title: 'Neural Interface Management',
+      subtitle: 'Configure Active Passive Abilities',
+      contentHTML: `
         <div class="passive-equipment-content">
           <div class="equipment-slots">
             <h4>Active Slots</h4>
@@ -35,14 +30,20 @@ export class PassiveEquipmentModal {
             <div id="available-passives"></div>
           </div>
         </div>
-        
-        <div class="story-actions">
-          <button class="btn" id="close-passive-equipment">Close</button>
-        </div>
-      </div>
-    `;
+      `,
+      closeButtonId: 'close-passive-equipment',
+    });
 
-    // Add CSS
+    this.modal = modal;
+
+    // Setup events using the factory
+    this.cleanup = ModalFactory.setupModalEvents(modal, closeButtonId);
+
+    // Add the CSS styles
+    this.addStyles();
+  }
+
+  addStyles() {
     const style = document.createElement('style');
 
     style.textContent = `
@@ -124,23 +125,9 @@ export class PassiveEquipmentModal {
       }
     `;
     document.head.appendChild(style);
-
-    document.getElementById('game-container').appendChild(this.modal);
   }
 
   setupEventListeners() {
-    document
-      .getElementById('close-passive-equipment')
-      .addEventListener('click', () => {
-        this.hide();
-      });
-
-    this.modal.addEventListener('click', e => {
-      if (e.target === this.modal) {
-        this.hide();
-      }
-    });
-
     // Listen for passive equipment events
     GameEvents.UI.Listeners.openPassiveEquipment(() => {
       this.show();
@@ -338,6 +325,12 @@ export class PassiveEquipmentModal {
       stats.getUpgradeCount('PASSIVE_SLOT_EXPANSION') || 0;
 
     return baseSlots + expansionUpgrades;
+  }
+
+  destroy() {
+    if (this.cleanup) {
+      this.cleanup();
+    }
   }
 }
 

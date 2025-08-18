@@ -281,7 +281,7 @@
       font-family: 'Courier New', monospace;
     }
 
-    /* Settings modal */
+    /* Settings modal - updated to use consistent styling */
     .settings-modal {
       display: none;
       position: fixed;
@@ -300,18 +300,34 @@
     }
 
     .settings-content {
-      background: rgba(0, 0, 0, 0.95);
+      background: linear-gradient(135deg, #0a1a0a, #1a2a1a);
       border: 2px solid #00ff00;
       border-radius: 10px;
       padding: 40px;
       max-width: 500px;
       width: 90%;
+      box-shadow: 0 0 50px rgba(0, 255, 0, 0.3);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .settings-content h2 {
       color: #00ff00;
       margin-bottom: 30px;
       text-align: center;
+      font-family: 'Courier New', monospace;
+      font-size: 1.5em;
     }
 
     .setting-item {
@@ -323,6 +339,7 @@
 
     .setting-item label {
       color: #88ff88;
+      font-family: 'Courier New', monospace;
     }
 
     .setting-item input,
@@ -332,6 +349,15 @@
       color: #00ff00;
       padding: 5px 10px;
       font-family: 'Courier New', monospace;
+    }
+
+    .setting-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+    }
+
+    .setting-item input[type="range"] {
+      width: 150px;
     }
   </style>
 </head>
@@ -363,10 +389,10 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
+  <!-- Settings Modal - Now using ModalFactory pattern but keeping inline for HTML file -->
   <div id="settings-modal" class="settings-modal">
     <div class="settings-content">
-      <h2>SETTINGS</h2>
+      <h2>⚙️ SETTINGS</h2>
       <div class="setting-item">
         <label>Sound Volume:</label>
         <input type="range" id="sound-volume" min="0" max="100" value="50" />
@@ -391,6 +417,37 @@
     import { GameStateManager } from './src/systems/save/game-state-manager.js';
 
     const gameState = new GameStateManager();
+
+    // Simplified modal handling to match ModalFactory pattern
+    function setupSettingsModal() {
+      const modal = document.getElementById('settings-modal');
+      const closeBtn = document.getElementById('close-settings-btn');
+      const settingsBtn = document.getElementById('settings-btn');
+
+      // Open settings
+      settingsBtn.addEventListener('click', () => {
+        modal.classList.add('active');
+      });
+
+      // Close settings
+      closeBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+      });
+
+      // Click outside to close
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+
+      // Escape key to close
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+          modal.classList.remove('active');
+        }
+      });
+    }
 
     // Function to check for saves and update UI
     async function checkSaveData() {
@@ -438,7 +495,8 @@
       }
     }
 
-    // Check for saves on page load
+    // Initialize everything
+    setupSettingsModal();
     checkSaveData();
 
     // Button event handlers
@@ -459,21 +517,6 @@
       } catch (error) {
         console.error('Failed to load game:', error);
         alert('Error loading save file: ' + error.message);
-      }
-    });
-
-    document.getElementById('settings-btn').addEventListener('click', () => {
-      document.getElementById('settings-modal').classList.add('active');
-    });
-
-    document.getElementById('close-settings-btn').addEventListener('click', () => {
-      document.getElementById('settings-modal').classList.remove('active');
-    });
-
-    // Close settings modal when clicking outside
-    document.getElementById('settings-modal').addEventListener('click', e => {
-      if (e.target === document.getElementById('settings-modal')) {
-        document.getElementById('settings-modal').classList.remove('active');
       }
     });
 
@@ -510,7 +553,7 @@
 
     // Periodically add new circuit lines
     setInterval(createCircuitLine, 2000);
-    </script>
+  </script>
 </body>
 
 </html>
