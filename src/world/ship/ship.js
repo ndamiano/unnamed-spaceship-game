@@ -1,48 +1,229 @@
-import { ShipMap } from './ship-map.js';
+// src/world/ship/ship.js - Fix room factory initialization
+import { SectionGenerator } from './section-generator.js';
+import { roomFactory } from '../rooms/room-factory.js';
 import { getStats } from '../../entities/player/player-stats.js';
 import { Directions } from '../../utils/index.js';
-import { eventBus } from '../../core/event-bus.js';
 import { GameEvents } from '../../core/game-events.js';
-import { Floor } from '../tiles/floor.js';
-import { WallSegment } from '../tiles/wall-segment.js';
-import { Door } from '../tiles/door.js';
-import GameObject from '../../entities/objects/game-object.js';
 
 export class Ship {
-  constructor(width, height, type = 'colony') {
+  constructor(width, height, type = 'colony', sectionId = 'ENGINEERING_CORE') {
     this.width = width;
     this.height = height;
     this.type = type;
-    this.map = new ShipMap(width, height, type);
+    this.currentSection = sectionId;
+    this.completedSections = new Set();
+    this.sectionProgress = new Map(); // Track progress per section
+
+    this.sectionGenerator = new SectionGenerator();
+    this.map = null; // Will be SectionMap instead of ShipMap
     this.isRestored = false;
 
     // Listen for save/restore events
     GameEvents.Save.Listeners.restoreShip(shipData => {
       this.restoreState(shipData);
     });
+
+    // Listen for section transition events
+    this.setupSectionTransitionListeners();
   }
 
-  getSpawnPoint() {
-    console.log(this.map.rooms[0]);
-    const spawnRoom = this.map.rooms.find(room => room.id == 'spawn');
+  setupSectionTransitionListeners() {
+    // Listen for neural interface activation
+    GameEvents.Game.Listeners.enterMindSpace(() => {
+      this.handleMindSpaceEntry();
+    });
+
+    // Listen for section completion
+    GameEvents.Game.Listeners.sectionComplete(sectionId => {
+      this.handleSectionCompletion(sectionId);
+    });
+  }
+
+  async initializeSection(sectionId = null, saveData = null) {
+    const targetSection = sectionId || this.currentSection;
+
+    console.log(`Initializing section: ${targetSection}`);
+
+    try {
+      // CRITICAL: Initialize room factory FIRST
+      console.log('Loading room definitions...');
+      await roomFactory.loadRoomDefinitions();
+
+      // THEN initialize the section generator with the loaded room factory
+      console.log('Initializing section generator...');
+      await this.sectionGenerator.initialize(roomFactory);
+
+      if (saveData && saveData.sectionId === targetSection) {
+        // Restore from save
+        console.log('Restoring section from save data');
+        this.map = await this.restoreSectionFromSave(saveData);
+      } else {
+        // Generate new section
+        console.log('Generating new section');
+        this.map = await this.sectionGenerator.generateSection(targetSection);
+      }
+
+      // Update current section
+      this.currentSection = targetSection;
+
+      console.log(`Section ${targetSection} initialized successfully`);
+
+      return true;
+    } catch (error) {
+      console.error(`Failed to initialize section ${targetSection}:`, error);
+      throw error;
+    }
+  }
+
+  async transitionToSection(newSectionId) {
+    console.log(`Transitioning from ${this.currentSection} to ${newSectionId}`);
+
+    try {
+      // Mark current section as complete
+      this.completedSections.add(this.currentSection);
+
+      // Store current section progress
+      if (this.map) {
+        this.sectionProgress.set(
+          this.currentSection,
+          this.map.getCompletionProgress()
+        );
+      }
+
+      // Generate and transition to new section
+      await this.initializeSection(newSectionId);
+
+      // Emit section change event
+      GameEvents.Game.Emit.message(
+        `Entering ${this.map.getSectionInfo().name}...`
+      );
+      GameEvents.Ship.Emit.sectionChanged({
+        from: this.currentSection,
+        to: newSectionId,
+        completedSections: Array.from(this.completedSections),
+      });
+
+      return true;
+    } catch (error) {
+      console.error(`Failed to transition to section ${newSectionId}:`, error);
+
+      return false;
+    }
+  }
+
+  handleMindSpaceEntry() {
+    console.log('Handling mind space entry...');
+
+    // Check if current section is sufficiently complete
+    const progress = this.getCurrentSectionProgress();
+    const requiredProgress = 75; // Require 75% completion
+
+    if (progress.overall < requiredProgress) {
+      GameEvents.Game.Emit.message(
+        `Neural pathways incomplete. Section progress: ${progress.overall}%. Continue exploring.`
+      );
+
+      return false;
+    }
+
+    // Check if there's a next section
+    const nextSection = this.sectionGenerator.getNextSection(
+      this.currentSection
+    );
+
+    if (!nextSection) {
+      // This is the final section - handle ship completion
+      this.handleShipCompletion();
+
+      return true;
+    }
+
+    // Transition to next section
+    setTimeout(() => {
+      this.transitionToSection(nextSection);
+    }, 3000);
+
+    return true;
+  }
+
+  handleSectionCompletion(sectionId) {
+    console.log(`Section completed: ${sectionId}`);
+    this.completedSections.add(sectionId);
+
+    // Update progress tracking
+    if (this.map && this.currentSection === sectionId) {
+      this.sectionProgress.set(sectionId, this.map.getCompletionProgress());
+    }
+
+    // Check if all sections are complete
+    const allSections = this.sectionGenerator.getSectionProgression();
+
+    if (this.completedSections.size >= allSections.length) {
+      this.handleShipCompletion();
+    }
+  }
+
+  handleShipCompletion() {
+    console.log('Ship awakening complete!');
+
+    GameEvents.Game.Emit.message(
+      'Ship consciousness fully awakened. All systems online. Ready for deep space exploration.'
+    );
+
+    // Emit ship completion event
+    GameEvents.Ship.Emit.awakeningComplete({
+      completedSections: Array.from(this.completedSections),
+      totalProgress: this.getTotalProgress(),
+    });
+  }
+
+  getCurrentSectionProgress() {
+    if (!this.map) {
+      return { exploration: 0, overall: 0 };
+    }
+
+    return this.map.getCompletionProgress();
+  }
+
+  getTotalProgress() {
+    const allSections = this.sectionGenerator.getSectionProgression();
+    const completed = this.completedSections.size;
+    const total = allSections.length;
 
     return {
-      x: Math.floor(spawnRoom.x + spawnRoom.width / 2),
-      y: Math.floor(spawnRoom.y + spawnRoom.height / 2),
+      completedSections: completed,
+      totalSections: total,
+      percentage: Math.round((completed / total) * 100),
     };
   }
 
+  // Original Ship interface methods (updated for sections)
+  getSpawnPoint() {
+    if (!this.map) {
+      return { x: 0, y: 0 };
+    }
+
+    return this.map.getSpawnPoint();
+  }
+
   revealAreaAroundPlayer(x, y, radius) {
-    this.map.revealAreaAroundPlayer(x, y, radius);
+    if (this.map) {
+      this.map.revealAreaAroundPlayer(x, y, radius);
+    }
   }
 
   canMoveTo(x, y, direction) {
-    if (x < 0 || x >= this.map.width || y < 0 || y >= this.map.height)
+    if (!this.map) return false;
+
+    if (x < 0 || x >= this.map.width || y < 0 || y >= this.map.height) {
       return false;
+    }
 
     const tile = this.map.getTile(x, y);
 
-    if (!tile.passable) return false;
+    if (!tile || !tile.passable) {
+      return false;
+    }
 
     const player = getStats();
     const currentTile = this.map.getTile(player.x, player.y);
@@ -73,6 +254,8 @@ export class Ship {
   }
 
   attemptInteract(targetX, targetY) {
+    if (!this.map) return;
+
     const tile = this.map.getTile(targetX, targetY);
 
     if (!tile) return;
@@ -86,135 +269,28 @@ export class Ship {
     }
   }
 
-  // Simplified save state - just save what we need
+  // Save/Load methods
   getSaveState() {
-    const tiles = [];
-
-    // Find the actual bounds of the ship (ignore empty areas)
-    const bounds = this.findShipBounds();
-
-    // Only save tiles within the ship bounds that have been modified
-    for (let y = bounds.minY; y <= bounds.maxY; y++) {
-      for (let x = bounds.minX; x <= bounds.maxX; x++) {
-        const tile = this.map.getTile(x, y);
-
-        if (!tile) continue;
-
-        // Only save tiles that have been explored or have content
-        if (
-          tile.visible ||
-          tile.object ||
-          this.hasWalls(tile) ||
-          !tile.passable
-        ) {
-          tiles.push({
-            x,
-            y,
-            visible: tile.visible,
-            passable: tile.passable,
-            number: tile.number,
-            object: tile.object ? this.serializeObject(tile.object) : null,
-            walls: this.serializeWalls(tile),
-          });
-        }
-      }
-    }
-
-    console.log(`Saving ${tiles.length} significant tiles`);
-
-    return {
+    const baseState = {
       width: this.width,
       height: this.height,
       type: this.type,
-      bounds,
-      tiles,
+      currentSection: this.currentSection,
+      completedSections: Array.from(this.completedSections),
+      sectionProgress: Object.fromEntries(this.sectionProgress),
     };
-  }
 
-  findShipBounds() {
-    let minX = this.width,
-      maxX = 0,
-      minY = this.height,
-      maxY = 0;
-    let foundTiles = false;
-
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        const tile = this.map.getTile(x, y);
-
-        if (tile && (tile.visible || tile.object || this.hasWalls(tile))) {
-          minX = Math.min(minX, x);
-          maxX = Math.max(maxX, x);
-          minY = Math.min(minY, y);
-          maxY = Math.max(maxY, y);
-          foundTiles = true;
-        }
-      }
+    if (this.map) {
+      baseState.sectionData = this.map.getSaveState();
     }
 
-    if (!foundTiles) {
-      return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
-    }
-
-    // Add small padding
-    const padding = 5;
-
-    return {
-      minX: Math.max(0, minX - padding),
-      maxX: Math.min(this.width - 1, maxX + padding),
-      minY: Math.max(0, minY - padding),
-      maxY: Math.min(this.height - 1, maxY + padding),
-    };
+    return baseState;
   }
 
-  serializeObject(obj) {
-    if (!obj) return null;
-
-    return {
-      type: obj.objectType,
-      flipped: obj.flipped || false,
-      storyData: obj.getSaveState
-        ? obj.getSaveState()
-        : {
-            determined: obj.storyEventDetermined || false,
-            fragments: Array.from(obj.availableStoryFragments || []),
-            events: obj.availableStoryEvents || [],
-            groupId: obj.storyGroupId,
-            used: obj.storyUsed || false,
-          },
-      activationResults: obj.activationResults || [],
-    };
-  }
-
-  serializeWalls(tile) {
-    if (!tile.slots) return null;
-
-    const walls = {};
-
-    ['top', 'right', 'bottom', 'left'].forEach(side => {
-      const slot = tile.slots[side];
-
-      if (slot) {
-        walls[side] = {
-          type: slot.constructor.name,
-          passable: slot.passable,
-          blocksLineOfSight: slot.blocksLineOfSight,
-        };
-      }
-    });
-
-    return Object.keys(walls).length > 0 ? walls : null;
-  }
-
-  hasWalls(tile) {
-    return tile.slots && Object.values(tile.slots).some(slot => slot !== null);
-  }
-
-  // Simplified restore state
   restoreState(shipData) {
     console.log('Restoring ship state...');
 
-    if (!shipData?.tiles) {
+    if (!shipData) {
       console.log('No ship data to restore');
 
       return;
@@ -222,138 +298,59 @@ export class Ship {
 
     this.isRestored = true;
 
-    // Create fresh map without room generation
-    this.map = this.createEmptyMap();
+    // Restore basic ship properties
+    this.width = shipData.width || this.width;
+    this.height = shipData.height || this.height;
+    this.type = shipData.type || this.type;
+    this.currentSection = shipData.currentSection || this.currentSection;
 
-    // Restore each saved tile
-    shipData.tiles.forEach(tileData => {
-      this.restoreTile(tileData);
-    });
+    // Restore completed sections
+    if (shipData.completedSections) {
+      this.completedSections = new Set(shipData.completedSections);
+    }
 
-    console.log(`Ship restored: ${shipData.tiles.length} tiles loaded`);
-    GameEvents.Game.Emit.message(
-      `Ship layout restored: ${shipData.tiles.length} areas loaded`
+    // Restore section progress
+    if (shipData.sectionProgress) {
+      this.sectionProgress = new Map(Object.entries(shipData.sectionProgress));
+    }
+
+    // The actual section data will be restored during initializeSection
+    console.log(
+      `Ship state restored: current section ${this.currentSection}, ${this.completedSections.size} completed sections`
     );
   }
 
-  createEmptyMap() {
-    // Create map structure without room generation
-    const map = Object.create(ShipMap.prototype);
-
-    map.width = this.width;
-    map.height = this.height;
-    map.type = this.type;
-    map.rooms = [];
-
-    // Create empty tile grid
-    map.tiles = Array.from({ length: this.height }, (_, y) =>
-      Array.from({ length: this.width }, (_, x) => new Floor(x, y))
+  async restoreSectionFromSave(saveData) {
+    // This would need to be implemented to recreate a SectionMap from save data
+    // For now, we'll generate a new section - implement proper restoration later
+    console.log(
+      'Section restoration from save data not yet implemented, generating new section'
     );
 
-    // Bind essential methods
-    map.getTile = ShipMap.prototype.getTile.bind(map);
-    map.hasLineOfSight = ShipMap.prototype.hasLineOfSight.bind(map);
-    map.revealAreaAroundPlayer =
-      ShipMap.prototype.revealAreaAroundPlayer.bind(map);
-
-    // Set up event listener for player movement reveals
-    eventBus.on('player-updated', player => {
-      map.revealAreaAroundPlayer(player.x, player.y, 2);
-    });
-
-    return map;
+    return await this.sectionGenerator.generateSection(saveData.sectionId);
   }
 
-  restoreTile(tileData) {
-    const tile = this.map.getTile(tileData.x, tileData.y);
+  // Utility methods
+  getSectionInfo() {
+    if (!this.map) return null;
 
-    if (!tile) {
-      console.warn(`No tile at ${tileData.x}, ${tileData.y}`);
-
-      return;
-    }
-
-    // Restore basic tile properties
-    tile.visible = tileData.visible;
-    tile.passable = tileData.passable;
-    if (tileData.number) tile.number = tileData.number;
-
-    // Restore walls
-    if (tileData.walls) {
-      this.restoreWalls(tile, tileData.walls);
-    }
-
-    // Restore object
-    if (tileData.object) {
-      tile.object = this.restoreObject(tileData.object, tileData.x, tileData.y);
-      if (tile.object) {
-        tile.passable = tile.object.passable;
-      }
-    }
+    return this.map.getSectionInfo();
   }
 
-  restoreWalls(tile, wallsData) {
-    Object.entries(wallsData).forEach(([side, wallData]) => {
-      let wall;
-
-      if (wallData.type === 'WallSegment') {
-        wall = new WallSegment(tile.x, tile.y, side);
-      } else if (wallData.type === 'Door') {
-        wall = new Door(tile.x, tile.y, side);
-      } else {
-        return;
-      }
-
-      wall.passable = wallData.passable;
-      wall.blocksLineOfSight = wallData.blocksLineOfSight;
-      tile.setSlot(side, wall);
-    });
+  getAvailableSections() {
+    return this.sectionGenerator.getSectionProgression();
   }
 
-  restoreObject(objData, x, y) {
-    try {
-      const obj = new GameObject(x, y, objData.type);
+  isCurrentSectionComplete() {
+    const progress = this.getCurrentSectionProgress();
 
-      obj.flipped = objData.flipped;
+    return progress.overall >= 75; // 75% completion threshold
+  }
 
-      // Restore story data
-      if (objData.storyData) {
-        obj.storyEventDetermined = objData.storyData.determined;
-        obj.availableStoryFragments = new Set(
-          objData.storyData.fragments || []
-        );
-        obj.availableStoryEvents = objData.storyData.events || [];
-        obj.storyGroupId = objData.storyData.groupId;
-        obj.storyUsed = objData.storyData.used;
-      }
-
-      // Restore activation results
-      if (objData.activationResults) {
-        obj.activationResults = objData.activationResults;
-      }
-
-      // Re-register with story system if needed
-      if (obj.storyGroupId) {
-        setTimeout(() => {
-          eventBus.emit('register-story-object', obj);
-        }, 100);
-      }
-
-      return obj;
-    } catch (error) {
-      console.error('Failed to restore object:', error);
-
-      // Create fallback object
-      return {
-        x,
-        y,
-        objectType: objData.type,
-        flipped: objData.flipped || false,
-        passable: false,
-        isActivatable: () => false,
-        onInteract: () =>
-          eventBus.emit('game-message', 'This object appears to be damaged.'),
-      };
-    }
+  canAccessNextSection() {
+    return (
+      this.isCurrentSectionComplete() &&
+      this.sectionGenerator.getNextSection(this.currentSection) !== null
+    );
   }
 }

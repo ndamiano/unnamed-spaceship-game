@@ -1,0 +1,101 @@
+{
+  "sections": {
+    "ENGINEERING_CORE": {
+      "id": "ENGINEERING_CORE",
+      "name": "Engineering Core",
+      "description": "The heart of the ship's mechanical systems",
+      "theme": "industrial",
+      "requiredRooms": ["spawn", "neuralInterface"],
+      "roomPool": [
+        { "id": "engineeringBay", "weight": 15, "maxCount": 3 },
+        { "id": "droneHangar", "weight": 12, "maxCount": 2 },
+        { "id": "storage", "weight": 10, "maxCount": 4 },
+        { "id": "aiCore", "weight": 8, "maxCount": 1 },
+        { "id": "powerRelay", "weight": 10, "maxCount": 2 }
+      ],
+      "excludeRooms": ["cryoChamber", "medicalBay", "xenobotany"],
+      "sectionSize": { "width": 80, "height": 60 },
+      "roomCount": { "min": 12, "max": 18 },
+      "storyThemes": ["ENGINEERING_LOGS", "SYSTEM_DIAGNOSTICS"]
+    },
+    
+    "MEDICAL_DISTRICT": {
+      "id": "MEDICAL_DISTRICT", 
+      "name": "Medical District",
+      "description": "Life support and biological research facilities",
+      "theme": "medical",
+      "requiredRooms": ["spawn", "neuralInterface"],
+      "roomPool": [
+        { "id": "medicalBay", "weight": 15, "maxCount": 2 },
+        { "id": "cryoChamber", "weight": 12, "maxCount": 3 },
+        { "id": "xenobotany", "weight": 10, "maxCount": 2 },
+        { "id": "researchLab", "weight": 12, "maxCount": 2 },
+        { "id": "quarantineBay", "weight": 8, "maxCount": 1 },
+        { "id": "storage", "weight": 8, "maxCount": 2 }
+      ],
+      "excludeRooms": ["engineeringBay", "droneHangar", "security"],
+      "sectionSize": { "width": 70, "height": 70 },
+      "roomCount": { "min": 10, "max": 15 },
+      "storyThemes": ["MEDICAL_REPORTS", "REVELATION_MEMORIES"]
+    },
+
+    "HABITAT_MODULE": {
+      "id": "HABITAT_MODULE",
+      "name": "Habitat Module", 
+      "description": "Living quarters and recreational facilities",
+      "theme": "residential",
+      "requiredRooms": ["spawn", "neuralInterface"],
+      "roomPool": [
+        { "id": "crewQuarters", "weight": 15, "maxCount": 6 },
+        { "id": "recreation", "weight": 10, "maxCount": 2 },
+        { "id": "holographicsLab", "weight": 8, "maxCount": 1 },
+        { "id": "farm", "weight": 12, "maxCount": 2 },
+        { "id": "storage", "weight": 8, "maxCount": 3 },
+        { "id": "observation", "weight": 6, "maxCount": 2 }
+      ],
+      "excludeRooms": ["engineeringBay", "aiCore", "droneHangar"],
+      "sectionSize": { "width": 90, "height": 50 },
+      "roomCount": { "min": 14, "max": 20 },
+      "storyThemes": ["PERSONAL_LOGS", "CREW_MEMORIES"]
+    },
+
+    "COMMAND_BRIDGE": {
+      "id": "COMMAND_BRIDGE",
+      "name": "Command Bridge",
+      "description": "Ship control and navigation systems", 
+      "theme": "command",
+      "requiredRooms": ["spawn", "neuralInterface"],
+      "roomPool": [
+        { "id": "bridgeCommand", "weight": 20, "maxCount": 1 },
+        { "id": "navigationHub", "weight": 15, "maxCount": 1 },
+        { "id": "security", "weight": 12, "maxCount": 1 },
+        { "id": "communicationsArray", "weight": 10, "maxCount": 1 },
+        { "id": "strategicPlanning", "weight": 8, "maxCount": 1 },
+        { "id": "storage", "weight": 6, "maxCount": 2 }
+      ],
+      "excludeRooms": ["farm", "cryoChamber", "xenobotany"],
+      "sectionSize": { "width": 60, "height": 60 },
+      "roomCount": { "min": 8, "max": 12 },
+      "storyThemes": ["COMMAND_LOGS", "NAVIGATION_DATA"]
+    },
+
+    "CORE_NEXUS": {
+      "id": "CORE_NEXUS",
+      "name": "Core Nexus",
+      "description": "The ship's consciousness center - final awakening",
+      "theme": "nexus", 
+      "requiredRooms": ["spawn", "shipComplete"],
+      "roomPool": [
+        { "id": "centralCore", "weight": 20, "maxCount": 1 },
+        { "id": "memoryVault", "weight": 15, "maxCount": 2 },
+        { "id": "consciousnessMatrix", "weight": 12, "maxCount": 1 },
+        { "id": "dataArchive", "weight": 10, "maxCount": 3 },
+        { "id": "synthesisNode", "weight": 8, "maxCount": 2 }
+      ],
+      "excludeRooms": ["storage", "farm", "crewQuarters"],
+      "sectionSize": { "width": 50, "height": 50 },
+      "roomCount": { "min": 6, "max": 10 },
+      "storyThemes": ["FINAL_TRUTH", "SHIP_AWAKENING"]
+    }
+  }
+}

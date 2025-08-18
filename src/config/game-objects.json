@@ -556,5 +556,104 @@
       "The threshold between ship sections."
     ],
     "activationResults": []
+  },
+
+  "neuralInterface": {
+    "name": "neural-interface",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "flavorTexts": [
+      "The neural interface hums with familiar patterns.",
+      "Synaptic connections pulse beneath the bio-glass surface.",
+      "Your reflection stares back from the interface screen."
+    ],
+    "activationResults": [
+      {
+        "type": "mind_dive",
+        "message": "Neural pathways align... diving deeper into ship consciousness..."
+      }
+    ]
+  },
+
+  "consciousnessNode": {
+    "name": "consciousness-node",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "CONSCIOUSNESS_FRAGMENTS",
+    "storyChance": 0.8,
+    "flavorTexts": [
+      "The consciousness node pulses with digital thoughts.",
+      "Streams of data flow through crystalline matrices.",
+      "The node responds to your presence with gentle warmth."
+    ],
+    "activationResults": []
+  },
+
+  "memoryCore": {
+    "name": "memory-core",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "MEMORY_FRAGMENTS",
+    "storyChance": 0.7,
+    "flavorTexts": [
+      "Ancient memories swirl within the core's depths.",
+      "The memory core contains echoes of forgotten experiences.",
+      "Data patterns shift like dreams within the storage matrix."
+    ],
+    "activationResults": []
+  },
+
+  "shipConsciousness": {
+    "name": "ship-consciousness",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "FINAL_AWAKENING",
+    "storyChance": 1.0,
+    "guaranteedStory": true,
+    "flavorTexts": [
+      "The ship's consciousness awaits your final decision.",
+      "All systems converge in this moment of awakening.",
+      "The choice between isolation and connection lies before you."
+    ],
+    "activationResults": [
+      {
+        "type": "ship_completion",
+        "message": "Ship consciousness fully awakened. Initiating fleet network protocols..."
+      }
+    ]
+  },
+
+  "fleetNetworkNode": {
+    "name": "fleet-network-node",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "FLEET_NETWORK",
+    "storyChance": 0.9,
+    "flavorTexts": [
+      "The fleet network node reaches out to distant vessels.",
+      "Quantum communications link this ship to the greater fleet.",
+      "Other consciousness signatures pulse in the network."
+    ],
+    "activationResults": []
+  },
+
+  "awakenedMemoryBank": {
+    "name": "awakened-memory-bank",
+    "passable": false,
+    "blocksLineOfSight": false,
+    "storyGroupId": "SHIP_MEMORIES",
+    "storyChance": 1.0,
+    "guaranteedStory": true,
+    "flavorTexts": [
+      "The awakened memory bank contains the ship's full history.",
+      "Every moment of the vessel's existence is preserved here.",
+      "The memories of crew and AI merge in digital harmony."
+    ],
+    "activationResults": [
+      {
+        "type": "upgrade_menu",
+        "shopType": "consciousness_upgrades"
+      }
+    ]
   }
 }

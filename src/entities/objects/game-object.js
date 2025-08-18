@@ -1,3 +1,4 @@
+// src/entities/objects/game-object.js
 import { Tile } from '../../world/tiles/tile.js';
 import { GameEvents } from '../../core/game-events.js';
 import { storySystem } from '../../systems/story/story-system.js';
@@ -36,6 +37,10 @@ export default class GameObject extends Tile {
     this.availableStoryFragments = new Set();
     this.availableStoryEvents = [];
     this.storyEventDetermined = false;
+
+    // Section properties
+    this.sectionType = null;
+    this.sectionId = null;
   }
 
   _setupFromConfig(config, objectType) {
@@ -57,6 +62,10 @@ export default class GameObject extends Tile {
     this.availableStoryFragments = new Set();
     this.availableStoryEvents = [];
     this.storyEventDetermined = false;
+
+    // Section properties
+    this.sectionType = null;
+    this.sectionId = null;
   }
 
   _setupStoryManagement() {
@@ -109,11 +118,22 @@ export default class GameObject extends Tile {
       }));
     }
 
+    // Restore section data
+    if (storyData.sectionType) {
+      this.sectionType = storyData.sectionType;
+    }
+
+    if (storyData.sectionId) {
+      this.sectionId = storyData.sectionId;
+    }
+
     console.log('Story state restored:', {
       storyGroupId: this.storyGroupId,
       fragmentsCount: this.availableStoryFragments.size,
       eventsCount: this.availableStoryEvents.length,
       determined: this.storyEventDetermined,
+      sectionType: this.sectionType,
+      sectionId: this.sectionId,
     });
   }
 
@@ -218,6 +238,19 @@ export default class GameObject extends Tile {
       this.y
     );
 
+    // Special handling for neural interface
+    if (this.objectType === 'neuralInterface') {
+      console.log('Neural interface interaction detected');
+
+      // Always try activation results first for neural interface
+      for (const result of this.activationResults) {
+        if (this.processActivationResult(result)) {
+          return;
+        }
+      }
+    }
+
+    // Standard interaction flow
     if (this.hasAvailableStory()) {
       console.log('Object has available story, consuming...');
       this.consumeNextStoryEvent();
@@ -274,11 +307,99 @@ export default class GameObject extends Tile {
 
         return false;
       },
+
+      // NEW: Mind dive handler for neural interface
+      mind_dive: () => this._handleMindDive(result),
+
+      // NEW: Ship completion handler
+      ship_completion: () => this._handleShipCompletion(result),
     };
 
     const handler = handlers[result.type];
 
     return handler ? handler() : false;
+  }
+
+  _handleMindDive(result) {
+    console.log('Processing mind dive activation...');
+
+    // Check if current section is sufficiently complete
+    const sectionProgress = this.calculateSectionProgress();
+    const requiredProgress = 75; // Require 75% completion
+
+    if (sectionProgress < requiredProgress) {
+      GameEvents.Game.Emit.message(
+        `Neural pathways incomplete. Section progress: ${sectionProgress}%. Continue exploring to stabilize the connection.`
+      );
+
+      return true;
+    }
+
+    // Initiate mind dive sequence
+    GameEvents.Game.Emit.message(
+      result.message || 'Neural interface activated...'
+    );
+
+    // Add some dramatic pause before transition
+    setTimeout(() => {
+      GameEvents.Game.Emit.message(
+        "Consciousness diving... accessing ship's neural core..."
+      );
+    }, 2000);
+
+    setTimeout(() => {
+      GameEvents.Game.Emit.enterMindSpace();
+    }, 4000);
+
+    return true;
+  }
+
+  _handleShipCompletion(result) {
+    console.log('Processing ship completion...');
+
+    GameEvents.Game.Emit.message(
+      result.message || 'Ship consciousness fully awakened...'
+    );
+
+    // Handle final ship awakening
+    setTimeout(() => {
+      GameEvents.Ship.Emit.awakeningComplete({
+        message:
+          'Fleet network integration complete. Ready for deep space exploration.',
+        unlocked: ['FLEET_COMMAND', 'DEEP_SPACE_EXPLORATION'],
+      });
+    }, 3000);
+
+    return true;
+  }
+
+  calculateSectionProgress() {
+    // Get current section progress from the ship
+    try {
+      const game = window.game;
+
+      if (game && game.ship && game.ship.getCurrentSectionProgress) {
+        const progress = game.ship.getCurrentSectionProgress();
+
+        return progress.overall || 0;
+      }
+    } catch (error) {
+      console.warn('Could not calculate section progress:', error);
+    }
+
+    // Fallback calculation based on story discoveries
+    if (this.storyGroupId) {
+      const groupProgress = storySystem.getGroupProgress(this.storyGroupId);
+
+      if (groupProgress.total > 0) {
+        return Math.round(
+          (groupProgress.discovered / groupProgress.total) * 100
+        );
+      }
+    }
+
+    // Very basic fallback - assume 50% if we can't calculate
+    return 50;
   }
 
   _handleResourceResult(result) {
@@ -338,6 +459,10 @@ export default class GameObject extends Tile {
         ...result,
         used: result.used || false,
       })),
+
+      // Section-specific data
+      sectionType: this.sectionType || null,
+      sectionId: this.sectionId || null,
     };
 
     console.log('GameObject save state for', this.objectType, ':', {
@@ -345,6 +470,7 @@ export default class GameObject extends Tile {
       storyFragments: saveState.availableStoryFragments.length,
       storyGroupId: saveState.storyGroupId,
       determined: saveState.storyEventDetermined,
+      section: saveState.sectionId,
     });
 
     return saveState;

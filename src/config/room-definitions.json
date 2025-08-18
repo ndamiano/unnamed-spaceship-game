@@ -24,24 +24,55 @@
     ]
   },
 
-  "finish": {
-    "id": "finish",
-    "name": "Teleportation Hub",
+  "neuralInterface": {
+    "id": "neuralInterface",
+    "name": "Neural Interface Chamber",
     "width": 5,
     "height": 5,
     "weight": 0,
-    "isFinish": true,
+    "isNeuralInterface": true,
     "doors": [
-      { "x": 4, "y": 2, "side": "right" },
       { "x": 0, "y": 2, "side": "left" },
+      { "x": 4, "y": 2, "side": "right" },
       { "x": 2, "y": 0, "side": "top" },
       { "x": 2, "y": 4, "side": "bottom" }
     ],
     "objects": [
-      { "type": "teleporter", "x": 2, "y": 2 },
-      { "type": "energyPylon", "x": 1, "y": 2 },
-      { "type": "energyPylon", "x": 3, "y": 2 },
-      { "type": "controlPanel", "x": 2, "y": 1 }
+      { "type": "neuralInterface", "x": 2, "y": 2, "guaranteed": true },
+      { "type": "consciousnessNode", "x": 1, "y": 1 },
+      { "type": "consciousnessNode", "x": 3, "y": 1 },
+      { "type": "consciousnessNode", "x": 1, "y": 3 },
+      { "type": "consciousnessNode", "x": 3, "y": 3 },
+      { "type": "memoryCore", "x": 0, "y": 0 },
+      { "type": "memoryCore", "x": 4, "y": 0 },
+      { "type": "memoryCore", "x": 0, "y": 4 },
+      { "type": "memoryCore", "x": 4, "y": 4 }
+    ]
+  },
+
+  "shipComplete": {
+    "id": "shipComplete",
+    "name": "Ship Consciousness Core",
+    "width": 7,
+    "height": 7,
+    "weight": 0,
+    "isShipComplete": true,
+    "doors": [
+      { "x": 3, "y": 0, "side": "top" },
+      { "x": 3, "y": 6, "side": "bottom" },
+      { "x": 0, "y": 3, "side": "left" },
+      { "x": 6, "y": 3, "side": "right" }
+    ],
+    "objects": [
+      { "type": "shipConsciousness", "x": 3, "y": 3, "guaranteed": true },
+      { "type": "fleetNetworkNode", "x": 2, "y": 2 },
+      { "type": "fleetNetworkNode", "x": 4, "y": 2 },
+      { "type": "fleetNetworkNode", "x": 2, "y": 4 },
+      { "type": "fleetNetworkNode", "x": 4, "y": 4 },
+      { "type": "awakenedMemoryBank", "x": 1, "y": 1 },
+      { "type": "awakenedMemoryBank", "x": 5, "y": 1 },
+      { "type": "awakenedMemoryBank", "x": 1, "y": 5 },
+      { "type": "awakenedMemoryBank", "x": 5, "y": 5 }
     ]
   },
 
@@ -237,22 +268,22 @@
   "aiCore": {
     "id": "aiCore",
     "name": "AI Core Chamber",
-    "width": 4,
-    "height": 4,
+    "width": 6,
+    "height": 6,
     "weight": 5,
     "doors": [
       { "x": 0, "y": 2, "side": "left" },
       { "x": 3, "y": 2, "side": "right" }
     ],
     "objects": [
-      { "type": "shipAICoreNode", "x": 1, "y": 1 },
-      { "type": "shipAICoreNode", "x": 2, "y": 1 },
-      { "type": "shipAICoreNode", "x": 1, "y": 2 },
       { "type": "shipAICoreNode", "x": 2, "y": 2 },
+      { "type": "shipAICoreNode", "x": 3, "y": 2 },
+      { "type": "shipAICoreNode", "x": 2, "y": 3 },
+      { "type": "shipAICoreNode", "x": 3, "y": 3 },
       { "type": "aITetherNode", "x": 0, "y": 0 },
-      { "type": "aITetherNode", "x": 3, "y": 0 },
-      { "type": "aITetherNode", "x": 0, "y": 3 },
-      { "type": "aITetherNode", "x": 3, "y": 3 }
+      { "type": "aITetherNode", "x": 5, "y": 0 },
+      { "type": "aITetherNode", "x": 0, "y": 5 },
+      { "type": "aITetherNode", "x": 5, "y": 5 }
     ]
   },
 
@@ -297,6 +328,284 @@
       { "type": "blackBoxCore", "x": 2, "y": 2 },
       { "type": "fleshweaverConsole", "x": 0, "y": 1 },
       { "type": "terminal", "x": 5, "y": 1 }
+    ]
+  },
+
+  "powerRelay": {
+    "id": "powerRelay",
+    "name": "Power Relay Station",
+    "width": 4,
+    "height": 4,
+    "weight": 8,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 3, "y": 2, "side": "right" },
+      { "x": 2, "y": 0, "side": "top" },
+      { "x": 2, "y": 3, "side": "bottom" }
+    ],
+    "objects": [
+      { "type": "powerCell", "x": 1, "y": 1 },
+      { "type": "powerCell", "x": 2, "y": 1 },
+      { "type": "plasmaConduit", "x": 1, "y": 2 },
+      { "type": "plasmaConduit", "x": 2, "y": 2 },
+      { "type": "terminal", "x": 0, "y": 0 }
+    ]
+  },
+
+  "quarantineBay": {
+    "id": "quarantineBay",
+    "name": "Quarantine Bay",
+    "width": 5,
+    "height": 4,
+    "weight": 6,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" }
+    ],
+    "objects": [
+      { "type": "quarantineChamber", "x": 2, "y": 1 },
+      { "type": "quarantineChamber", "x": 3, "y": 1 },
+      { "type": "bioScanner", "x": 1, "y": 2 },
+      { "type": "autoDocUnit", "x": 4, "y": 2 },
+      { "type": "terminal", "x": 0, "y": 0 }
+    ]
+  },
+
+  "crewQuarters": {
+    "id": "crewQuarters",
+    "name": "Crew Quarters",
+    "width": 4,
+    "height": 5,
+    "weight": 10,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 3, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "personalLocker", "x": 0, "y": 0 },
+      { "type": "personalLocker", "x": 3, "y": 0 },
+      { "type": "personalLocker", "x": 0, "y": 4 },
+      { "type": "personalLocker", "x": 3, "y": 4 },
+      { "type": "hygienePod", "x": 1, "y": 1 },
+      { "type": "hygienePod", "x": 2, "y": 1 },
+      { "type": "terminal", "x": 1, "y": 3 }
+    ]
+  },
+
+  "recreation": {
+    "id": "recreation",
+    "name": "Recreation Center",
+    "width": 6,
+    "height": 5,
+    "weight": 8,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 5, "y": 2, "side": "right" },
+      { "x": 3, "y": 0, "side": "top" }
+    ],
+    "objects": [
+      { "type": "hologramProjector", "x": 2, "y": 2 },
+      { "type": "observationDeck", "x": 1, "y": 0 },
+      { "type": "observationDeck", "x": 4, "y": 0 },
+      { "type": "personalLocker", "x": 0, "y": 1 },
+      { "type": "personalLocker", "x": 5, "y": 1 },
+      { "type": "terminal", "x": 2, "y": 4 }
+    ]
+  },
+
+  "observation": {
+    "id": "observation",
+    "name": "Observation Deck",
+    "width": 5,
+    "height": 4,
+    "weight": 6,
+    "doors": [
+      { "x": 2, "y": 3, "side": "bottom" }
+    ],
+    "objects": [
+      { "type": "observationDeck", "x": 1, "y": 1 },
+      { "type": "observationDeck", "x": 2, "y": 1 },
+      { "type": "observationDeck", "x": 3, "y": 1 },
+      { "type": "terminal", "x": 2, "y": 2 }
+    ]
+  },
+
+  "bridgeCommand": {
+    "id": "bridgeCommand",
+    "name": "Command Bridge",
+    "width": 7,
+    "height": 5,
+    "weight": 8,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 6, "y": 2, "side": "right" },
+      { "x": 3, "y": 4, "side": "bottom" }
+    ],
+    "objects": [
+      { "type": "terminal", "x": 3, "y": 1 },
+      { "type": "securityTerminal", "x": 1, "y": 1 },
+      { "type": "securityTerminal", "x": 5, "y": 1 },
+      { "type": "observationDeck", "x": 2, "y": 0 },
+      { "type": "observationDeck", "x": 3, "y": 0 },
+      { "type": "observationDeck", "x": 4, "y": 0 },
+      { "type": "commsRelayStation", "x": 3, "y": 3 }
+    ]
+  },
+
+  "navigationHub": {
+    "id": "navigationHub",
+    "name": "Navigation Hub",
+    "width": 5,
+    "height": 4,
+    "weight": 8,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 4, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "terminal", "x": 2, "y": 1 },
+      { "type": "hologramProjector", "x": 1, "y": 2 },
+      { "type": "hologramProjector", "x": 3, "y": 2 },
+      { "type": "commsRelayStation", "x": 2, "y": 3 }
+    ]
+  },
+
+  "communicationsArray": {
+    "id": "communicationsArray",
+    "name": "Communications Array",
+    "width": 4,
+    "height": 5,
+    "weight": 6,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 3, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "commsRelayStation", "x": 1, "y": 1 },
+      { "type": "commsRelayStation", "x": 2, "y": 1 },
+      { "type": "commsRelayStation", "x": 1, "y": 3 },
+      { "type": "commsRelayStation", "x": 2, "y": 3 },
+      { "type": "terminal", "x": 1, "y": 0 }
+    ]
+  },
+
+  "strategicPlanning": {
+    "id": "strategicPlanning",
+    "name": "Strategic Planning",
+    "width": 5,
+    "height": 4,
+    "weight": 6,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 4, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "terminal", "x": 2, "y": 1 },
+      { "type": "hologramProjector", "x": 2, "y": 2 },
+      { "type": "securityTerminal", "x": 1, "y": 0 },
+      { "type": "securityTerminal", "x": 3, "y": 0 }
+    ]
+  },
+
+  "centralCore": {
+    "id": "centralCore",
+    "name": "Central Core",
+    "width": 5,
+    "height": 5,
+    "weight": 10,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 4, "y": 2, "side": "right" },
+      { "x": 2, "y": 0, "side": "top" },
+      { "x": 2, "y": 4, "side": "bottom" }
+    ],
+    "objects": [
+      { "type": "shipAICoreNode", "x": 2, "y": 2 },
+      { "type": "aITetherNode", "x": 1, "y": 1 },
+      { "type": "aITetherNode", "x": 3, "y": 1 },
+      { "type": "aITetherNode", "x": 1, "y": 3 },
+      { "type": "aITetherNode", "x": 3, "y": 3 },
+      { "type": "terminal", "x": 2, "y": 0 }
+    ]
+  },
+
+  "memoryVault": {
+    "id": "memoryVault",
+    "name": "Memory Vault",
+    "width": 4,
+    "height": 4,
+    "weight": 8,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 3, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "awakenedMemoryBank", "x": 1, "y": 1 },
+      { "type": "awakenedMemoryBank", "x": 2, "y": 1 },
+      { "type": "awakenedMemoryBank", "x": 1, "y": 2 },
+      { "type": "awakenedMemoryBank", "x": 2, "y": 2 },
+      { "type": "terminal", "x": 0, "y": 0 }
+    ]
+  },
+
+  "consciousnessMatrix": {
+    "id": "consciousnessMatrix",
+    "name": "Consciousness Matrix",
+    "width": 5,
+    "height": 5,
+    "weight": 8,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 4, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "consciousnessNode", "x": 2, "y": 2 },
+      { "type": "consciousnessNode", "x": 1, "y": 1 },
+      { "type": "consciousnessNode", "x": 3, "y": 1 },
+      { "type": "consciousnessNode", "x": 1, "y": 3 },
+      { "type": "consciousnessNode", "x": 3, "y": 3 },
+      { "type": "memoryCore", "x": 0, "y": 0 },
+      { "type": "memoryCore", "x": 4, "y": 0 },
+      { "type": "memoryCore", "x": 0, "y": 4 },
+      { "type": "memoryCore", "x": 4, "y": 4 }
+    ]
+  },
+
+  "dataArchive": {
+    "id": "dataArchive",
+    "name": "Data Archive",
+    "width": 4,
+    "height": 5,
+    "weight": 8,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 3, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "terminal", "x": 1, "y": 1 },
+      { "type": "terminal", "x": 2, "y": 1 },
+      { "type": "terminal", "x": 1, "y": 3 },
+      { "type": "terminal", "x": 2, "y": 3 },
+      { "type": "blackBoxCore", "x": 1, "y": 2 },
+      { "type": "blackBoxCore", "x": 2, "y": 2 }
+    ]
+  },
+
+  "synthesisNode": {
+    "id": "synthesisNode",
+    "name": "Synthesis Node",
+    "width": 4,
+    "height": 4,
+    "weight": 6,
+    "doors": [
+      { "x": 0, "y": 2, "side": "left" },
+      { "x": 3, "y": 2, "side": "right" }
+    ],
+    "objects": [
+      { "type": "fleetNetworkNode", "x": 1, "y": 1 },
+      { "type": "fleetNetworkNode", "x": 2, "y": 1 },
+      { "type": "fleetNetworkNode", "x": 1, "y": 2 },
+      { "type": "fleetNetworkNode", "x": 2, "y": 2 },
+      { "type": "terminal", "x": 0, "y": 0 }
     ]
   }
 }

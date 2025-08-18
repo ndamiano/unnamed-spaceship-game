@@ -1,4 +1,4 @@
-// src/systems/ship/ship-system.js
+// src/systems/ship/ship-system.js - Fixed for section system
 import { Ship } from '../../world/ship/ship.js';
 import { GameEvents } from '../../core/game-events.js';
 import { getStats } from '../../entities/player/player-stats.js';
@@ -13,24 +13,30 @@ export class ShipSystem {
     console.log('Initializing ship system...');
 
     try {
+      // Determine section based on save data or default
+      const sectionId = saveData?.currentSection || 'ENGINEERING_CORE';
       const width = saveData?.width || 250;
       const height = saveData?.height || 250;
       const type = saveData?.type || 'colony';
 
-      this.ship = new Ship(width, height, type);
+      // Create ship instance
+      this.ship = new Ship(width, height, type, sectionId);
 
       // Add enhancement methods
       this.addShipEnhancements();
 
-      // Generate layout if not restored from save
-      if (!saveData?.tiles) {
-        await this.ship.map.generateLayout();
-      }
+      // Initialize the section (this replaces the old generateLayout call)
+      await this.ship.initializeSection(
+        sectionId,
+        saveData?.sectionData || saveData
+      );
 
       // Setup upgrade features
       this.setupUpgradeFeatures();
 
-      console.log(`Ship created: ${width}x${height}, type: ${type}`);
+      console.log(
+        `Ship created: ${width}x${height}, type: ${type}, section: ${sectionId}`
+      );
 
       this.initialized = true;
       GameEvents.Initialization.Emit.shipInitialized();
@@ -43,6 +49,8 @@ export class ShipSystem {
   addShipEnhancements() {
     // Room scanner functionality
     this.ship.revealCurrentRoom = (playerX, playerY) => {
+      if (!this.ship.map) return;
+
       const currentRoom = this.ship.map.rooms.find(
         room =>
           playerX >= room.x &&
@@ -83,6 +91,8 @@ export class ShipSystem {
 
     // Fabricator refresh functionality
     this.ship.refreshNearestFabricator = (playerX, playerY) => {
+      if (!this.ship.map) return false;
+
       let nearestFabricator = null;
       let nearestDistance = Infinity;
       let fabricatorPos = null;
@@ -149,7 +159,7 @@ export class ShipSystem {
   }
 
   getSpawnPoint() {
-    return this.ship ? this.ship.getSpawnPoint() : null;
+    return this.ship ? this.ship.getSpawnPoint() : { x: 0, y: 0 };
   }
 
   revealAreaAroundPlayer(x, y, radius) {

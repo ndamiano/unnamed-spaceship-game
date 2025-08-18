@@ -1,3 +1,4 @@
+// src/world/rooms/room-factory.js - Add debug logging
 import { BaseRoom } from './base-room.js';
 import GameObject from '../../entities/objects/game-object.js';
 
@@ -23,6 +24,7 @@ export class RoomFactory {
       .then(data => {
         this.roomDefinitions = data;
         console.log('Room definitions loaded successfully');
+        console.log('Available room types:', Object.keys(data));
 
         return data;
       })
@@ -50,18 +52,28 @@ export class RoomFactory {
 
     if (!roomDef) {
       console.error(`Unknown room type: ${roomId}`);
+      console.log('Available room types:', Object.keys(definitions));
+      console.log('Creating fallback room instead');
 
-      return this.createFallbackRoom(x, y);
+      return this.createFallbackRoom(x, y, roomId);
     }
+
+    console.log(`Creating room: ${roomId} (${roomDef.name})`);
 
     return this.buildRoomFromDefinition(roomDef, x, y);
   }
 
-  createFallbackRoom(x, y) {
+  createFallbackRoom(x, y, attemptedRoomId = 'unknown') {
+    console.warn(
+      `Creating fallback room for missing room type: ${attemptedRoomId}`
+    );
+
     const room = new BaseRoom(x, y);
 
     room.width = 4;
     room.height = 4;
+    room.id = `fallback_${attemptedRoomId}`;
+    room.name = `Missing: ${attemptedRoomId}`;
     room.addPotentialDoor(0, 2, 'left');
     room.addPotentialDoor(3, 2, 'right');
     room.addPotentialDoor(2, 0, 'top');
@@ -89,19 +101,27 @@ export class RoomFactory {
 
     // Add objects
     roomDef.objects.forEach(objDef => {
-      const gameObject = new GameObject(0, 0, objDef.type);
+      try {
+        const gameObject = new GameObject(0, 0, objDef.type);
 
-      // Handle special properties
-      if (objDef.flipped) {
-        gameObject.flip();
+        // Handle special properties
+        if (objDef.flipped) {
+          gameObject.flip();
+        }
+
+        if (objDef.guaranteed) {
+          gameObject.guaranteedStory = true;
+          gameObject.storyChance = 1.0;
+        }
+
+        room.addObject(gameObject, objDef.x, objDef.y);
+      } catch (error) {
+        console.error(
+          `Failed to create object ${objDef.type} in room ${roomDef.id}:`,
+          error
+        );
+        // Continue without this object rather than failing the whole room
       }
-
-      if (objDef.guaranteed) {
-        gameObject.guaranteedStory = true;
-        gameObject.storyChance = 1.0;
-      }
-
-      room.addObject(gameObject, objDef.x, objDef.y);
     });
 
     return room;
@@ -124,7 +144,7 @@ export class RoomFactory {
     if (!spawnDef) {
       console.error('No spawn room defined!');
 
-      return this.createFallbackRoom(x, y);
+      return this.createFallbackRoom(x, y, 'spawn');
     }
 
     return this.buildRoomFromDefinition(spawnDef, x, y);
@@ -138,7 +158,7 @@ export class RoomFactory {
     if (!finishDef) {
       console.error('No finish room defined!');
 
-      return this.createFallbackRoom(x, y);
+      return this.createFallbackRoom(x, y, 'finish');
     }
 
     return this.buildRoomFromDefinition(finishDef, x, y);
@@ -146,13 +166,15 @@ export class RoomFactory {
 
   // Ship type variants - you can extend this for different ship types
   getRoomTypesForShip(shipType) {
+    const allRoomTypes = this.getStandardRoomTypes();
+
     switch (shipType) {
       case 'warship':
-        return this.getStandardRoomTypes().filter(room =>
+        return allRoomTypes.filter(room =>
           ['security', 'storage', 'aiCore', 'engineeringBay'].includes(room.id)
         );
       case 'science':
-        return this.getStandardRoomTypes().filter(room =>
+        return allRoomTypes.filter(room =>
           [
             'researchLab',
             'xenobotany',
@@ -162,7 +184,12 @@ export class RoomFactory {
         );
       case 'colony':
       default:
-        return this.getStandardRoomTypes();
+        console.log(`Getting room types for ship type: ${shipType}`);
+        console.log(
+          `Available room types: ${allRoomTypes.map(r => r.id).join(', ')}`
+        );
+
+        return allRoomTypes;
     }
   }
 }

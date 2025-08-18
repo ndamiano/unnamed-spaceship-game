@@ -1,8 +1,9 @@
-// src/core/game-events.js
+// src/core/game-events.js - Add section-related events
 import { eventBus } from './event-bus.js';
 
 /**
  * Centralized game events with type safety and organized emit/listen structure
+ * Updated with section system events
  */
 export const GameEvents = {
   Player: {
@@ -57,6 +58,12 @@ export const GameEvents = {
       refreshNearestFabricator: () =>
         eventBus.emit('refresh-nearest-fabricator'),
       revealCurrentRoom: () => eventBus.emit('reveal-current-room'),
+
+      // Section system events
+      enterMindSpace: () => eventBus.emit('enter-mind-space'),
+      sectionComplete: sectionId =>
+        eventBus.emit('section-complete', sectionId),
+      sectionTransition: data => eventBus.emit('section-transition', data),
     },
     Listeners: {
       message: callback => eventBus.on('game-message', callback),
@@ -67,6 +74,26 @@ export const GameEvents = {
         eventBus.on('refresh-nearest-fabricator', callback),
       revealCurrentRoom: callback =>
         eventBus.on('reveal-current-room', callback),
+
+      // Section system listeners
+      enterMindSpace: callback => eventBus.on('enter-mind-space', callback),
+      sectionComplete: callback => eventBus.on('section-complete', callback),
+      sectionTransition: callback =>
+        eventBus.on('section-transition', callback),
+    },
+  },
+
+  Ship: {
+    Emit: {
+      sectionChanged: data => eventBus.emit('ship-section-changed', data),
+      awakeningComplete: data => eventBus.emit('ship-awakening-complete', data),
+      progressUpdate: data => eventBus.emit('ship-progress-update', data),
+    },
+    Listeners: {
+      sectionChanged: callback => eventBus.on('ship-section-changed', callback),
+      awakeningComplete: callback =>
+        eventBus.on('ship-awakening-complete', callback),
+      progressUpdate: callback => eventBus.on('ship-progress-update', callback),
     },
   },
 
