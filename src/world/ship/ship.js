@@ -325,13 +325,41 @@ export class Ship {
   }
 
   async restoreSectionFromSave(saveData) {
-    // This would need to be implemented to recreate a SectionMap from save data
-    // For now, we'll generate a new section - implement proper restoration later
-    console.log(
-      'Section restoration from save data not yet implemented, generating new section'
-    );
+    console.log('Restoring section from save data:', saveData);
 
-    return await this.sectionGenerator.generateSection(saveData.sectionId);
+    if (!saveData || !saveData.sectionData) {
+      console.log('No section data found in save, generating new section');
+
+      return await this.sectionGenerator.generateSection(
+        saveData?.sectionId || this.currentSection
+      );
+    }
+
+    try {
+      // Import the SectionMap class
+      const { SectionMap } = await import('./section-map.js');
+
+      // Create a new SectionMap instance
+      const restoredMap = new SectionMap(
+        saveData.sectionData.width || this.width,
+        saveData.sectionData.height || this.height,
+        { id: saveData.sectionData.sectionId || this.currentSection }
+      );
+
+      // Restore the map state
+      await restoredMap.restoreFromSave(saveData.sectionData);
+
+      console.log('Section successfully restored from save data');
+
+      return restoredMap;
+    } catch (error) {
+      console.error('Failed to restore section from save data:', error);
+      console.log('Falling back to generating new section');
+
+      return await this.sectionGenerator.generateSection(
+        saveData?.sectionId || this.currentSection
+      );
+    }
   }
 
   // Utility methods

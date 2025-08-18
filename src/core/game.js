@@ -1,4 +1,3 @@
-// src/core/game.js - SIMPLIFIED VERSION
 import { GameConfig } from '../config/game-config.js';
 import { GameEvents } from './game-events.js';
 import { InputHandler } from './input-handler.js';
@@ -19,11 +18,12 @@ import { SaveSystem } from '../systems/save/save-system.js';
 import { GameLoopSystem } from '../systems/gameloop/gameloop-system.js';
 
 export class Game {
-  constructor(options = {}) {
+  constructor(options = {}, saveData = null) {
     this.config = GameConfig;
     this.options = this.mergeDefaultOptions(options);
     this.initialized = false;
     this.systems = new Map();
+    this.saveData = saveData; // Store save data for later use
 
     // References for backwards compatibility
     this.renderer = null;
@@ -56,7 +56,17 @@ export class Game {
 
   setupSystems() {
     // Create all systems but don't initialize them yet
-    this.systems.set('save', new SaveSystem());
+    // CRITICAL FIX: Pass save data directly to SaveSystem
+    const saveSystem = new SaveSystem();
+
+    if (this.saveData) {
+      saveSystem.saveData = this.saveData;
+      saveSystem.isRestoringFromSave = true;
+      console.log('Save data set directly in SaveSystem');
+    }
+
+    this.systems.set('save', saveSystem);
+
     this.systems.set('rendering', new RenderingSystem(this.config));
     this.systems.set('ship', new ShipSystem());
     this.systems.set('player', new PlayerSystem());
@@ -213,7 +223,6 @@ export class Game {
     console.log('Starting game initialization...');
 
     try {
-      this.systems.get('save').checkForSaveRestore();
       await this.loadGameData();
     } catch (error) {
       console.error('Failed to initialize game:', error);
@@ -265,65 +274,44 @@ export class Game {
   }
 
   initializeUpgradeFeatures() {
-    console.log('Initializing upgrade features...');
-
-    // Set up minimap references
-    minimap.setReferences(this.ship, this.player);
-
-    // Check if minimap should be enabled from save
-    if (this.player.hasUpgrade('NAVIGATION_MATRIX')) {
-      GameEvents.UI.Emit.enableMinimap();
-    }
-
-    // Initialize active abilities hotbar
-    const activeAbilitiesHotbar = initializeActiveAbilitiesHotbar();
-
-    window.activeAbilitiesHotbar = activeAbilitiesHotbar;
+    console.log('Enabling upgrade system features...');
 
     // Initialize passive equipment modal
-    const passiveEquipmentModal = initializePassiveEquipmentModal();
+    initializePassiveEquipmentModal();
 
-    window.passiveEquipmentModal = passiveEquipmentModal;
+    // Initialize active abilities hotbar
+    initializeActiveAbilitiesHotbar();
 
-    // Listen for ability hotkey events
-    document.addEventListener('abilityHotkey', e => {
-      const abilityId = activeAbilitiesHotbar.abilities.get(e.detail.keyNumber);
-
-      if (abilityId) {
-        const result = this.player.useActiveAbility(abilityId);
-
-        if (result.success) {
-          GameEvents.Game.Emit.message(result.message);
-          activeAbilitiesHotbar.refresh();
-        } else if (result.message) {
-          GameEvents.Game.Emit.message(`Cannot use ability: ${result.message}`);
-        }
-      }
-    });
-
-    console.log('Upgrade features initialized');
+    // Initialize minimap
+    minimap.setReferences(this.ship, this.player);
   }
 
   showLoadingError(error) {
-    document.body.innerHTML = `
-      <div style="color: #ff0000; text-align: center; margin-top: 50px; font-family: monospace;">
-        <h2>Game Loading Error</h2>
-        <p>Failed to load game configuration.</p>
-        <p>Error: ${error.message}</p>
-        <button onclick="location.reload()">Retry</button>
-      </div>
-    `;
-  }
+    console.error('Game loading error:', error);
 
-  getSaveState() {
-    if (!this.initialized) return null;
+    const errorMessage = `Failed to load game: ${error.message}`;
 
-    return {
-      player: this.systems.get('player')?.getSaveState(),
-      ship: this.systems.get('ship')?.getSaveState(),
-      story: storySystem.getSaveState(),
-      gameLayer: 1,
-      unlockedFeatures: ['exploration'],
-    };
+    // Show error to user - could be a modal or replace canvas content
+    if (document.getElementById('gameCanvas')) {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#ff0000';
+      ctx.font = '20px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('LOADING ERROR', canvas.width / 2, canvas.height / 2 - 30);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '14px monospace';
+      ctx.fillText(errorMessage, canvas.width / 2, canvas.height / 2);
+      ctx.fillText(
+        'Check console for details',
+        canvas.width / 2,
+        canvas.height / 2 + 30
+      );
+    }
   }
 }

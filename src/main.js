@@ -1,4 +1,3 @@
-// src/main.js
 import { Game } from './core/game.js';
 import { GameStateManager } from './systems/save/game-state-manager.js';
 import { GameEvents } from './core/game-events.js';
@@ -39,8 +38,7 @@ class GameLoader {
           isNewGame ? 'Starting new game...' : 'Loading saved game...'
         );
 
-        // Make this async
-        this.initializeGame(saveData).catch(error => {
+        this.initializeGame(isNewGame ? null : saveData).catch(error => {
           console.error('Failed to initialize game:', error);
           this.redirectToStart();
         });
@@ -64,7 +62,7 @@ class GameLoader {
   }
 
   async initializeGame(saveData) {
-    this.game = new Game();
+    this.game = new Game({}, saveData);
     this.gameState.saveData = saveData;
 
     // Initialize the game asynchronously

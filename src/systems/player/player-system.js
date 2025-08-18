@@ -1,4 +1,3 @@
-// src/systems/player/player-system.js
 import { Player } from '../../entities/player/player.js';
 import { GameEvents } from '../../core/game-events.js';
 import { registerPlayer } from '../../entities/player/player-stats.js';
@@ -18,9 +17,14 @@ export class PlayerSystem {
     this.isRestoringFromSave = !!saveData;
 
     try {
+      console.log(saveData);
       const { spawnX, spawnY } = this.determineSpawnPosition(saveData);
 
+      const properSpawnPoint = this.determineSpawnPoint(saveData);
+
       this.player = new Player(spawnX, spawnY);
+
+      this.player.spawnPoint = properSpawnPoint;
 
       // Register player with PlayerStats BEFORE initializing event handlers
       registerPlayer(this.player);
@@ -39,7 +43,7 @@ export class PlayerSystem {
         GameEvents.Story.Emit.show('AWAKENING_PROTOCOL');
       }
 
-      console.log('Player setup complete');
+      console.log(`Player setup complete: ${this.player}`);
 
       this.initialized = true;
       GameEvents.Initialization.Emit.playerReady();
@@ -65,6 +69,24 @@ export class PlayerSystem {
     }
 
     return { spawnX, spawnY };
+  }
+
+  determineSpawnPoint(saveData) {
+    if (saveData?.spawnPoint) {
+      console.log(
+        `Using saved spawn point: ${saveData.spawnPoint.x}, ${saveData.spawnPoint.y}`
+      );
+
+      return { ...saveData.spawnPoint };
+    } else {
+      const shipSpawnPoint = this.ship.getSpawnPoint();
+
+      console.log(
+        `Using ship spawn point: ${shipSpawnPoint.x}, ${shipSpawnPoint.y}`
+      );
+
+      return { ...shipSpawnPoint };
+    }
   }
 
   setupCameraFollowing() {

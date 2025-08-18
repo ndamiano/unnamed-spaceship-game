@@ -641,30 +641,24 @@ export class SectionMap {
   }
 
   getSaveState() {
-    // Find actual bounds of generated content
     const bounds = this.findSectionBounds();
     const tiles = [];
 
-    // Only save tiles within the section bounds that have been modified
     for (let y = bounds.minY; y <= bounds.maxY; y++) {
       for (let x = bounds.minX; x <= bounds.maxX; x++) {
         const tile = this.getTile(x, y);
 
-        if (!tile) continue;
-
-        // Only save tiles that have been explored or have content
         if (
-          tile.visible ||
-          tile.object ||
-          this.hasWalls(tile) ||
-          !tile.passable
+          tile &&
+          (tile.visible || tile.explored || tile.object || this.hasWalls(tile))
         ) {
           tiles.push({
-            x,
-            y,
-            visible: tile.visible,
-            passable: tile.passable,
-            number: tile.number,
+            x: x,
+            y: y,
+            tileType: tile.type || 'floor',
+            visible: tile.visible || false,
+            explored: tile.explored || false,
+            passable: tile.passable !== undefined ? tile.passable : true,
             object: tile.object ? this.serializeObject(tile.object) : null,
             walls: this.serializeWalls(tile),
           });
@@ -675,20 +669,24 @@ export class SectionMap {
     return {
       width: this.width,
       height: this.height,
-      sectionId: this.sectionDef.id,
-      sectionTheme: this.sectionDef.theme,
-      sectionName: this.sectionDef.name,
+      sectionId: this.sectionDef?.id,
+      sectionTheme: this.sectionDef?.theme,
+      sectionName: this.sectionDef?.name,
       bounds,
       tiles,
-      rooms: this.rooms.map(room => ({
-        id: room.id,
-        name: room.name,
-        x: room.x,
-        y: room.y,
-        width: room.width,
-        height: room.height,
-        sectionType: room.sectionType,
-      })),
+      rooms: this.rooms
+        ? this.rooms.map(room => ({
+            id: room.id,
+            name: room.name,
+            x: room.x,
+            y: room.y,
+            width: room.width,
+            height: room.height,
+            sectionType: room.sectionType,
+            visited: room.visited || false,
+            explored: room.explored || false,
+          }))
+        : [],
     };
   }
 
@@ -769,5 +767,87 @@ export class SectionMap {
 
   hasWalls(tile) {
     return tile.slots && Object.values(tile.slots).some(slot => slot !== null);
+  }
+
+  async restoreFromSave(sectionData) {
+    console.log('Restoring SectionMap from save data');
+
+    // Restore basic properties
+    this.width = sectionData.width || this.width;
+    this.height = sectionData.height || this.height;
+    this.sectionDef = {
+      id: sectionData.sectionId || this.sectionDef?.id,
+      name: sectionData.sectionName || this.sectionDef?.name,
+      theme: sectionData.sectionTheme || this.sectionDef?.theme,
+    };
+
+    // Restore rooms
+    if (sectionData.rooms) {
+      this.rooms = sectionData.rooms.map(roomData => ({
+        ...roomData,
+        visited: roomData.visited || false,
+        explored: roomData.explored || false,
+      }));
+    }
+
+    // Restore tiles and their state
+    if (sectionData.tiles) {
+      this.tiles = [];
+      for (let y = 0; y < this.height; y++) {
+        this.tiles[y] = [];
+        for (let x = 0; x < this.width; x++) {
+          const savedTile = sectionData.tiles.find(t => t.x === x && t.y === y);
+
+          if (savedTile) {
+            // Import the appropriate tile class
+            const { SectionTile } = await import('./section-tile.js');
+            const tile = new SectionTile(x, y, savedTile.tileType || 'floor');
+
+            // Restore tile properties
+            tile.visible = savedTile.visible || false;
+            tile.explored = savedTile.explored || false;
+            tile.passable =
+              savedTile.passable !== undefined ? savedTile.passable : true;
+
+            // Restore walls
+            if (savedTile.walls) {
+              tile.slots = {};
+              for (const [side, wallData] of Object.entries(savedTile.walls)) {
+                // You'll need to restore the actual wall objects here
+                // For now, just store the data
+                tile.slots[side] = wallData;
+              }
+            }
+
+            // Restore objects on the tile
+            if (savedTile.object) {
+              try {
+                const { gameObjectLoader } = await import(
+                  '../../entities/objects/game-object-loader.js'
+                );
+
+                tile.object = await gameObjectLoader.createObject(
+                  savedTile.object.type,
+                  x,
+                  y,
+                  savedTile.object
+                );
+
+                // Restore object state
+                if (tile.object && tile.object.restoreStoryState) {
+                  tile.object.restoreStoryState(savedTile.object.storyData);
+                }
+              } catch (error) {
+                console.warn(`Failed to restore object at ${x},${y}:`, error);
+              }
+            }
+
+            this.tiles[y][x] = tile;
+          }
+        }
+      }
+    }
+
+    console.log('SectionMap restoration complete');
   }
 }

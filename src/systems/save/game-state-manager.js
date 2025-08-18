@@ -50,8 +50,6 @@ export class GameStateManager {
   }
 
   saveGame(gameData) {
-    if (!this.saveData) return false;
-
     try {
       // Simple merge - no compression needed
       this.saveData = {
@@ -81,7 +79,7 @@ export class GameStateManager {
     try {
       const data = JSON.parse(saved);
 
-      return data.version && data.player;
+      return data !== null;
     } catch {
       return false;
     }
