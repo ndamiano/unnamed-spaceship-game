@@ -161,10 +161,20 @@ export class PassiveEquipmentModal {
     const stats = getStats();
     const equippedContainer = document.getElementById('equipped-passives');
 
+    if (!equippedContainer) {
+      console.error('equipped-passives container not found');
+
+      return;
+    }
+
     equippedContainer.innerHTML = '';
 
     // Create slots based on player's max passive slots
     const maxSlots = this.getMaxPassiveSlots();
+
+    console.log(`Rendering ${maxSlots} passive slots`);
+
+    console.log(stats);
 
     for (let i = 0; i < maxSlots; i++) {
       const slot = document.createElement('div');
@@ -172,15 +182,17 @@ export class PassiveEquipmentModal {
       slot.className = 'passive-slot';
       slot.dataset.slotIndex = i;
 
-      // Check if this slot is occupied
-      const equippedPassives = Array.from(stats.equippedPassives || []);
-      const equippedAbility = equippedPassives[i];
+      // Check if this slot is occupied using Map
+      const equippedAbility = stats.equippedPassives?.get(i);
+
+      console.log(`Slot ${i}: ${equippedAbility || 'empty'}`);
 
       if (equippedAbility) {
         const upgrade = UpgradeSystem.getUpgrade(equippedAbility);
 
-        slot.className = 'passive-slot occupied';
-        slot.innerHTML = `
+        if (upgrade) {
+          slot.className = 'passive-slot occupied';
+          slot.innerHTML = `
           <div>
             <div class="ability-name">${upgrade.icon} ${upgrade.name}</div>
             <div class="ability-description">${upgrade.description}</div>
@@ -189,13 +201,16 @@ export class PassiveEquipmentModal {
             </button>
           </div>
         `;
+        } else {
+          console.warn(`Could not find upgrade for ${equippedAbility}`);
+          slot.textContent = 'Unknown Ability';
+        }
       } else {
         slot.textContent = 'Empty Slot';
       }
 
       // Add drop handling
       this.setupDropTarget(slot);
-
       equippedContainer.appendChild(slot);
     }
   }

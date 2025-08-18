@@ -48,7 +48,12 @@ export default class GameObject extends Tile {
     this.storyChance = config.storyChance || 0.0;
     this.guaranteedStory = config.guaranteedStory || false;
     this.exhaustedMessage = config.exhaustedMessage || null;
-    this.activationResults = config.activationResults || [];
+    this.activationResults = config.activationResults
+      ? config.activationResults.map(result => ({
+          ...result,
+          used: result.used || false,
+        }))
+      : [];
 
     this.flavorTexts = config.flavorTexts || ['An unremarkable object.'];
     this.selectedFlavorText =
@@ -405,9 +410,6 @@ export default class GameObject extends Tile {
   _handleResourceResult(result) {
     if (!result.used) {
       GameEvents.Resources.Emit.add(result.resourceType, result.amount);
-      GameEvents.Game.Emit.message(
-        `Collected ${result.amount} ${result.resourceType}`
-      );
       result.used = true;
 
       return true;

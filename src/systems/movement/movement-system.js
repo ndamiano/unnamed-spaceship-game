@@ -52,9 +52,13 @@ export class MovementSystem {
       const game = window.game;
 
       if (!game?.player || !game?.ship) return;
+      const explorationRadius = game.player.explorationRadius;
 
-      // Update visible tiles when player moves
-      game.ship.revealAreaAroundPlayer(game.player.x, game.player.y, 2);
+      game.ship.revealAreaAroundPlayer(
+        game.player.x,
+        game.player.y,
+        explorationRadius
+      );
     });
   }
 

@@ -11,6 +11,7 @@ function getStats() {
     battery: playerInstance.battery,
     maxBattery: playerInstance.maxBattery,
     harvestMultiplier: playerInstance.harvestMultiplier,
+    equippedPassives: playerInstance.equippedPassives,
     movementCost: playerInstance.movementCost,
     resources: playerInstance.resources,
     getUpgradeCount: upgradeId => playerInstance.upgrades.get(upgradeId) || 0,

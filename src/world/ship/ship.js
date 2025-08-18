@@ -102,6 +102,10 @@ export class Ship {
         to: newSectionId,
         completedSections: Array.from(this.completedSections),
       });
+      const spawnPoint = this.getSpawnPoint();
+
+      GameEvents.Player.Emit.move(spawnPoint.x, spawnPoint.y, { x: 0, y: 1 });
+      GameEvents.Player.Emit.updateSpawn(spawnPoint);
 
       return true;
     } catch (error) {

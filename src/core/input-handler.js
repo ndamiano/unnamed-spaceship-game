@@ -57,9 +57,6 @@ class InputHandler {
       } else if (key === 'm') {
         e.preventDefault();
         this.handleMinimapToggle();
-      } else if (key === 'u') {
-        e.preventDefault();
-        GameEvents.UI.Emit.openUpgrades({ shopType: 'always_on' });
       } else if (key === 'h') {
         e.preventDefault();
         this.showHelp();

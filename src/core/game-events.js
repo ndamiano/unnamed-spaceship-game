@@ -27,6 +27,7 @@ export const GameEvents = {
         eventBus.emit('passive-equipped', abilityId),
       passiveUnequipped: abilityId =>
         eventBus.emit('passive-unequipped', abilityId),
+      updateSpawn: newSpawn => eventBus.emit('update-spawn-point', newSpawn),
     },
     Listeners: {
       move: callback => eventBus.on('player-move', callback),
@@ -46,6 +47,7 @@ export const GameEvents = {
       passiveEquipped: callback => eventBus.on('passive-equipped', callback),
       passiveUnequipped: callback =>
         eventBus.on('passive-unequipped', callback),
+      updateSpawn: callback => eventBus.on('update-spawn-point', callback),
     },
   },
 

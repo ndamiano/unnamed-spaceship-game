@@ -23,7 +23,7 @@ class Player {
     this.playtimeStart = Date.now();
 
     // Enhanced features
-    this.equippedPassives = new Set();
+    this.equippedPassives = new Map();
     this.maxPassiveSlots = 1;
     this.visitedRoomTypes = new Set();
     this.currentRoom = null;
@@ -108,16 +108,7 @@ class Player {
     });
 
     GameEvents.Resources.Listeners.add(({ type, amount }) => {
-      const toAdd = amount * this.harvestMultiplier;
-
-      this.resources = modifyResources(this.resources, {
-        [type]: toAdd,
-      });
-
-      // Check for power siphon
-      this.handleResourceCollection(type, toAdd);
-
-      GameEvents.Player.Emit.updated(getStats());
+      this.handleResourceCollection(type, amount);
     });
 
     GameEvents.Save.Listeners.restorePlayer(playerData => {
@@ -159,6 +150,10 @@ class Player {
     GameEvents.Player.Listeners.enterRoom(roomType => {
       this.handleRoomEntry(roomType);
     });
+
+    GameEvents.Player.Listeners.updateSpawn(newSpawn => {
+      this.spawnPoint = newSpawn;
+    });
   }
 
   // Enhanced battery depletion with emergency reserves
@@ -186,36 +181,53 @@ class Player {
   }
 
   // Passive equipment methods
-  equipPassiveAbility(abilityId, _slotIndex) {
+  equipPassiveAbility(abilityId, slotIndex) {
     const maxSlots = this.getMaxPassiveSlots();
 
-    if (this.equippedPassives.size >= maxSlots) {
-      GameEvents.Game.Emit.message('No available passive slots');
+    if (slotIndex >= maxSlots) {
+      GameEvents.Game.Emit.message('Invalid equipment slot');
 
       return false;
     }
 
-    if (this.equippedPassives.has(abilityId)) {
-      GameEvents.Game.Emit.message('Passive already equipped');
+    // Check if already equipped in any slot
+    for (const [_slot, ability] of this.equippedPassives.entries()) {
+      if (ability === abilityId) {
+        GameEvents.Game.Emit.message('Passive already equipped');
+
+        return false;
+      }
+    }
+
+    // Check if slot is occupied
+    if (this.equippedPassives.has(slotIndex)) {
+      GameEvents.Game.Emit.message('Slot already occupied');
 
       return false;
     }
 
-    this.equippedPassives.add(abilityId);
+    // Equip to specific slot
+    this.equippedPassives.set(slotIndex, abilityId);
     GameEvents.Player.Emit.passiveEquipped(abilityId);
 
     return true;
   }
 
   unequipPassiveAbility(abilityId) {
-    if (this.equippedPassives.has(abilityId)) {
-      this.equippedPassives.delete(abilityId);
-      GameEvents.Player.Emit.passiveUnequipped(abilityId);
+    for (const [slot, ability] of this.equippedPassives.entries()) {
+      if (ability === abilityId) {
+        this.equippedPassives.delete(slot);
+        GameEvents.Player.Emit.passiveUnequipped(abilityId);
 
-      return true;
+        return true;
+      }
     }
 
     return false;
+  }
+
+  hasEquippedPassive(abilityId) {
+    return Array.from(this.equippedPassives.values()).includes(abilityId);
   }
 
   getMaxPassiveSlots() {
@@ -272,12 +284,37 @@ class Player {
   }
 
   getCurrentRoomData() {
-    // Placeholder - would need ship integration
-    return null;
+    const game = window.game;
+
+    if (!game?.ship?.map) return null;
+
+    const currentRoom = game.ship.map.rooms?.find(
+      room =>
+        this.x >= room.x &&
+        this.x < room.x + room.width &&
+        this.y >= room.y &&
+        this.y < room.y + room.height
+    );
+
+    return currentRoom
+      ? {
+          type: currentRoom.id,
+          name: currentRoom.name,
+          room: currentRoom,
+        }
+      : null;
   }
 
   // Resource collection with power siphon
-  handleResourceCollection(_resourceType, _amount) {
+  handleResourceCollection(type, amount) {
+    const toAdd = amount * this.harvestMultiplier;
+
+    this.resources = modifyResources(this.resources, {
+      [type]: toAdd,
+    });
+    GameEvents.Game.Emit.message(`Received ${toAdd} ${type}`);
+
+    // Check for power siphon
     const powerSiphonLevel = this.upgrades.get('POWER_SIPHON') || 0;
 
     if (powerSiphonLevel > 0) {
@@ -288,6 +325,8 @@ class Player {
         GameEvents.Game.Emit.message('Power Siphon: +1 battery');
       }
     }
+
+    GameEvents.Player.Emit.updated(getStats());
   }
 
   // Apply immediate upgrade effects
@@ -530,7 +569,7 @@ class Player {
 
     // Enhanced state restoration
     if (playerData.equippedPassives) {
-      this.equippedPassives = new Set(playerData.equippedPassives);
+      this.equippedPassives = new Map(playerData.equippedPassives);
     }
 
     if (playerData.visitedRoomTypes) {
@@ -578,7 +617,7 @@ class Player {
       totalPlaytime: this.totalPlaytime,
       spawnPoint: { ...this.spawnPoint },
       direction: this.direction,
-      equippedPassives: Array.from(this.equippedPassives),
+      equippedPassives: Array.from(this.equippedPassives.entries()),
       visitedRoomTypes: Array.from(this.visitedRoomTypes),
       maxPassiveSlots: this.maxPassiveSlots,
       abilityHotbarAssignments: this.abilityHotbarAssignments,

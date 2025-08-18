@@ -34,19 +34,6 @@ export class ActiveAbilitiesHotbar {
   }
 
   setupEventListeners() {
-    // Listen for keyboard input
-    document.addEventListener('keydown', e => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-        return;
-      }
-
-      const keyNumber = parseInt(e.key);
-
-      if (keyNumber >= 1 && keyNumber <= 9) {
-        this.useAbility(keyNumber);
-      }
-    });
-
     // Listen for player updates
     GameEvents.Player.Listeners.updated(() => {
       this.refresh();

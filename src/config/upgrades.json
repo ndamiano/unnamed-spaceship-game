@@ -72,21 +72,6 @@
     "category": "exploration"
   },
   
-  "ROOM_SCANNER": {
-    "id": "ROOM_SCANNER",
-    "name": "Room Scanner",
-    "description": "Reveal entire room layout when entering any room",
-    "type": "always_on",
-    "repeatable": false,
-    "maxLevel": 1,
-    "cost": {
-      "Nanites": 120,
-      "Ship Parts": 20
-    },
-    "icon": "🔍",
-    "category": "exploration"
-  },
-  
   "NAVIGATION_MATRIX": {
     "id": "NAVIGATION_MATRIX",
     "name": "Navigation Matrix",
