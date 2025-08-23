@@ -19,19 +19,12 @@ export class ShipSystem {
       const height = saveData?.height || 250;
       const type = saveData?.type || 'colony';
 
-      // Create ship instance
       this.ship = new Ship(width, height, type, sectionId);
 
-      // Add enhancement methods
       this.addShipEnhancements();
 
-      // Initialize the section (this replaces the old generateLayout call)
-      await this.ship.initializeSection(
-        sectionId,
-        saveData?.sectionData || saveData
-      );
+      await this.ship.initializeSection(sectionId, saveData);
 
-      // Setup upgrade features
       this.setupUpgradeFeatures();
 
       console.log(

@@ -279,30 +279,6 @@
     "category": "utility"
   },
   
-  "QUANTUM_TELEPORT": {
-    "id": "QUANTUM_TELEPORT",
-    "name": "Quantum Teleport",
-    "description": "Teleport back to spawn point (costs 20 battery)",
-    "type": "active",
-    "repeatable": false,
-    "maxLevel": 1,
-    "cost": {
-      "Nanites": 300,
-      "Ship Parts": 75,
-      "Research Points": 100
-    },
-    "requirements": {
-      "upgradeCount": {
-        "BATTERY_CAPACITY": 3
-      },
-      "storyFragments": 12
-    },
-    "cooldown": "none",
-    "batteryCost": 20,
-    "icon": "🌀",
-    "category": "mobility"
-  },
-  
   "EMERGENCY_BURST": {
     "id": "EMERGENCY_BURST",
     "name": "Emergency Burst",

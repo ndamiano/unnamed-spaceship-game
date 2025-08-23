@@ -4,6 +4,7 @@ import { roomFactory } from '../rooms/room-factory.js';
 import { getStats } from '../../entities/player/player-stats.js';
 import { Directions } from '../../utils/index.js';
 import { GameEvents } from '../../core/game-events.js';
+import { SectionMap } from './section-map.js';
 
 export class Ship {
   constructor(width, height, type = 'colony', sectionId = 'ENGINEERING_CORE') {
@@ -42,18 +43,26 @@ export class Ship {
   async initializeSection(sectionId = null, saveData = null) {
     const targetSection = sectionId || this.currentSection;
 
-    console.log(`Initializing section: ${targetSection}`);
+    console.log(`Initializing section: ${targetSection}`, {
+      sectionId: targetSection,
+      hasSaveData: !!saveData,
+      saveDataSectionId: saveData?.sectionData?.sectionId,
+      saveDataCurrentSection: saveData?.currentSection,
+    });
 
     try {
-      // CRITICAL: Initialize room factory FIRST
       console.log('Loading room definitions...');
       await roomFactory.loadRoomDefinitions();
 
-      // THEN initialize the section generator with the loaded room factory
       console.log('Initializing section generator...');
       await this.sectionGenerator.initialize(roomFactory);
 
-      if (saveData && saveData.sectionId === targetSection) {
+      if (
+        saveData &&
+        saveData.sectionData &&
+        (saveData.sectionData.sectionId === targetSection ||
+          saveData.currentSection === targetSection)
+      ) {
         // Restore from save
         console.log('Restoring section from save data');
         this.map = await this.restoreSectionFromSave(saveData);
@@ -336,17 +345,24 @@ export class Ship {
     }
 
     try {
-      // Import the SectionMap class
-      const { SectionMap } = await import('./section-map.js');
+      const sectionId = saveData.sectionData.sectionId || this.currentSection;
 
-      // Create a new SectionMap instance
+      const sectionDef = this.sectionGenerator.getSectionDefinition(sectionId);
+
+      if (!sectionDef) {
+        console.warn(
+          `No section definition found for ${sectionId}, falling back to generation`
+        );
+
+        return await this.sectionGenerator.generateSection(sectionId);
+      }
+
       const restoredMap = new SectionMap(
         saveData.sectionData.width || this.width,
         saveData.sectionData.height || this.height,
-        { id: saveData.sectionData.sectionId || this.currentSection }
+        sectionDef
       );
 
-      // Restore the map state
       await restoredMap.restoreFromSave(saveData.sectionData);
 
       console.log('Section successfully restored from save data');

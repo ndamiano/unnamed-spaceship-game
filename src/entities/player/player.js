@@ -360,8 +360,6 @@ class Player {
         return !this.naniteConverterUsed && this.resources.Nanites >= 100;
       case 'FABRICATOR_REFRESH':
         return this.battery >= 15;
-      case 'QUANTUM_TELEPORT':
-        return this.battery >= 20;
       case 'EMERGENCY_BURST':
         return (
           !this.emergencyBurstUsed && this.battery / this.maxBattery <= 0.25
@@ -381,8 +379,6 @@ class Player {
         return this.useNaniteConverter();
       case 'FABRICATOR_REFRESH':
         return this.useFabricatorRefresh();
-      case 'QUANTUM_TELEPORT':
-        return this.useQuantumTeleport();
       case 'EMERGENCY_BURST':
         return this.useEmergencyBurst();
       default:
@@ -403,13 +399,6 @@ class Player {
     GameEvents.Game.Emit.refreshNearestFabricator();
 
     return { success: true, message: 'Nanofabricator refreshed' };
-  }
-
-  useQuantumTeleport() {
-    GameEvents.Player.Emit.loseBattery(20);
-    this.teleportToSpawn();
-
-    return { success: true, message: 'Teleported to spawn point' };
   }
 
   useEmergencyBurst() {
@@ -457,25 +446,6 @@ class Player {
     return this.upgrades.get(upgradeId) || 0;
   }
 
-  canQuantumTeleport() {
-    return this.hasUpgrade('QUANTUM_ENTANGLEMENT') && this.battery >= 20;
-  }
-
-  quantumTeleport() {
-    if (!this.canQuantumTeleport()) return false;
-
-    this.x = this.spawnPoint.x;
-    this.y = this.spawnPoint.y;
-    this.battery -= 20;
-
-    GameEvents.Game.Emit.message(
-      'Quantum entanglement activated - teleported to spawn'
-    );
-    GameEvents.Player.Emit.move(this.x, this.y, this.direction);
-
-    return true;
-  }
-
   updatePlaytime() {
     const now = Date.now();
     const sessionTime = Math.floor((now - this.playtimeStart) / 1000);
@@ -490,10 +460,8 @@ class Player {
     this.battery = this.maxBattery;
     this.updatePlaytime();
 
-    // Apply deep sleep protocol
     this.applyResetBonuses();
 
-    // Reset per-reset abilities
     this.onReset();
 
     if (this.renderable) {
@@ -505,7 +473,6 @@ class Player {
     this.emergencyReservesUsed = false;
     this.naniteConverterUsed = false;
     this.emergencyBurstUsed = false;
-    // fabricatorRefreshUsed doesn't reset as it has no cooldown
   }
 
   applyResetBonuses() {
@@ -537,8 +504,6 @@ class Player {
   }
 
   calculateKnowledgeBonus(level) {
-    // This would need story system integration
-    // For now, placeholder calculation
     const discoveredFragments = this.visitedRoomTypes.size;
 
     return discoveredFragments * level * 5;
@@ -567,7 +532,6 @@ class Player {
       this.direction = playerData.direction;
     }
 
-    // Enhanced state restoration
     if (playerData.equippedPassives) {
       this.equippedPassives = new Map(playerData.equippedPassives);
     }

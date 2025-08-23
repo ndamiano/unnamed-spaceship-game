@@ -4,6 +4,8 @@ import { WallSegment } from '../tiles/wall-segment.js';
 import { Door } from '../tiles/door.js';
 import { getPossibleDoorPositions, randomInt } from '../../utils/math-utils.js';
 import { GameEvents } from '../../core/game-events.js';
+import { Tile } from '../tiles/tile.js';
+import { gameObjectLoader } from '../../entities/objects/game-object-loader.js';
 
 export class SectionMap {
   constructor(width, height, sectionDefinition) {
@@ -770,7 +772,7 @@ export class SectionMap {
   }
 
   async restoreFromSave(sectionData) {
-    console.log('Restoring SectionMap from save data');
+    console.log('Restoring SectionMap from save data', sectionData);
 
     // Restore basic properties
     this.width = sectionData.width || this.width;
@@ -788,64 +790,109 @@ export class SectionMap {
         visited: roomData.visited || false,
         explored: roomData.explored || false,
       }));
+      console.log(`Restored ${this.rooms.length} rooms`);
+    }
+
+    // FIXED: Initialize tile grid first, then restore saved tiles
+    this.tiles = [];
+    for (let y = 0; y < this.height; y++) {
+      this.tiles[y] = [];
+      for (let x = 0; x < this.width; x++) {
+        this.tiles[y][x] = new Tile(x, y); // Initialize as null first
+      }
     }
 
     // Restore tiles and their state
-    if (sectionData.tiles) {
-      this.tiles = [];
-      for (let y = 0; y < this.height; y++) {
-        this.tiles[y] = [];
-        for (let x = 0; x < this.width; x++) {
-          const savedTile = sectionData.tiles.find(t => t.x === x && t.y === y);
+    if (sectionData.tiles && Array.isArray(sectionData.tiles)) {
+      console.log(`Restoring ${sectionData.tiles.length} tiles`);
 
-          if (savedTile) {
-            // Import the appropriate tile class
-            const { SectionTile } = await import('./section-tile.js');
-            const tile = new SectionTile(x, y, savedTile.tileType || 'floor');
+      for (const savedTile of sectionData.tiles) {
+        const { x, y } = savedTile;
 
-            // Restore tile properties
-            tile.visible = savedTile.visible || false;
-            tile.explored = savedTile.explored || false;
-            tile.passable =
-              savedTile.passable !== undefined ? savedTile.passable : true;
+        // Validate coordinates
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+          console.warn(`Skipping tile at invalid coordinates: ${x}, ${y}`);
+          continue;
+        }
 
-            // Restore walls
-            if (savedTile.walls) {
-              tile.slots = {};
-              for (const [side, wallData] of Object.entries(savedTile.walls)) {
-                // You'll need to restore the actual wall objects here
-                // For now, just store the data
-                tile.slots[side] = wallData;
-              }
-            }
+        try {
+          // Import the appropriate tile class
+          const tile = new Tile(x, y, savedTile.tileType || 'floor');
 
-            // Restore objects on the tile
-            if (savedTile.object) {
-              try {
-                const { gameObjectLoader } = await import(
-                  '../../entities/objects/game-object-loader.js'
-                );
+          // Restore tile properties
+          tile.visible = savedTile.visible || false;
+          tile.explored = savedTile.explored || false;
+          tile.passable =
+            savedTile.passable !== undefined ? savedTile.passable : true;
 
-                tile.object = await gameObjectLoader.createObject(
-                  savedTile.object.type,
-                  x,
-                  y,
-                  savedTile.object
-                );
+          // FIXED: Restore walls properly
+          if (savedTile.walls && typeof savedTile.walls === 'object') {
+            tile.slots = {};
+            for (const [side, wallData] of Object.entries(savedTile.walls)) {
+              if (wallData && typeof wallData === 'object') {
+                // Import wall classes as needed
+                const { WallSegment, Door } = await import('./wall-segment.js');
 
-                // Restore object state
-                if (tile.object && tile.object.restoreStoryState) {
-                  tile.object.restoreStoryState(savedTile.object.storyData);
+                // Create appropriate wall type based on saved data
+                if (wallData.type === 'Door') {
+                  tile.slots[side] = new Door(x, y, side);
+                  tile.slots[side].passable =
+                    wallData.passable !== undefined ? wallData.passable : true;
+                } else {
+                  tile.slots[side] = new WallSegment(x, y, side);
+                  tile.slots[side].passable =
+                    wallData.passable !== undefined ? wallData.passable : false;
                 }
-              } catch (error) {
-                console.warn(`Failed to restore object at ${x},${y}:`, error);
+
+                if (wallData.blocksLineOfSight !== undefined) {
+                  tile.slots[side].blocksLineOfSight =
+                    wallData.blocksLineOfSight;
+                }
               }
             }
-
-            this.tiles[y][x] = tile;
           }
+
+          // Restore objects on the tile
+          if (savedTile.object) {
+            try {
+              tile.object = await gameObjectLoader.createObject(
+                savedTile.object.type,
+                x,
+                y,
+                savedTile.object
+              );
+
+              // Restore object state
+              if (tile.object && tile.object.restoreStoryState) {
+                tile.object.restoreStoryState(savedTile.object.storyData);
+              }
+            } catch (error) {
+              console.warn(`Failed to restore object at ${x},${y}:`, error);
+            }
+          }
+
+          this.tiles[y][x] = tile;
+        } catch (error) {
+          console.error(`Failed to restore tile at ${x},${y}:`, error);
         }
       }
+    }
+
+    // FIXED: Ensure spawn room is properly set
+    if (this.rooms.length > 0) {
+      // Try to find the spawn room
+      this.spawnRoom =
+        this.rooms.find(
+          room =>
+            room.id === 'spawn' ||
+            room.sectionType === 'spawn' ||
+            room.name?.toLowerCase().includes('spawn')
+        ) || this.rooms[0]; // Fallback to first room
+
+      console.log(
+        'Spawn room set to:',
+        this.spawnRoom.name || this.spawnRoom.id
+      );
     }
 
     console.log('SectionMap restoration complete');

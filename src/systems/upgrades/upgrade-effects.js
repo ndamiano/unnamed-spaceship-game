@@ -102,7 +102,6 @@ export class UpgradeEffects {
     const handlers = {
       NANITE_CONVERTER: () => this.useNaniteConverter(),
       FABRICATOR_REFRESH: () => this.useFabricatorRefresh(),
-      QUANTUM_TELEPORT: () => this.useQuantumTeleport(),
       EMERGENCY_BURST: () => this.useEmergencyBurst(),
     };
 
@@ -147,19 +146,6 @@ export class UpgradeEffects {
     GameEvents.Game.Emit.refreshNearestFabricator();
 
     return { success: true, message: 'Nanofabricator refreshed' };
-  }
-
-  useQuantumTeleport() {
-    const stats = getStats();
-
-    if (stats.battery < 20) {
-      return { success: false, message: 'Need 20 battery' };
-    }
-
-    GameEvents.Player.Emit.loseBattery(20);
-    GameEvents.Player.Emit.teleportToSpawn();
-
-    return { success: true, message: 'Teleported to spawn point' };
   }
 
   useEmergencyBurst() {
