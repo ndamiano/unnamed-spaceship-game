@@ -363,9 +363,17 @@ export class Ship {
         sectionDef
       );
 
-      await restoredMap.restoreFromSave(saveData.sectionData);
+      // Add error handling for the restore operation
+      try {
+        await restoredMap.restoreFromSave(saveData.sectionData);
+        console.log('Section successfully restored from save data');
+      } catch (restoreError) {
+        console.error('Failed to restore SectionMap:', restoreError);
+        // Create a fresh map if restoration fails
+        console.log('Creating new section instead due to restoration failure');
 
-      console.log('Section successfully restored from save data');
+        return await this.sectionGenerator.generateSection(sectionId);
+      }
 
       return restoredMap;
     } catch (error) {

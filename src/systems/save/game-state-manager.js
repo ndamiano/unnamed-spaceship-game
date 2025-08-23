@@ -37,6 +37,15 @@ export class GameStateManager {
     this.transitionToGame();
   }
 
+  // Add a method to properly restore section data
+  getSectionSaveData() {
+    if (this.saveData && this.saveData.sectionData) {
+      return this.saveData.sectionData;
+    }
+
+    return null;
+  }
+
   transitionToGame() {
     sessionStorage.setItem(
       'gameStartData',
